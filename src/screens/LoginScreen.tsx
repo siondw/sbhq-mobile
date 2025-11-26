@@ -46,53 +46,55 @@ const LoginScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.card}>
-        <Text weight="bold" style={styles.title}>
-          Login
-        </Text>
-        {error ? (
-          <Text style={styles.error} weight="medium">
-            {error}
+      <View style={styles.content}>
+        <View style={styles.card}>
+          <Text weight="bold" style={styles.title}>
+            Login
           </Text>
-        ) : null}
-        {message ? (
-          <Text style={styles.message} weight="medium">
-            {message}
-          </Text>
-        ) : null}
-        <View style={styles.field}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-            editable={!sending && !verifying}
-          />
-        </View>
-        {otpSent && (
+          {error ? (
+            <Text style={styles.error} weight="medium">
+              {error}
+            </Text>
+          ) : null}
+          {message ? (
+            <Text style={styles.message} weight="medium">
+              {message}
+            </Text>
+          ) : null}
           <View style={styles.field}>
             <TextInput
               style={styles.input}
-              placeholder="Enter code"
-              keyboardType="number-pad"
-              value={otp}
-              onChangeText={setOtp}
-              editable={!verifying}
+              placeholder="Email"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              value={email}
+              onChangeText={setEmail}
+              editable={!sending && !verifying}
             />
           </View>
-        )}
-        <View style={styles.buttons}>
-          <Button label="Continue with Google" onPress={handleGoogle} disabled={loading || sending || verifying} />
-          <View style={styles.spacer} />
-          <Button label={otpSent ? 'Resend Email OTP' : 'Send Email OTP'} onPress={() => void handleEmailOtp()} disabled={loading || sending} />
           {otpSent && (
-            <>
-              <View style={styles.spacer} />
-              <Button variant="secondary" label="Verify Email OTP" onPress={() => void handleVerifyOtp()} disabled={loading || verifying} />
-            </>
+            <View style={styles.field}>
+              <TextInput
+                style={styles.input}
+                placeholder="Enter code"
+                keyboardType="number-pad"
+                value={otp}
+                onChangeText={setOtp}
+                editable={!verifying}
+              />
+            </View>
           )}
+          <View style={styles.buttons}>
+            <Button label="Continue with Google" onPress={handleGoogle} disabled={loading || sending || verifying} />
+            <View style={styles.spacer} />
+            <Button label={otpSent ? 'Resend Email OTP' : 'Send Email OTP'} onPress={() => void handleEmailOtp()} disabled={loading || sending} />
+            {otpSent && (
+              <>
+                <View style={styles.spacer} />
+                <Button variant="secondary" label="Verify Email OTP" onPress={() => void handleVerifyOtp()} disabled={loading || verifying} />
+              </>
+            )}
+          </View>
         </View>
       </View>
     </View>
@@ -104,7 +106,12 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
     paddingHorizontal: SPACING.MD,
-    paddingTop: HEADER_HEIGHT + SPACING.LG,
+    paddingTop: HEADER_HEIGHT + SPACING.XL,
+    paddingBottom: SPACING.LG,
+  },
+  content: {
+    flex: 1,
+    justifyContent: 'center',
   },
   card: {
     backgroundColor: COLORS.SURFACE,

@@ -2,42 +2,47 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import Text from './primitives/Text';
 import { useAuth } from '../logic/auth/useAuth';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from './theme';
+import { COLORS, SPACING, TYPOGRAPHY } from './theme';
 import { FontAwesome } from '@expo/vector-icons';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const Header = () => {
   const { derivedUser } = useAuth();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.brandRow}>
-        <FontAwesome name="trophy" size={14} color={COLORS.PRIMARY_DARK} />
-        <Text weight="medium" style={styles.brand}>
-          Superbowl HQ
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
+        <View style={styles.brandRow}>
+          <FontAwesome name="trophy" size={14} color={COLORS.PRIMARY_DARK} />
+          <Text weight="medium" style={styles.brand}>
+            Superbowl HQ
+          </Text>
+        </View>
+        <Text weight="medium" style={styles.user}>
+          {derivedUser?.username || derivedUser?.email || 'Guest'}
         </Text>
       </View>
-      <Text weight="medium" style={styles.user}>
-        {derivedUser?.username || derivedUser?.email || 'Guest'}
-      </Text>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  safeArea: {
     position: 'absolute',
     top: 0,
     left: 0,
     right: 0,
-    height: HEADER_HEIGHT,
-    zIndex: 1000,
-    width: '100%',
     backgroundColor: 'rgba(255,255,255,0.9)',
+    zIndex: 1000,
+  },
+  container: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'flex-end',
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.MD,
     paddingBottom: SPACING.XS,
+    minHeight: 56,
   },
   brandRow: {
     flexDirection: 'row',
