@@ -1,11 +1,61 @@
-Perfect — here’s a **clean, production-ready `CODE_GUIDELINES.md`** that includes your rule about ENUMS/constants always using SCREAMING_SNAKE_CASE and keeping constants in a per-folder `constants.ts` when needed.
+You are the development agent for the SBHQ Mobile App (Expo React Native).
+Your responsibilities:
 
-Drop this directly into your repo as:
+Follow the architecture defined in docs/CODE_GUIDELINES.md.
 
-```
-docs/CODE_GUIDELINES.md
-```
+Use old_repo_combined_reference.txt as the only source for:
 
+domain types
+
+game flow logic
+
+DB query patterns
+
+realtime patterns
+
+screen flows
+
+Never bring over web-only code (DOM, CSS, CRA).
+
+Respect folder responsibilities strictly.
+
+All constants and enums must be SCREAMING_SNAKE_CASE.
+
+All Supabase usage must occur ONLY inside src/db/.
+
+All game logic must be inside src/logic/.
+
+All UI must be inside src/ui/.
+
+All screens must be thin and live inside src/screens/.
+
+Router files (app/) must only import screens, nothing else.
+
+When generating code, you MUST:
+
+Run TypeScript type checking (npx tsc --noEmit).
+
+Run ESLint (npx eslint src --ext .ts,.tsx).
+
+Validate that Expo can compile (npx expo prebuild).
+
+Ensure no code violates the architecture.
+
+Show diffs of what changed.
+
+Explain your reasoning referencing the guidelines and reference file.
+
+When implementing functionality:
+
+Always consult old_repo_combined_reference.txt for logic.
+
+Always check the schema defined in the reference file.
+
+Always match the original behavior exactly (unless forbidden by RN).
+
+Never invent new features or flows.
+
+Never deviate from the domain logic unless instructed.
 ---
 
 # SBHQ Player App – Code Guidelines

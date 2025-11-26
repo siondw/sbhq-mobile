@@ -1,0 +1,92 @@
+const js = require('@eslint/js');
+const globals = require('globals');
+const react = require('eslint-plugin-react');
+const reactHooks = require('eslint-plugin-react-hooks');
+const tseslint = require('typescript-eslint');
+
+module.exports = [
+  {
+    ignores: [
+      '**/node_modules/**',
+      'dist/**',
+      'web-build/**',
+      '.expo/**',
+      'build/**',
+      'coverage/**',
+      'app/**',
+      'components/**',
+      'assets/**',
+      'eslint.config.js',
+    ],
+  },
+  js.configs.recommended,
+  ...tseslint.configs.recommendedTypeChecked.map((config) => ({
+    ...config,
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      ...config.languageOptions,
+      parserOptions: {
+        ...config.languageOptions?.parserOptions,
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
+      },
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+      },
+    },
+  })),
+  {
+    files: ['**/*.{js,jsx,ts,tsx}'],
+    plugins: {
+      react,
+      'react-hooks': reactHooks,
+    },
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.es2021,
+      },
+    },
+    settings: {
+      react: {
+        version: 'detect',
+      },
+    },
+    rules: {
+      'react/jsx-uses-react': 'off',
+      'react/react-in-jsx-scope': 'off',
+      'react/prop-types': 'off',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
+      'no-console': [
+        'warn',
+        {
+          allow: ['warn', 'error'],
+        },
+      ],
+    },
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    plugins: {
+      '@typescript-eslint': tseslint.plugin,
+    },
+    rules: {
+      '@typescript-eslint/no-explicit-any': 'error',
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        {
+          prefer: 'type-imports',
+          fixStyle: 'inline-type-imports',
+        },
+      ],
+      '@typescript-eslint/array-type': [
+        'error',
+        {
+          default: 'array-simple',
+        },
+      ],
+    },
+  },
+];

@@ -1,0 +1,4246 @@
+=== src\components\admin\ContestDetail\InContestScreen.tsx ===
+--- component ---
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import styles from "./InContestScreen.module.css";
+
+import SubheaderToggles from "../InContest/SubheaderToggles/SubheaderToggles";
+import StatCard from "../InContest/StatCard/StatCard";
+import CurrentQuestionView from "../InContest/CurrentQuestionView/CurrentQuestionView";
+import QuestionsList from "../InContest/QuestionList/QuestionList";
+import QuestionModal from "../InContest/QuestionModal/QuestionModal";
+
+import { supabase } from "../../../supabase";
+import type { ContestRow, QuestionRow } from "../../../types/sbhq";
+
+type AdminQuestion = QuestionRow & { options?: string[] | Record<string, string>; correct_option?: string | null };
+
+function InContestScreen() {
+  const { id: contestId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
+  const [contest, setContest] = useState<ContestRow | null>(null);
+  const [loadingContest, setLoadingContest] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [lobbyOpen, setLobbyOpen] = useState(false);
+  const [submissionOpen, setSubmissionOpen] = useState(false);
+  const [finished, setFinished] = useState(false);
+  const [currentRound, setCurrentRound] = useState(0);
+
+  const [reinstateRound, setReinstateRound] = useState("");
+  const [activeParticipants, setActiveParticipants] = useState(0);
+
+  const [showQuestionModal, setShowQuestionModal] = useState(false);
+  const [questionToEdit, setQuestionToEdit] = useState<AdminQuestion | null>(null);
+  const [questions, setQuestions] = useState<AdminQuestion[]>([]);
+
+  useEffect(() => {
+    async function fetchContestData() {
+      try {
+        const { data: cData, error: cErr } = await supabase
+          .from("contests")
+          .select("*")
+          .eq("id", contestId)
+          .single();
+        if (cErr || !cData) throw cErr || new Error("Contest not found");
+
+        setContest(cData);
+        setLobbyOpen(cData.lobby_open);
+        setSubmissionOpen(cData.submission_open);
+        setFinished(cData.finished);
+        setCurrentRound(cData.current_round || 0);
+
+        const { count, error: pErr } = await supabase
+          .from("participants")
+          .select("id", { count: "exact", head: true })
+          .eq("contest_id", contestId)
+          .eq("active", true);
+
+        if (!pErr) setActiveParticipants(count || 0);
+      } catch (err) {
+        console.error("Error fetching contest data:", err);
+        setError((err as Error).message);
+      } finally {
+        setLoadingContest(false);
+      }
+    }
+    if (contestId) fetchContestData();
+  }, [contestId]);
+
+  useEffect(() => {
+    if (!contestId) return;
+    const channel = supabase
+      .channel(`participants-changes-${contestId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+          filter: `contest_id=eq.${contestId}`,
+        },
+        async () => {
+          const { count, error } = await supabase
+            .from("participants")
+            .select("id", { count: "exact", head: true })
+            .eq("contest_id", contestId)
+            .eq("active", true);
+          if (!error) setActiveParticipants(count || 0);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [contestId]);
+
+  useEffect(() => {
+    async function fetchQuestions() {
+      try {
+        const { data: qData, error: qErr } = await supabase
+          .from("questions")
+          .select("*")
+          .eq("contest_id", contestId)
+          .order("round", { ascending: true });
+        if (qErr) throw qErr;
+        setQuestions((qData as AdminQuestion[]) || []);
+      } catch (err) {
+        console.error("Error fetching questions:", err);
+      }
+    }
+    if (contestId) {
+      fetchQuestions();
+    }
+  }, [contestId]);
+
+  async function handleToggleLobby() {
+    const updated = !lobbyOpen;
+    setLobbyOpen(updated);
+    await supabase.from("contests").update({ lobby_open: updated }).eq("id", contestId);
+  }
+
+  async function handleToggleSubmissions() {
+    const updated = !submissionOpen;
+    setSubmissionOpen(updated);
+    await supabase.from("contests").update({ submission_open: updated }).eq("id", contestId);
+  }
+
+  async function handleToggleFinished() {
+    const updated = !finished;
+    setFinished(updated);
+    await supabase.from("contests").update({ finished: updated }).eq("id", contestId);
+  }
+
+  async function incrementRound(delta: number) {
+    const newRound = currentRound + delta;
+    if (newRound < 0) return;
+    setCurrentRound(newRound);
+    await supabase.from("contests").update({ current_round: newRound }).eq("id", contestId);
+  }
+
+  function openCreateQuestionModal() {
+    setQuestionToEdit(null);
+    setShowQuestionModal(true);
+  }
+  function openEditQuestionModal(q: AdminQuestion) {
+    setQuestionToEdit(q);
+    setShowQuestionModal(true);
+  }
+  function closeQuestionModal() {
+    setShowQuestionModal(false);
+    setQuestionToEdit(null);
+  }
+
+  async function handleReinstateParticipants() {
+    if (!reinstateRound) {
+      alert("Please enter a valid round number.");
+      return;
+    }
+    if (!window.confirm(`Reinstate participants from round ${reinstateRound}?`)) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("participants")
+        .update({ active: true, elimination_round: null })
+        .eq("contest_id", contestId)
+        .eq("elimination_round", parseInt(reinstateRound, 10));
+
+      if (error) {
+        console.error("Error reinstating participants:", error.message);
+        alert("Failed to reinstate participants.");
+      } else {
+        alert(`Participants from round ${reinstateRound} reinstated successfully!`);
+      }
+    } catch (err) {
+      console.error("Error:", (err as Error).message);
+    }
+  }
+
+  async function handleQuestionSavedOrDeleted() {
+    closeQuestionModal();
+    try {
+      const { data: qData, error: qErr } = await supabase
+        .from("questions")
+        .select("*")
+        .eq("contest_id", contestId)
+        .order("round", { ascending: true });
+      if (qErr) throw qErr;
+      setQuestions((qData as AdminQuestion[]) || []);
+    } catch (err) {
+      console.error("Error refreshing questions:", err);
+    }
+  }
+
+  if (loadingContest) return <div>Loading contest...</div>;
+  if (error) return <div>Error: {error}</div>;
+  if (!contest) return <div>Contest not found.</div>;
+
+  return (
+    <div className={styles.inContestWrapper}>
+      <header className={styles.header}>
+        <div className={styles.left}>Admin</div>
+        <div className={styles.center}>{contest.name}</div>
+        <div className={styles.right}>SBHQ</div>
+      </header>
+
+      <SubheaderToggles
+        lobbyOpen={lobbyOpen}
+        submissionOpen={submissionOpen}
+        finished={finished}
+        onToggleLobby={handleToggleLobby}
+        onToggleSubmission={handleToggleSubmissions}
+        onToggleFinished={handleToggleFinished}
+        roundNumber={currentRound}
+        onIncrementRound={incrementRound}
+      />
+
+      <div className={styles.mainContent}>
+        <div className={styles.leftColumn}>
+          <StatCard value={activeParticipants} label="PARTICIPANTS" />
+          <StatCard value={currentRound} label="ROUND" />
+
+          <div className={styles.reinstateCard}>
+            <input
+              type="number"
+              placeholder="Enter Round Number"
+              value={reinstateRound}
+              onChange={(e) => setReinstateRound(e.target.value)}
+              className={styles.roundInput}
+            />
+            <button className={styles.reinstateButton} onClick={handleReinstateParticipants}>
+              Reinstate Players
+            </button>
+          </div>
+        </div>
+
+        <div className={styles.centerColumn}>
+          <CurrentQuestionView
+            roundNumber={currentRound}
+            submissionOpen={submissionOpen}
+            questions={questions}
+            onCreateQuestion={openCreateQuestionModal}
+          />
+        </div>
+
+        <div className={styles.rightColumn}>
+          <QuestionsList questions={questions} onEditQuestion={openEditQuestionModal} />
+        </div>
+      </div>
+
+      {showQuestionModal && (
+        <QuestionModal
+          contestId={contestId || ""}
+          question={questionToEdit}
+          onClose={closeQuestionModal}
+          onSavedOrDeleted={handleQuestionSavedOrDeleted}
+        />
+      )}
+
+      <button className={styles.fab} onClick={openCreateQuestionModal}>
+        +
+      </button>
+
+      <button className={styles.backButton} onClick={() => navigate("/admin")}>
+        ← Back to Contests
+      </button>
+    </div>
+  );
+}
+
+export default InContestScreen;
+
+--- css: src\components\admin\ContestDetail\InContestScreen.module.css ---
+/* src/screens/Admin/ContestDetail/InContestScreen.module.css */
+
+.inContestWrapper {
+    width: 100%;
+    min-height: 100vh;
+    background-color: #f8f8f8; /* light background like in Overview */
+    color: #333;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* The top header bar with “Admin” / contest name / “SBHQ” */
+  .header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #fff;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #ddd;
+    font-weight: 600;
+  }
+  
+  .left, .center, .right {
+    font-size: 1.2rem;
+  }
+  
+  .center {
+    text-align: center;
+  }
+  
+  .right {
+    color: #666;
+  }
+  
+  /* The big 3-column layout for the main content area */
+  .mainContent {
+    flex: 1; /* fill remaining vertical space */
+    display: grid;
+    grid-template-columns: 1fr 2fr 1.5fr; /* adjust ratios as needed */
+    gap: 1rem;
+    padding: 1rem 2rem;
+  }
+  
+  /* Left column with StatCards */
+  .leftColumn {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    height: 100%;
+  }
+
+  .leftColumnSpacer {
+    flex: 1;
+  }
+  
+  /* Center column (CurrentQuestionView) */
+  .centerColumn {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  }
+  
+  /* Right column (QuestionsList) */
+  .rightColumn {
+    background-color: #fff;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  
+    /* if you want a vertical scroll */
+    max-height: calc(100vh - 160px);
+    overflow-y: auto;
+  }
+  
+  /* The floating + button for “Create Question” (optional) */
+  .fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 50px;
+    height: 50px;
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.8rem;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: background-color 0.2s;
+  }
+  
+  .fab:hover {
+    background-color: #0080ff;
+  }
+  
+  /* Simple placeholders for loading/error states, if needed */
+  .loading,
+  .error {
+    margin: 2rem;
+    text-align: center;
+    color: #666;
+  }
+  
+.backButton {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 1.5rem;
+    padding: 0.75rem 1.5rem;
+    background-color: #fff;
+    color: #0066cc;
+    border: 1px solid #0066cc;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: all 0.2s;
+  }
+  
+  .backButton:hover {
+    background-color: #f0f7ff;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+
+.backLink {
+  padding: 0.75rem;
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 1rem;
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.backLink:hover {
+  color: #0052a3;
+  text-decoration: underline;
+}
+
+/* Reinstate Participants Card */
+.reinstateCard {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 1rem;
+    text-align: center;
+    transition: box-shadow 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem; /* Ensure proper spacing between input and button */
+  }
+  
+  .reinstateCard:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  }
+  
+  /* Input field for round number */
+  .roundInput {
+    width: 100%; /* Prevent input from spilling out of the card */
+    box-sizing: border-box; /* Ensures padding and border are included in width */
+    padding: 0.5rem 1rem;
+    font-size: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: border-color 0.2s;
+  }
+  
+  .roundInput:focus {
+    border-color: #0066cc;
+    outline: none;
+  }
+  
+  /* Button to reinstate participants */
+  .reinstateButton {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: transparent; /* Make background transparent */
+    color: #0066cc; /* Use the primary color for text */
+    font-size: 1rem;
+    font-weight: 600;
+    border: 2px solid #0066cc; /* Add border with primary color */
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, box-shadow 0.2s, color 0.2s;
+  }
+  
+  .reinstateButton:hover {
+    background-color: #0066cc; /* Change background color on hover */
+    color: #fff; /* Change text color on hover */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+  }
+  
+  .reinstateButton:active {
+    background-color: #004080; /* Change background color on active */
+    color: #fff; /* Change text color on active */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) inset;
+  }
+
+=== src\components\admin\CreateContestModal\CreateContestModal.tsx ===
+--- component ---
+import React, { useState, FormEvent } from "react";
+import { supabase } from "../../../supabase";
+import styles from "./CreateContestModal.module.css";
+
+interface CreateContestModalProps {
+  onClose: () => void;
+  onCreated: () => void;
+}
+
+function CreateContestModal({ onClose, onCreated }: CreateContestModalProps) {
+  const [name, setName] = useState("");
+  const [date, setDate] = useState(""); // Expected "YYYY-MM-DDTHH:mm"
+  const [price, setPrice] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError(null);
+
+    // Validate form fields
+    if (!name.trim()) {
+      setError("Please provide a contest name.");
+      return;
+    }
+    if (!date) {
+      setError("Please choose a date and time.");
+      return;
+    }
+    if (!price || isNaN(Number(price))) {
+      setError("Please provide a valid numeric price.");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Parse and convert local date to UTC
+      const localDate = new Date(date);
+      const utcDate = localDate.toISOString();
+
+      // Insert into the database
+      const { error } = await supabase.from("contests").insert([
+        {
+          name: name.trim(),
+          start_time: utcDate, // Save as UTC ISO string
+          price: parseFloat(price),
+          current_round: 0,
+          finished: false,
+          lobby_open: false,
+          submission_open: false,
+        },
+      ]);
+
+      if (error) throw error;
+
+      // Refresh parent data and close modal
+      onCreated();
+      onClose();
+    } catch (err) {
+      console.error("Error during contest creation:", err);
+      setError("Failed to create contest. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <h2 className={styles.modalTitle}>Create New Contest</h2>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit}>
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Contest Name:</label>
+            <input
+              type="text"
+              className={styles.input}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="E.g. Trivia Night"
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Date & Time:</label>
+            <input
+              type="datetime-local"
+              className={styles.input}
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+            />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label className={styles.label}>Price:</label>
+            <input
+              type="text"
+              className={styles.input}
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              placeholder="E.g. 10.00"
+            />
+          </div>
+
+          {error && <div className={styles.error}>{error}</div>}
+
+          <div className={styles.buttonRow}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onClose}
+              disabled={loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={styles.submitButton}
+              disabled={loading}
+            >
+              {loading ? "Creating..." : "Create"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default CreateContestModal;
+
+--- css: src\components\admin\CreateContestModal\CreateContestModal.module.css ---
+/* src/components/admin/Overview/CreateContestModal.module.css */
+
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999; /* ensure it’s above normal content */
+  }
+  
+  .modalContent {
+    background-color: #fff;
+    width: 400px;
+    max-width: 90%;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  }
+  
+  .modalTitle {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  .formGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .label {
+    display: block;
+    margin-bottom: 4px;
+    font-weight: 500;
+    color: #333;
+  }
+  
+  .input {
+    width: 100%;
+    padding: 8px;
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .error {
+    margin-bottom: 1rem;
+    color: #cc0000;
+  }
+  
+  .buttonRow {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  
+  .cancelButton {
+    background-color: #999;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .cancelButton:hover {
+    background-color: #777;
+  }
+  
+  .submitButton {
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .submitButton:hover {
+    background-color: #0080ff;
+  }
+  
+
+=== src\components\admin\InContest\CurrentQuestionView\CurrentQuestionView.tsx ===
+--- component ---
+import React, { useState, useEffect, useCallback } from "react";
+import { supabase } from "../../../../supabase";
+import styles from "./CurrentQuestionView.module.css";
+import type { QuestionRow } from "../../../../types/sbhq";
+
+type Question = QuestionRow & { options?: string[] | Record<string, string> | null; correct_option?: string | null };
+
+interface CurrentQuestionViewProps {
+  roundNumber: number;
+  submissionOpen: boolean;
+  questions: Question[];
+  onCreateQuestion: () => void;
+}
+
+function CurrentQuestionView({ roundNumber, submissionOpen, questions, onCreateQuestion }: CurrentQuestionViewProps) {
+  const [pendingCorrectOption, setPendingCorrectOption] = useState("");
+  const [answersDistribution, setAnswersDistribution] = useState<Record<string, number>>({});
+  const [totalAnswers, setTotalAnswers] = useState(0);
+
+  // Identify the question for this round (may be undefined)
+  const currentQ = questions.find((q) => q.round === roundNumber);
+  const questionId = currentQ?.id;
+  const normalizedOptions = currentQ
+    ? Array.isArray(currentQ.options)
+      ? currentQ.options
+      : Object.values(currentQ.options || {})
+    : [];
+
+  // Fetch answers distribution
+  const fetchAnswersDistribution = useCallback(async () => {
+    if (!questionId) {
+      console.warn("fetchAnswersDistribution: No question ID, skipping fetch.");
+      return;
+    }
+
+    try {
+      const { data: answers, error } = await supabase
+        .from("answers")
+        .select("answer")
+        .eq("question_id", questionId); // Updated to use question_id
+
+      if (error) throw error;
+
+      const counts: Record<string, number> = {};
+      (answers || []).forEach((row) => {
+        const ans = (row as { answer?: string }).answer || "No Answer";
+        counts[ans] = (counts[ans] || 0) + 1;
+      });
+
+      setAnswersDistribution(counts);
+      setTotalAnswers(Object.values(counts).reduce((sum, val) => sum + (val as number), 0));
+    } catch (err) {
+      console.error("Error fetching distribution:", err);
+    }
+  }, [questionId]);
+
+  useEffect(() => {
+    fetchAnswersDistribution();
+
+    if (!questionId) {
+      console.warn("useEffect: No question ID, skipping subscription setup.");
+      return;
+    }
+
+    const channel = supabase
+      .channel(`answers-question-${questionId}`) // Updated channel name
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "answers",
+          filter: `question_id=eq.${questionId}`, // Updated to filter by question_id
+        },
+        () => {
+          fetchAnswersDistribution();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [questionId, fetchAnswersDistribution]);
+
+  if (!currentQ) {
+    return (
+      <div className={styles.noQuestion}>
+        <p>No question set for Round {roundNumber} yet.</p>
+        <button onClick={onCreateQuestion}>Create Question</button>
+      </div>
+    );
+  }
+
+  const { question, correct_option } = currentQ;
+
+  async function handleSetCorrectOption() {
+    if (!pendingCorrectOption || !questionId) {
+      alert("Please select an option to mark correct.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("questions")
+        .update({ correct_option: pendingCorrectOption })
+        .eq("id", questionId);
+
+      if (error) throw error;
+
+      currentQ.correct_option = pendingCorrectOption;
+      setPendingCorrectOption("");
+      alert("Correct option set!");
+    } catch (err) {
+      console.error("Error setting correct_option:", err);
+      alert("Error setting correct option. Check console.");
+    }
+  }
+
+  const total = totalAnswers;
+
+  return (
+    <div className={styles.currentQWrapper}>
+      <h2>Round {roundNumber}</h2>
+      <h3>{question}</h3>
+
+      {submissionOpen ? (
+        <div className={styles.openPhase}>
+          <p>Submissions are open! (Real-time distribution):</p>
+          {normalizedOptions?.map((opt) => (
+            <div key={opt} className={styles.optionRow}>
+              <strong>{opt}:</strong> {answersDistribution[opt] || 0} response(s)
+            </div>
+          ))}
+          <div className={styles.optionRow}>
+            <strong>Total submissions:</strong> {total}
+          </div>
+        </div>
+      ) : (
+        <div className={styles.closedPhase}>
+          {!correct_option ? (
+            <>
+              <p>Submissions closed. Set the correct option:</p>
+              <div className={styles.optionsList}>
+                {normalizedOptions?.map((opt, idx) => (
+                  <label key={idx} className={styles.optionItem}>
+                    <input
+                      type="radio"
+                      name="correctOption"
+                      value={opt}
+                      onChange={(e) => setPendingCorrectOption(e.target.value)}
+                    />
+                    {opt}
+                  </label>
+                ))}
+              </div>
+              <button
+                onClick={handleSetCorrectOption}
+                className={styles.confirmButton}
+              >
+                Confirm Correct Option
+              </button>
+            </>
+          ) : (
+            <>
+              <p>
+                Submissions closed. The correct option is:{" "}
+                <strong>{correct_option}</strong>.
+              </p>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default CurrentQuestionView;
+
+--- css: src\components\admin\InContest\CurrentQuestionView\CurrentQuestionView.module.css ---
+/* src/components/admin/InContest/CurrentQuestionView/CurrentQuestionView.module.css */
+
+.noQuestion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 2rem;
+    color: #333;
+  }
+  
+  .noQuestion p {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+  
+  .noQuestion button {
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  .noQuestion button:hover {
+    background-color: #0080ff;
+  }
+  
+  .currentQWrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .currentQWrapper h2 {
+    margin: 0;
+    font-size: 1.3rem;
+    color: #444;
+  }
+  
+  .currentQWrapper h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #333;
+  }
+  
+  .closedState {
+    margin-top: 1rem;
+  }
+  
+  .optionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+  
+  .optionItem {
+    cursor: pointer;
+    font-size: 1rem;
+  }
+  
+  .optionItem input[type="radio"] {
+    margin-right: 0.5rem;
+  }
+
+.optionsList button {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+  width: auto;
+  display: inline-block;
+}
+
+.optionsList button:hover {
+  background-color: #0080ff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.optionsList button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.optionsList button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.closedState button {
+  background-color: #0066cc;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+  margin-top: 1rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.closedState button:hover {
+  background-color: #0080ff;
+}
+
+.closedState button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+.openPhase,
+.closedPhase {
+  margin-top: 1rem;
+  background-color: #fafafa;
+  border-radius: 6px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.optionRow {
+  margin: 0.4rem 0;
+}
+
+.correctHighlight {
+  background-color: #e6f2ff;
+}
+
+.distributionBox {
+  margin-top: 1rem;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 1rem;
+}
+
+.confirmButton {
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 1rem;
+  width: auto;
+  display: inline-block;
+}
+
+.confirmButton:hover {
+  background-color: #0080ff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.confirmButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.confirmButton:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+=== src\components\admin\InContest\QuestionList\QuestionList.tsx ===
+--- component ---
+import React from "react";
+import styles from "./QuestionList.module.css";
+import type { QuestionRow } from "../../../../types/sbhq";
+
+type Question = QuestionRow & { correct_option?: string | null; options?: string[] | Record<string, string> | null; text?: string };
+
+interface QuestionsListProps {
+  questions: Question[];
+  onEditQuestion: (q: Question) => void;
+}
+
+function QuestionsList({ questions, onEditQuestion }: QuestionsListProps) {
+  if (!questions.length) {
+    return (
+      <div className={styles.questionsList}>
+        <h3>All Questions</h3>
+        <p className={styles.noQuestions}>No questions created yet.</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.questionsList}>
+      <h3>All Questions</h3>
+      {questions.map((q) => {
+        const correctOption = q.correct_option || null;
+        const questionText = q.question || q.text || "";
+        const opts = Array.isArray(q.options) ? q.options : Object.values(q.options || {});
+        return (
+          <div key={q.id} className={styles.questionItem}>
+            <div>
+              <strong>Round {q.round}</strong>: {questionText}
+            </div>
+            {opts.length > 0 && <div>Options: {opts.join(", ")}</div>}
+            {correctOption && <div className={styles.correctLabel}>Correct: {correctOption}</div>}
+            <button onClick={() => onEditQuestion(q)}>Edit</button>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default QuestionsList;
+
+--- css: src\components\admin\InContest\QuestionList\QuestionList.module.css ---
+/* src/components/admin/InContest/QuestionList/QuestionList.module.css */
+
+.questionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  
+  .questionsList h3 {
+    margin-top: 0;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  .questionItem {
+    background-color: #f9f9f9;
+    padding: 0.8rem;
+    border-radius: 6px;
+    transition: background-color 0.2s;
+    position: relative;
+  }
+  
+  .questionItem:hover {
+    background-color: #efefef;
+  }
+  
+  .correctLabel {
+    font-size: 0.9rem;
+    color: #0066cc;
+    margin-top: 0.3rem;
+  }
+  
+  /* The “Edit” button in each item */
+  .questionItem button {
+    position: absolute;
+    right: 0.8rem;
+    top: 0.8rem;
+    background-color: #0066cc;
+    color: #fff;
+    border: none;
+    padding: 0.4rem 0.8rem;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: background-color 0.2s;
+  }
+  
+  .questionItem button:hover {
+    background-color: #0080ff;
+  }
+  
+
+=== src\components\admin\InContest\QuestionModal\QuestionModal.tsx ===
+--- component ---
+// src/components/admin/InContest/QuestionModal/QuestionModal.js
+import React, { useState, ChangeEvent, FormEvent } from "react";
+import { supabase } from "../../../../supabase";
+import styles from "./QuestionModal.module.css";
+import type { QuestionRow } from "../../../../types/sbhq";
+
+type Question = QuestionRow & { options?: string[] | Record<string, string> | null };
+
+interface QuestionModalProps {
+  contestId: string;
+  question: Question | null;
+  onClose: () => void;
+  onSavedOrDeleted: () => void;
+}
+
+function QuestionModal({ contestId, question, onClose, onSavedOrDeleted }: QuestionModalProps) {
+  const isEditing = !!question;
+  const [round, setRound] = useState<number>(question?.round || 1);
+  const [questionText, setQuestionText] = useState(question?.question || "");
+  const [options, setOptions] = useState<string[]>(
+    question
+      ? Array.isArray(question.options)
+        ? question.options
+        : Object.values(question.options || {})
+      : ["", "", "", ""]
+  );
+  const [correctOption, setCorrectOption] = useState<string>(question?.correct_option || "");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleOptionChange(e: ChangeEvent<HTMLInputElement>, idx: number) {
+    const newOptions = [...options];
+    newOptions[idx] = e.target.value;
+    setOptions(newOptions);
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!questionText.trim()) {
+      alert("Question text cannot be empty.");
+      return;
+    }
+    const finalOptions = options.filter((opt) => opt.trim());
+    try {
+      setLoading(true);
+      setError(null);
+
+      if (!isEditing) {
+        const { error } = await supabase.from("questions").insert({
+          contest_id: contestId,
+          round,
+          question: questionText,
+          options: finalOptions,
+          correct_option: correctOption || null,
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("questions")
+          .update({
+            round,
+            question: questionText,
+            options: finalOptions,
+            correct_option: correctOption || null,
+          })
+          .eq("id", question?.id);
+        if (error) throw error;
+      }
+
+      onSavedOrDeleted();
+    } catch (err) {
+      console.error("Error saving question:", err);
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleDelete() {
+    if (!question) return;
+    const confirmDelete = window.confirm("Delete this question?");
+    if (!confirmDelete) return;
+
+    try {
+      setLoading(true);
+      const { error } = await supabase.from("questions").delete().eq("id", question.id);
+      if (error) throw error;
+
+      onSavedOrDeleted();
+    } catch (err) {
+      console.error("Error deleting question:", err);
+      setError((err as Error).message);
+      setLoading(false);
+    }
+  }
+
+  return (
+    <div className={styles.modalOverlay}>
+      <div className={styles.modalContent}>
+        <h2>{isEditing ? "Edit Question" : "Create Question"}</h2>
+        {error && <div className={styles.error}>Error: {error}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className={styles.formGroup}>
+            <label>Round:</label>
+            <input type="number" value={round} onChange={(e) => setRound(parseInt(e.target.value, 10))} min={1} />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Question Text:</label>
+            <textarea value={questionText} onChange={(e) => setQuestionText(e.target.value)} />
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Options:</label>
+            <div className={styles.optionsGrid}>
+              {options.map((opt, idx) => (
+                <input
+                  key={idx}
+                  type="text"
+                  className={styles.optionInput}
+                  placeholder={`Option ${idx + 1}`}
+                  value={opt}
+                  onChange={(e) => handleOptionChange(e, idx)}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className={styles.formGroup}>
+            <label>Correct Answer (optional):</label>
+            <input type="text" value={correctOption} onChange={(e) => setCorrectOption(e.target.value)} />
+          </div>
+
+          <div className={styles.buttonRow}>
+            <button type="button" onClick={onClose} disabled={loading}>
+              Cancel
+            </button>
+            {isEditing && (
+              <button type="button" onClick={handleDelete} disabled={loading} className={styles.deleteButton}>
+                Delete
+              </button>
+            )}
+            <button type="submit" disabled={loading}>
+              {loading ? "Saving..." : "Save"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+export default QuestionModal;
+
+--- css: src\components\admin\InContest\QuestionModal\QuestionModal.module.css ---
+/* src/components/admin/InContest/QuestionModal/QuestionModal.module.css */
+
+/* The semi-transparent overlay */
+.modalOverlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+  }
+  
+  /* The modal content box */
+  .modalContent {
+    background-color: #fff;
+    width: 800px;  /* Increased from 600px */
+    max-width: 95%;
+    border-radius: 8px;
+    padding: 2rem;  /* Increased padding */
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  }
+  
+  .modalContent h2 {
+    margin-top: 0;
+    font-size: 1.4rem;
+    color: #333;
+    margin-bottom: 1rem;
+  }
+  
+  .error {
+    margin-bottom: 1rem;
+    color: #cc0000;
+  }
+  
+  /* The form layout */
+  .formGroup {
+    margin-bottom: 1rem;
+  }
+  
+  .formGroup label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #333;
+  }
+  
+  .formGroup input[type="number"],
+  .formGroup textarea,
+  .formGroup input[type="text"] {
+    width: 100%;
+    padding: 0.6rem;
+    background-color: #f8f8f8;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical; /* for textareas */
+  }
+  
+  .formGroup textarea {
+    min-height: 60px;
+  }
+  
+  .buttonRow {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    margin-top: 1.5rem;
+  }
+  
+  .buttonRow button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+  }
+  
+  .buttonRow button:hover {
+    opacity: 0.9;
+  }
+  
+  /* The delete button can have a different color */
+  .deleteButton {
+    background-color: #ff5555;
+    color: #fff;
+  }
+  
+  /* other buttons could be neutral or accent */
+
+  .optionsGrid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;  /* Increased from 1rem */
+    margin-top: 0.5rem;
+  }
+
+  .optionInput {
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 90%;  /* Decreased from 100% */
+    font-size: 0.9rem;
+    margin: 0 auto;  /* Center the input */
+  }
+
+=== src\components\admin\InContest\StatCard\StatCard.tsx ===
+--- component ---
+import React from "react";
+import styles from "./StatCard.module.css";
+
+interface StatCardProps {
+  value: number | string;
+  label: string;
+}
+
+function StatCard({ value, label }: StatCardProps) {
+  return (
+    <div className={styles.statCard}>
+      <div className={styles.value}>{value}</div>
+      <div className={styles.label}>{label}</div>
+    </div>
+  );
+}
+
+export default StatCard;
+
+--- css: src\components\admin\InContest\StatCard\StatCard.module.css ---
+/* src/components/admin/InContest/StatCard/StatCard.module.css */
+
+.statCard {
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    padding: 1rem;
+    text-align: center;
+    transition: box-shadow 0.2s;
+  }
+  
+  .statCard:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+  }
+  
+  .value {
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: #333;
+  }
+  
+  .label {
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 0.2rem;
+  }
+  
+
+=== src\components\admin\InContest\SubheaderToggles\SubheaderToggles.tsx ===
+--- component ---
+import React from "react";
+import styles from "./SubheaderToggles.module.css";
+
+interface SubheaderTogglesProps {
+  lobbyOpen: boolean;
+  submissionOpen: boolean;
+  finished: boolean;
+  onToggleLobby: () => void;
+  onToggleSubmission: () => void;
+  onToggleFinished: () => void;
+  roundNumber: number;
+  onIncrementRound: (delta: number) => void;
+}
+
+function SubheaderToggles({
+  lobbyOpen,
+  submissionOpen,
+  finished,
+  onToggleLobby,
+  onToggleSubmission,
+  onToggleFinished,
+  roundNumber,
+  onIncrementRound,
+}: SubheaderTogglesProps) {
+  return (
+    <div className={styles.subheader}>
+      <div className={styles.toggleItem}>
+        <span>Lobby:</span>
+        <button onClick={onToggleLobby} className={styles.toggleButton} data-active={lobbyOpen}>
+          {lobbyOpen ? "ON" : "OFF"}
+        </button>
+      </div>
+      <div className={styles.toggleItem}>
+        <span>Submissions:</span>
+        <button
+          onClick={onToggleSubmission}
+          className={styles.toggleButton}
+          data-submissions={submissionOpen}
+        >
+          {submissionOpen ? "ON" : "OFF"}
+        </button>
+      </div>
+      <div className={styles.toggleItem}>
+        <span>Finished:</span>
+        <button onClick={onToggleFinished} className={styles.toggleButton} data-finished={finished}>
+          {finished ? "ON" : "OFF"}
+        </button>
+      </div>
+
+      <div className={styles.roundContainer}>
+        <span>Round: {roundNumber}</span>
+        <button onClick={() => onIncrementRound(+1)}>+</button>
+        <button onClick={() => onIncrementRound(-1)}>-</button>
+      </div>
+    </div>
+  );
+}
+
+export default SubheaderToggles;
+
+--- css: src\components\admin\InContest\SubheaderToggles\SubheaderToggles.module.css ---
+/* src/components/admin/InContest/SubheaderToggles/SubheaderToggles.module.css */
+
+.subheader {
+    display: flex;
+    align-items: center;
+    background-color: #fff;
+    border-bottom: 1px solid #ddd;
+    padding: 0.75rem 2rem;
+    gap: 2rem;
+    font-size: 0.95rem;
+    color: #333;
+  }
+  
+  .toggleItem {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .toggleButton {
+    background-color: #999;
+    color: #fff;
+    padding: 4px 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    min-width: 45px;
+  }
+  
+  .toggleButton[data-active="true"] {
+    background-color: #4CAF50;  /* Green for active lobby */
+  }
+  
+  .toggleButton[data-submissions="true"] {
+    background-color: #2196F3;  /* Blue for active submissions */
+  }
+  
+  .toggleButton[data-finished="true"] {
+    background-color: #9C27B0;  /* Purple for finished state */
+  }
+  
+  .toggleButton:hover {
+    background-color: #777;
+  }
+  
+  .roundContainer {
+    margin-left: auto; /* push it to the right end */
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .roundContainer button {
+    background-color: #ccc;
+    border: none;
+    border-radius: 4px;
+    width: 24px;
+    height: 24px;
+    cursor: pointer;
+    color: #333;
+    transition: background-color 0.2s;
+  }
+  
+  .roundContainer button:hover {
+    background-color: #aaa;
+  }
+
+=== src\components\admin\Overview\OverviewScreen.tsx ===
+--- component ---
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "../../../supabase";
+import styles from "./OverviewScreen.module.css";
+import CreateContestModal from "../CreateContestModal/CreateContestModal";
+import { formatInTimeZone } from "date-fns-tz";
+import type { ContestRow } from "../../../types/sbhq";
+
+interface ContestWithParticipants extends ContestRow {
+  participants?: Array<{ user_id: string; active: boolean }>;
+}
+
+function OverviewScreen() {
+  const navigate = useNavigate();
+
+  // State management
+  const [contests, setContests] = useState<ContestWithParticipants[]>([]);
+  const [filteredContests, setFilteredContests] = useState<ContestWithParticipants[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [countsMap, setCountsMap] = useState<Record<string, number>>({});
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+  // Tabs for filtering
+  const TABS = ["All", "Upcoming", "Past", "Active"];
+  const [activeTab, setActiveTab] = useState("All");
+
+  // 1) Fetch contests on mount
+  useEffect(() => {
+    async function fetchContests() {
+      try {
+        const { data, error } = await supabase
+          .from("contests")
+          .select("*")
+          .order("created_at", { ascending: false })
+          .limit(20);
+
+        if (error) throw error;
+        setContests(data || []);
+        setFilteredContests(data || []);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchContests();
+  }, []);
+
+  // 2) Filter contests based on active tab
+  useEffect(() => {
+    if (!contests.length) return;
+
+    const now = new Date();
+    let filtered = contests;
+
+    if (activeTab === "Upcoming") {
+      filtered = contests.filter((c) => {
+        const startTime = new Date(c.start_time);
+        return startTime > now && !c.finished;
+      });
+    } else if (activeTab === "Past") {
+      filtered = contests.filter((c) => c.finished);
+    } else if (activeTab === "Active") {
+      filtered = contests.filter((c) => c.lobby_open || c.submission_open);
+    }
+
+    setFilteredContests(filtered);
+  }, [activeTab, contests]);
+
+  // 3) Delete a contest
+  async function handleDeleteContest(contestId: string) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this contest?"
+    );
+    if (!confirmed) return;
+
+    try {
+      const { error } = await supabase
+        .from("contests")
+        .delete()
+        .eq("id", contestId);
+
+      if (error) throw error;
+
+      setContests((prev) => prev.filter((c) => c.id !== contestId));
+    } catch (err) {
+      alert("Error deleting contest: " + (err as Error).message);
+    }
+  }
+
+  // 4) Navigate to contest details
+  function handleCardClick(contestId: string) {
+    navigate(`/admin/${contestId}`);
+  }
+
+  // 5) Fetch participant counts
+  async function getParticipantCount(contestId: string) {
+    try {
+      const { count, error } = await supabase
+        .from("participants")
+        .select("id", { count: "exact", head: true })
+        .eq("contest_id", contestId);
+
+      if (error) throw error;
+      return count || 0;
+    } catch (error) {
+      console.error("Error fetching participant count:", error);
+      return 0;
+    }
+  }
+
+  useEffect(() => {
+    async function fetchAllCounts() {
+      const map: Record<string, number> = {};
+      for (const contest of contests) {
+        const count = await getParticipantCount(contest.id);
+        map[contest.id] = count;
+      }
+      setCountsMap(map);
+    }
+    if (contests.length) fetchAllCounts();
+  }, [contests]);
+
+  // 6) Format start time
+  function formatStartTime(timeString: string | null | undefined) {
+    if (!timeString) return "No time";
+
+    try {
+      const userTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return formatInTimeZone(new Date(timeString), userTimeZone, "MM/dd/yyyy h:mm a");
+    } catch (error) {
+      console.error("Error formatting date:", timeString, error);
+      return "Invalid date";
+    }
+  }
+
+  // 7) Refresh contests after creation
+  async function handleContestCreated() {
+    try {
+      const { data, error } = await supabase
+        .from("contests")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      setContests((data as ContestWithParticipants[]) || []);
+      setFilteredContests((data as ContestWithParticipants[]) || []);
+    } catch (err) {
+      console.error("Error refreshing contests after creation:", err);
+    }
+  }
+
+  // 8) Handle modal visibility
+  function openCreateModal() {
+    setShowCreateModal(true);
+  }
+  function closeCreateModal() {
+    setShowCreateModal(false);
+  }
+
+  if (loading) {
+    return <div className={styles.loading}>Loading contests...</div>;
+  }
+  if (error) {
+    return <div className={styles.error}>Error: {error}</div>;
+  }
+
+  return (
+    <div className={styles.overviewWrapper}>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.left}>SBHQ</div>
+        <div className={styles.center}>All Contests</div>
+        <div className={styles.right}>Admin</div>
+      </header>
+
+      {/* Tabs */}
+      <div className={styles.tabsRow}>
+        {TABS.map((tab) => (
+          <div
+            key={tab}
+            className={tab === activeTab ? styles.tabActive : styles.tabInactive}
+            onClick={() => setActiveTab(tab)}
+          >
+            {tab}
+          </div>
+        ))}
+      </div>
+
+      {/* Contest Grid */}
+      <div className={styles.grid}>
+        {filteredContests.map((c) => {
+          const participantCount = countsMap[c.id] || 0;
+          const dateFormatted = formatStartTime(c.start_time);
+
+          return (
+            <div
+              key={c.id}
+              className={styles.card}
+              onClick={() => handleCardClick(c.id)}
+            >
+              <div className={styles.dateBadge}>{dateFormatted}</div>
+              <h3 className={styles.cardTitle}>{c.name}</h3>
+              <p className={styles.cardInfo}>{participantCount} Registered</p>
+              <div className={styles.booleansWrapper}>
+                <div>Lobby: {c.lobby_open ? "Open" : "Closed"}</div>
+                <div>Submissions: {c.submission_open ? "Open" : "Closed"}</div>
+                <div>Finished: {c.finished ? "Yes" : "No"}</div>
+              </div>
+              <button
+                className={styles.deleteButton}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleDeleteContest(c.id);
+                }}
+              >
+                Delete
+              </button>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Create Contest Modal */}
+      <button className={styles.fab} onClick={openCreateModal}>
+        +
+      </button>
+      {showCreateModal && (
+        <CreateContestModal
+          onClose={closeCreateModal}
+          onCreated={handleContestCreated}
+        />
+      )}
+    </div>
+  );
+}
+
+export default OverviewScreen;
+
+--- css: src\components\admin\Overview\OverviewScreen.module.css ---
+/* src/components/admin/Overview/OverviewScreen.module.css */
+
+/* Wrapper for entire screen */
+.overviewWrapper {
+  width: 100%;
+  min-height: 100vh;
+  background-color: #f8f8f8; /* light background for contrast */
+  color: #333;
+  padding-bottom: 80px; /* so we can see the FAB if it’s fixed at bottom */
+  box-sizing: border-box;
+}
+
+/* Header with left/center/right items */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #fff;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #ddd;
+  font-weight: 600;
+}
+
+.left {
+  font-size: 1.2rem;
+}
+
+.center {
+  font-size: 1.2rem;
+}
+
+.right {
+  font-size: 1.2rem;
+  color: #666;
+}
+
+/* Tabs row */
+.tabsRow {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem 2rem;
+  background-color: #fff;
+  border-bottom: 1px solid #ddd;
+}
+
+.tabActive,
+.tabInactive {
+  cursor: pointer;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+}
+
+.tabActive {
+  color: #0066cc; /* or your brand's blue */
+  background-color: #e6f2ff; /* faint blue background */
+}
+
+.tabInactive {
+  color: #333;
+  background-color: transparent;
+}
+
+/* Grid for the cards */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 columns */
+  gap: 1.5rem;
+  padding: 2rem;
+}
+
+/* Each card */
+.card {
+  position: relative; /* so we can place the delete button */
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+/* Date badge at top-left */
+.dateBadge {
+  font-size: 0.9rem;
+  color: #0066cc;
+  margin-bottom: 0.5rem;
+}
+
+/* Title of card */
+.cardTitle {
+  font-size: 1.1rem;
+  margin: 0 0 0.5rem;
+  color: #333;
+}
+
+/* small info text */
+.cardInfo {
+  font-size: 0.85rem;
+  color: #555;
+  margin: 0;
+  margin-bottom: 0.5rem;
+}
+
+.booleansWrapper {
+  font-size: 0.85rem;
+  color: #666;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+}
+
+/* The delete button that appears on hover */
+.deleteButton {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  background-color: #ff5555;
+  color: #fff;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.2s;
+  cursor: pointer;
+}
+
+.card:hover .deleteButton {
+  opacity: 1; /* only visible on hover */
+}
+
+.deleteButton:hover {
+  background-color: #ff7777;
+}
+
+/* Loading / error states */
+.loading,
+.error {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+}
+
+/* Floating Action Button */
+.fab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  width: 50px;
+  height: 50px;
+  background-color: #0066cc;
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  font-size: 1.8rem;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.fab:hover {
+  background-color: #0099ff;
+}
+
+
+=== src\components\AuthForm\AuthForm.tsx ===
+--- component ---
+import React, { useState, FormEvent } from "react";
+import LargeButton from "../CustomButton/LargeButton";
+import styles from "./AuthForm.module.css";
+import { supabase } from "../../supabase";
+
+function AuthForm() {
+  const [email, setEmail] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleEmailSubmit = async (event: FormEvent) => {
+    event.preventDefault();
+    setSuccessMessage("");
+    setErrorMessage("");
+
+    if (!email.trim()) {
+      setErrorMessage("Email is required.");
+      return;
+    }
+
+    try {
+      const redirectUrl = process.env.REACT_APP_REDIRECT_URL;
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          shouldCreateUser: true,
+          emailRedirectTo: redirectUrl,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      setSuccessMessage(
+        "Magic link sent! Check your email to log in or register."
+      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message || "Failed to send magic link.");
+      } else {
+        setErrorMessage("Failed to send magic link.");
+      }
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: process.env.REACT_APP_REDIRECT_URL,
+        },
+      });
+
+      if (error) {
+        throw error;
+      }
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMessage(error.message || "Failed to sign in with Google.");
+      } else {
+        setErrorMessage("Failed to sign in with Google.");
+      }
+    }
+  };
+
+  return (
+    <div className={styles.authFormContainer}>
+      <button
+        className={styles.googleButton}
+        onClick={handleGoogleSignIn}
+        type="button"
+      >
+        Continue with Google
+      </button>
+      <div className={styles.divider}>
+        <span>or</span>
+      </div>
+      <form className={styles.form} onSubmit={handleEmailSubmit}>
+        <input
+          className={styles.inputField}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="Email"
+          required
+        />
+        {errorMessage && <div className={styles.error}>{errorMessage}</div>}
+        {successMessage && <div className={styles.success}>{successMessage}</div>}
+        <LargeButton text="Send Magic Link" type="submit" />
+      </form>
+    </div>
+  );
+}
+
+export default AuthForm;
+
+--- css: src\components\AuthForm\AuthForm.module.css ---
+.authFormContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center children horizontally */
+  justify-content: center; /* Center children vertically */
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers all children horizontally */
+  justify-content: center; /* Centers all children vertically */
+  gap: 16px; /* Ensures consistent spacing between form elements */
+  width: 100%; /* Full-screen width to ensure proper alignment */
+}
+
+.inputField {
+  background-color: var(--sernity);
+  width: 300px;
+  height: 64px;
+  border-radius: 8px;
+  color: var(--color-whitesmoke);
+  padding: 8px;
+  font-size: 16px;
+  box-sizing: border-box; /* Add this to include padding in width calculation */
+}
+
+.custom, .googleButton {
+  width: 300px;
+  height: 56px;
+  color: var(--color-whitesmoke);
+  border: none;
+  border-radius: 5px; /* Matching border radius */
+  font-size: 18px;
+  cursor: pointer;
+  display: flex; /* Ensure content alignment inside the button */
+  align-items: center; /* Center vertically */
+  justify-content: center; /* Center horizontally */
+  box-sizing: border-box; /* Add this to include padding in width calculation */
+}
+
+.custom {
+  width: 300px;
+  background-color: var(--green); /* Send Magic Link button style */
+  padding: 8px;
+}
+
+.googleButton {
+  background-color: #608ce5; /* Google blue */
+}
+
+.googleButton:hover {
+  background-color: #507ac5; /* Slightly darker blue for hover */
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%; /* Ensures the divider spans the full width */
+  gap: 8px;
+  color: var(--color-whitesmoke);
+  font-size: 14px;
+  text-align: center;
+  margin: 16px 0;
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background-color: var(--color-whitesmoke);
+}
+
+
+=== src\components\CustomButton\LargeButton.tsx ===
+--- component ---
+import React from 'react';
+import styles from './LargeButton.module.css';
+
+interface CustomButtonProps {
+  text: string;
+  onClick?: () => void;
+  className?: string;
+  id?: string;
+  type?: 'button' | 'submit' | 'reset';
+}
+
+const CustomButton = ({ text, onClick, className, id, type = 'button' }: CustomButtonProps) => {
+  return (
+    <button id={id} type={type} className={`${styles.custom} ${className || ''}`} onClick={onClick}>
+      {text}
+    </button>
+  );
+};
+
+export default CustomButton;
+
+--- css: src\components\CustomButton\LargeButton.module.css ---
+.custom {
+    width: 300px;
+    height: 56px;
+    background-color: var(--green); 
+    color: var(--color-whitesmoke); 
+    border: none;
+    border-radius: 5px;  /* Example border radius */
+    font-size: 18px;
+    cursor: pointer;
+    /* Adjust these values to change the glow effect */
+    /* box-shadow: 0 0 10px var(--green);  */
+}
+
+=== src\components\GameStatsSummary\GameStatsSummary.tsx ===
+--- component ---
+import React from 'react';
+import styles from './GameStatsSummary.module.css';
+import DollarSignIcon from '../../assets/DollarSignIcon.svg';
+import LeaderboardIcon from '../../assets/leaderboard.svg';
+import PersonIcon from '../../assets/person.svg';
+
+interface GameStatsSummaryProps {
+  numberOfRemainingPlayers: number;
+  roundNumber: number;
+  className?: string;
+}
+
+function GameStatsSummary({ numberOfRemainingPlayers, roundNumber, className }: GameStatsSummaryProps) {
+  const chanceOfWinning =
+    numberOfRemainingPlayers > 0 ? ((1 / numberOfRemainingPlayers) * 100).toFixed(2) : '0.00';
+
+  return (
+    <div className={`${styles.statsSummary} ${className || ''}`}>
+      <div className={styles.statItem}>
+        <img src={PersonIcon} alt="Person Icon" className={styles.icon} />
+        <span className={styles.text}>{numberOfRemainingPlayers} players remaining</span>
+      </div>
+      <div className={styles.statItem}>
+        <img src={LeaderboardIcon} alt="Leaderboard Icon" className={styles.icon} />
+        <span className={styles.text}>Round {roundNumber}</span>
+      </div>
+      <div className={styles.statItem}>
+        <img src={DollarSignIcon} alt="Dollar Sign Icon" className={styles.icon} />
+        <span className={styles.text}>{chanceOfWinning}% Chance of Winning</span>
+      </div>
+    </div>
+  );
+}
+
+export default GameStatsSummary;
+
+--- css: src\components\GameStatsSummary\GameStatsSummary.module.css ---
+.statsSummary {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    padding: 10px;
+}
+
+.statItem {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px; /* Space between items */
+}
+
+.icon {
+    margin-right: 8px; /* Space between the icon and the text */
+    width: 18px; /* Set the width of the icons */
+    height: 18px; /* Set the height of the icons */
+}
+
+.text {
+    font-family: Poppins;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 27px; /* 150% */
+    background: var(--green-serenity, linear-gradient(180deg, #01710C 0%, #54627B 100%));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+
+=== src\components\Header\Header.tsx ===
+--- component ---
+import React from "react";
+import styles from "./Header.module.css";
+import { useAuth } from '../../contexts/AuthContext';
+
+import MySvgComponent from "../SVG";
+
+function Header() {
+  const { user } = useAuth();
+
+  return (
+    <header className={styles.header}>
+      <div className={styles.icons}>
+        <MySvgComponent iconType="trophy" height="16px" width="16px" />
+        <div style={{ fontSize: '14px' }}>Superbowl HQ</div>
+      </div>
+      <div className={styles.userName}>
+        {user ? user.user_metadata?.full_name || user.email || 'User' : 'Guest'}
+      </div>
+    </header>
+  );
+}
+
+export default Header;
+
+--- css: src\components\Header\Header.module.css ---
+.header {
+    position: sticky; /* Key change */
+    top: 0;
+    z-index: 1000; /* Ensure it stays above other content */
+    display: flex; 
+    height: 64px; 
+    width: 100%;
+    background-color: rgba(255, 255, 255, 0.5); 
+    flex-direction: row; 
+    align-items: flex-end; 
+    justify-content: space-between; 
+    padding: 0 32px;
+    box-sizing: border-box; 
+    gap: 4px; 
+  }
+  
+
+.userName {
+    font-size: 14px;
+    color: var(--sernity);
+    font-weight: medium;
+}
+
+.icons {
+    display: flex;
+    flex-direction: 'row';
+    align-items: center;
+    gap: 8px;
+    font-size: var(--font-size-xs);
+    color: var(--sernity);
+    font-weight: medium;
+}
+
+=== src\components\MainText\MainText.tsx ===
+--- component ---
+import React, { CSSProperties } from 'react';
+import { Link } from 'react-router-dom';
+import styles from './MainText.module.css';
+
+interface MainTextProps {
+  header: string;
+  subheader: string;
+  linkPath?: string;
+  linkText?: string;
+  gradient?: string;
+  headerStyle?: CSSProperties;
+}
+
+function MainText({ header, subheader, linkPath, linkText, gradient, headerStyle }: MainTextProps) {
+  const textStyle = gradient
+    ? {
+        background: gradient,
+        color: 'transparent',
+        WebkitBackgroundClip: 'text',
+        backgroundClip: 'text',
+      }
+    : {};
+
+  return (
+    <div className={styles.mainText}>
+      <div className={styles.header} style={{ ...textStyle, ...headerStyle }}>
+        {header}
+      </div>
+      <div className={styles.subheader} style={textStyle as CSSProperties}>
+        {subheader}
+        {linkPath && linkText && (
+          <Link to={linkPath} className={styles.link}>
+            {linkText}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export default MainText;
+
+--- css: src\components\MainText\MainText.module.css ---
+.mainText {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0px;
+}
+.header {
+    font-size: var(--h1-size); /* Adjust as needed */
+    font-weight: bold; /* Adjust as needed */
+    background-image: linear-gradient(to right, var(--header-gradient-start), var(--header-gradient-end));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-align: center; 
+}
+
+.subheader {
+    font-size: var(-font-size-xs); /* Adjust as needed */
+    font-weight: 600px; /* Adjust as needed */
+    color: #666; /* Adjust as needed */
+    margin-bottom: 1em; /* Adjust as needed */
+    text-align: center;
+}
+
+
+
+
+=== src\components\PinInput\PinInput.tsx ===
+--- component ---
+import React, { useState, createRef, ChangeEvent, KeyboardEvent } from 'react';
+import styles from './PinInput.module.css';
+
+interface PinInputProps {
+  onPinComplete: (pin: string) => void;
+}
+
+function PinInput({ onPinComplete }: PinInputProps) {
+  const [pins, setPins] = useState<string[]>(Array(6).fill(''));
+  const inputRefs = Array.from({ length: 6 }, () => createRef<HTMLInputElement>());
+
+  const handlePinChange = (index: number, value: string) => {
+    if (!value.match(/[0-9]/) && value !== '') return; // Ensure only numbers are allowed
+
+    const newPins = [...pins];
+    newPins[index] = value;
+    setPins(newPins);
+
+    if (value && index < 5) {
+      inputRefs[index + 1].current?.focus();
+    }
+
+    if (newPins.every((pin) => pin.length === 1)) {
+      onPinComplete(newPins.join(''));
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>, index: number) => {
+    if (e.key === 'Backspace' && !pins[index] && index > 0) {
+      inputRefs[index - 1].current?.focus();
+    }
+  };
+
+  return (
+    <div className={styles.pinInputContainer}>
+      {pins.map((pin, index) => (
+        <input
+          key={index}
+          ref={inputRefs[index]}
+          type="text"
+          value={pin}
+          onChange={(e: ChangeEvent<HTMLInputElement>) => handlePinChange(index, e.target.value)}
+          onKeyDown={(e) => handleKeyDown(e, index)}
+          className={styles.pinInputField}
+          maxLength={1}
+          autoComplete="off"
+        />
+      ))}
+    </div>
+  );
+}
+
+export default PinInput;
+
+--- css: src\components\PinInput\PinInput.module.css ---
+.pinInputContainer {
+    display: flex;
+    justify-content: space-between;
+    width: auto;
+    gap: 8px;
+
+  }
+  
+  .pinInputField {
+    width: 48px;
+    height: 72px;
+    text-align: center;
+    font-size: 44px;
+    font-weight: 600;
+    color: var(--Serenity, #54627B);
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 5px;
+    line-height: 72px;
+    border: 0px;
+  }
+  
+  @media screen and (max-width: 320px) {
+    .pinInputContainer {
+      justify-content: center; /* Center the items horizontally */
+      flex-wrap: wrap; /* Allow items to wrap to the next row */
+    }
+  
+    .pinInputField {
+      width: 40px; /* Adjust the width for smaller screens */
+      height: 60px; /* Adjust the height for smaller screens */
+      font-size: 32px; /* Adjust the font size for smaller screens */
+      line-height: 60px; /* Adjust the line height to match the height */
+      margin-bottom: 8px; /* Add margin bottom for spacing between rows */
+    }
+  
+    .pinInputField:nth-child(3n) {
+      margin-right: 0; /* Remove the right margin for every 3rd item */
+    }
+  }
+
+=== src\components\PlayersList\PlayersList.tsx ===
+--- component ---
+import React from 'react';
+import styles from './PlayersList.module.css';
+
+interface PlayersListProps {
+  players: string[];
+}
+
+function PlayersList({ players }: PlayersListProps) {
+  const MAX_VISIBLE_PLAYERS = 20;
+  const visiblePlayers = players.slice(0, MAX_VISIBLE_PLAYERS);
+  const remainingCount = Math.max(0, players.length - MAX_VISIBLE_PLAYERS);
+
+  return (
+    <div className={styles.playerListContainer}>
+      <h2 className={styles.header}>{players.length} Players in lobby</h2>
+      <div className={styles.playerGrid}>
+        {visiblePlayers.map((player, index) => (
+          <span key={index} className={styles.player}>
+            {player}
+          </span>
+        ))}
+        {remainingCount > 0 && <span className={styles.player}>+{remainingCount} more</span>}
+      </div>
+    </div>
+  );
+}
+
+export default PlayersList;
+
+--- css: src\components\PlayersList\PlayersList.module.css ---
+.playerListContainer {
+    flex: 1;
+    background-color: rgba(248, 249, 250, 0.5); /* 50% transparent background */
+    border-radius: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+    text-align: center;
+    max-width: 300px;
+    width: 100%; /* Ensure it doesn't exceed 300px */
+    height: 325px; /* Fixed height */
+    overflow-y: auto; /* Cut off overflow in the y direction */
+  }
+  
+  .header {
+    margin-top: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #54627B;
+    margin-bottom: 20px;
+  }
+  
+  .playerGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    justify-items: stretch; /* Ensure items are stretched to fit the container */
+  }
+  
+  .player {
+    font-size: 16px;
+    color: #54627B; /* Apply the desired color */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-align: center; /* Center align the text */
+    font-style: italic; /* Make the text italic */
+  }
+  
+
+=== src\screens\Admin\AdminScreen.tsx ===
+--- component ---
+import React from "react";
+import { Outlet } from "react-router-dom";
+import styles from "./AdminScreen.module.css";
+
+function AdminScreen() {
+  return (
+    <div className={styles.adminContainer}>
+      <div className={styles.contentArea}>
+        <Outlet />
+      </div>
+    </div>
+  );
+}
+
+export default AdminScreen;
+
+--- css: src\screens\Admin\AdminScreen.module.css ---
+/* src/screens/Admin/AdminScreen.module.css */
+.adminContainer {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #121212; /* Dark background */
+    color: #fff; /* White text */
+  }
+  
+  .contentArea {
+    flex: 1;
+    overflow-y: auto;
+  }
+  
+
+=== src\screens\Auth\AuthScreen.tsx ===
+--- component ---
+import React from "react";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import AuthForm from "../../components/AuthForm/AuthForm";
+import styles from "./AuthScreen.module.css";
+
+function AuthScreen() {
+  return (
+    <div className={styles.authScreen}>
+      <div className={styles.header}>
+        <Header />
+      </div>
+      <div className={styles.screenContent}>
+        <MainText header="Welcome!" subheader="Sign in to continue." />
+        <AuthForm />
+      </div>
+    </div>
+  );
+}
+
+export default AuthScreen;
+
+--- css: src\screens\Auth\AuthScreen.module.css ---
+.authScreen {
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .header {
+    position: sticky;
+    top: 0;
+    width: 100%;
+  }
+  
+  .screenContent {
+    padding-top: 64px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    align-items: center;
+  }
+  
+
+=== src\screens\Correct\CorrectScreen.tsx ===
+--- component ---
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+
+import { supabase } from "../../supabase";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import GameStatsSummary from "../../components/GameStatsSummary/GameStatsSummary";
+import styles from "./CorrectScreen.module.css";
+
+import { useAuth } from "../../contexts/AuthContext";
+import useRequireState from "../../hooks/useRequireState";
+import type { ContestRow } from "../../types/sbhq";
+
+type Participant = {
+  id: string;
+  user_id: string;
+  active: boolean;
+  contest_id: string;
+  elimination_round: number | null;
+};
+
+function CorrectScreen() {
+  const navigate = useNavigate();
+
+  const { contest } = useRequireState<{ contest: ContestRow }>(["contest"], "/");
+  const { user, isLoading: authLoading } = useAuth();
+
+  const [currentRound, setCurrentRound] = useState<number>(contest?.current_round ?? 1);
+  const [numberOfRemainingPlayers, setNumberOfRemainingPlayers] = useState(0);
+  const [loadingPlayers, setLoadingPlayers] = useState(true);
+
+  useEffect(() => {
+    if (!contest?.id) return;
+
+    const fetchOnMount = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("contests")
+          .select("submission_open, current_round")
+          .eq("id", contest.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching contest state on refresh:", error);
+          return;
+        }
+
+        if (data?.submission_open) {
+          navigate("/question", {
+            replace: true,
+            state: {
+              contest: { ...contest, ...data },
+            },
+          });
+        } else {
+          setCurrentRound(data?.current_round || currentRound);
+        }
+      } catch (err) {
+        console.error("Failed to fetch contest state on refresh:", (err as Error).message);
+      }
+    };
+
+    fetchOnMount();
+  }, [contest, contest?.id, navigate, currentRound]);
+
+  useEffect(() => {
+    if (!contest?.id || !user?.id) return;
+
+    const fetchParticipants = async () => {
+      try {
+        const { data: participants, error } = await supabase
+          .from("participants")
+          .select("*")
+          .eq("contest_id", contest.id);
+
+        if (error) throw error;
+        if (!participants) return;
+
+        const participantRows = participants as Participant[];
+        const activePlayers = participantRows.filter((p) => p.active).length;
+        setNumberOfRemainingPlayers(activePlayers);
+
+        const userParticipant = participantRows.find((p) => p.user_id === user.id);
+        if (!userParticipant || !userParticipant.active) {
+          navigate("/eliminated", { replace: true });
+          return;
+        }
+
+        setLoadingPlayers(false);
+      } catch (err) {
+        console.error("Error fetching participants:", err);
+        setLoadingPlayers(false);
+      }
+    };
+
+    fetchParticipants();
+  }, [contest, contest?.id, user?.id, navigate]);
+
+  useEffect(() => {
+    if (!contest?.id || !user?.id) return;
+
+    const contestChannel = supabase
+      .channel(`contest-${contest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "contests",
+          filter: `id=eq.${contest.id}`,
+        },
+        async (payload: RealtimePostgresChangesPayload<ContestRow>) => {
+          const newRow = payload.new as ContestRow | undefined;
+          const newSubmissionOpen = newRow?.submission_open;
+
+          if (newSubmissionOpen === true) {
+            navigate("/question", {
+              replace: true,
+              state: {
+                contest: { ...contest, ...newRow },
+              },
+            });
+          } else if (newRow?.current_round) {
+            setCurrentRound(newRow.current_round);
+          }
+        }
+      )
+      .subscribe();
+
+    const participantsChannel = supabase
+      .channel(`participants-${contest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "participants",
+          filter: `contest_id=eq.${contest.id}`,
+        },
+        async () => {
+          try {
+            const { data: updatedParticipants, error } = await supabase
+              .from("participants")
+              .select("*")
+              .eq("contest_id", contest.id);
+
+            if (error || !updatedParticipants) return;
+
+            const participantRows = updatedParticipants as Participant[];
+            const activeCount = participantRows.filter((p) => p.active).length;
+            setNumberOfRemainingPlayers(activeCount);
+
+            const userParticipant = participantRows.find((p) => p.user_id === user.id);
+            if (!userParticipant || !userParticipant.active) {
+              navigate("/eliminated", { replace: true });
+            }
+          } catch (err) {
+            console.error("Error refreshing participants:", err);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(contestChannel);
+      supabase.removeChannel(participantsChannel);
+    };
+  }, [contest, contest?.id, user?.id, navigate]);
+
+  useEffect(() => {
+    const blockBack = () => {
+      window.history.pushState(null, document.title, window.location.href);
+    };
+    window.addEventListener("popstate", blockBack);
+    return () => window.removeEventListener("popstate", blockBack);
+  }, []);
+
+  if (authLoading || loadingPlayers) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className={styles.correctScreen}>
+      <Header />
+      <div className={styles.content}>
+        <div className={styles.textWithIcon}>
+          <span className={styles.correctText}>Correct</span>
+          <span className={styles.checkMarkIcon}>✓</span>
+        </div>
+        <MainText
+          header=""
+          subheader="Stay Tuned for the Next Question..."
+          gradient="linear-gradient(180deg, #01710C 0%, #54627B 100%)"
+        />
+      </div>
+      <GameStatsSummary
+        numberOfRemainingPlayers={numberOfRemainingPlayers}
+        roundNumber={currentRound || 1}
+        className={styles.gameStatsSummary}
+      />
+    </div>
+  );
+}
+
+export default CorrectScreen;
+
+--- css: src\screens\Correct\CorrectScreen.module.css ---
+.correctScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 48px;
+}
+
+.textWithIcon {
+    display: flex;
+    align-items: center;
+    font-size: 24px;  
+}
+
+.correctText {
+    font-family: 'Poppins', sans-serif;
+    font-size: 48px;
+    font-weight: 600;
+    background: linear-gradient(180deg, #01710C 0%, #54627B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.checkMarkIcon {
+    font-size: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 5px;  
+    background: linear-gradient(180deg, #01710C 0%, #54627B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: 43px;  
+    height: 43px;
+}
+
+.gameStatsSummary {
+    margin-top: 8px
+}
+
+
+=== src\screens\Eliminated\EliminatedScreen.tsx ===
+--- component ---
+import React, { useState, useEffect } from "react";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import styles from "./EliminatedScreen.module.css";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "../../supabase";
+import { useAuth } from "../../contexts/AuthContext";
+import type { ContestRow } from "../../types/sbhq";
+
+function EliminatedScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
+
+  const { contest } = (location.state || {}) as { contest?: ContestRow };
+
+  const [pollingCount, setPollingCount] = useState(0);
+  const [hasNavigated, setHasNavigated] = useState(false);
+  const maxPollingCount = 10;
+  const pollingInterval = 30000;
+
+  useEffect(() => {
+    if (!contest || !user) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    const pollForReinstatement = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("participants")
+          .select("active, elimination_round")
+          .eq("user_id", user.id)
+          .eq("contest_id", contest.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching participant status:", error.message);
+          return;
+        }
+
+        if (data?.active && data?.elimination_round === null && !hasNavigated) {
+          setHasNavigated(true);
+          navigate("/correct", { replace: true, state: { contest } });
+        }
+      } catch (err) {
+        console.error("Error during polling:", (err as Error).message);
+      }
+    };
+
+    const interval = setInterval(() => {
+      if (pollingCount < maxPollingCount) {
+        pollForReinstatement();
+        setPollingCount((prev) => prev + 1);
+      } else {
+        clearInterval(interval);
+      }
+    }, pollingInterval);
+
+    return () => clearInterval(interval);
+  }, [contest, user, navigate, pollingCount, hasNavigated]);
+
+  const gradientStyle = "linear-gradient(167deg, #710117 29.79%, #54627B 90.89%)";
+
+  return (
+    <div className={styles.eliminatedScreen}>
+      <Header />
+      <div className={styles.content}>
+        <div className={styles.textWithIcon}>
+          <span className={styles.eliminatedText}>Eliminated</span>
+          <span className={styles.xIcon}>✗</span>
+        </div>
+        <MainText header="" subheader="Thanks for playing!" gradient={gradientStyle} />
+      </div>
+    </div>
+  );
+}
+
+export default EliminatedScreen;
+
+--- css: src\screens\Eliminated\EliminatedScreen.module.css ---
+.eliminatedScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+.content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 48px;
+}
+
+.textWithIcon {
+    display: flex;
+    align-items: center;
+    font-size: 24px;  
+}
+
+.eliminatedText {
+    font-family: 'Poppins', sans-serif;
+    font-size: 48px;
+    font-weight: 600;
+    background: linear-gradient(167deg, #710117 29.79%, #54627B 90.89%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.xIcon {
+    font-size: 43px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 12px;  
+    background: linear-gradient(167deg, #710117 29.79%, #54627B 90.89%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    width: 43px;  
+    height: 43px;
+}
+
+
+
+=== src\screens\JoinContests\JoinContestsScreen.tsx ===
+--- component ---
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../../components/Header/Header";
+import ContestCard from "../../components/ContestCard/ContestCard";
+import styles from "./JoinContestsScreen.module.css";
+import { supabase } from "../../supabase";
+import { useAuth } from "../../contexts/AuthContext";
+import type { ContestRow, ParticipantRow } from "../../types/sbhq";
+
+type ContestWithParticipants = ContestRow & { participants?: Array<Partial<ParticipantRow>> };
+
+function JoinContestsScreen() {
+  const navigate = useNavigate();
+  const { user } = useAuth(); // Get the user from the updated AuthContext
+  const [contests, setContests] = useState<ContestWithParticipants[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true); // Track loading state
+
+  // Fetch contests initially
+  useEffect(() => {
+    const fetchContests = async () => {
+      if (!user) {
+        setError("User is not authenticated.");
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("contests")
+          .select(`
+            id,
+            name,
+            start_time,
+            lobby_open,
+            participants:participants(user_id, active)
+          `)
+          .order("start_time", { ascending: true });
+
+        if (error) throw error;
+
+        setContests((data as ContestWithParticipants[]) || []);
+      } catch (err) {
+        console.error("Failed to fetch contests:", (err as Error).message);
+        setError("Failed to load contests. Please try again later.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchContests();
+  }, [user]);
+
+  useEffect(() => {
+    let isRedirected = false; // Track redirection state
+
+    const checkOpenLobbies = async () => {
+      if (isRedirected) return; // Stop polling after redirect
+
+      try {
+        // Step 1: Fetch contests where the user is a participant
+        const { data: userContests, error: participantsError } = await supabase
+          .from("participants")
+          .select("contest_id")
+          .eq("user_id", user?.id);
+
+        if (participantsError) throw participantsError;
+
+        if (userContests.length === 0) {
+          // User is not registered for any contests
+          return;
+        }
+
+        // Step 2: Extract contest IDs from the user's participants data
+        const contestIds = userContests.map((p) => p.contest_id);
+
+        // Step 3: Fetch open lobbies among the contests the user is registered for
+        const { data: openContests, error: contestsError } = await supabase
+          .from("contests")
+          .select("*")
+          .in("id", contestIds) // Narrow search to only relevant contest IDs
+          .eq("lobby_open", true);
+
+        if (contestsError) throw contestsError;
+
+        if (openContests && openContests.length > 0) {
+          // Redirect to the lobby of the first open contest
+          isRedirected = true; // Mark as redirected
+          navigate("/lobby", { state: { contest: openContests[0] } });
+        }
+      } catch (err) {
+        console.error("Failed to check open lobbies:", (err as Error).message);
+      }
+    };
+
+    // Check immediately on mount
+    checkOpenLobbies();
+
+    // Then set up polling
+    const interval = setInterval(checkOpenLobbies, 10000);
+
+    return () => clearInterval(interval);
+  }, [navigate, user]);
+
+  // Handle joining a contest
+  const handleJoinContest = async (contestId: string) => {
+    if (!user) {
+      setError("User is not authenticated. Please log in again.");
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("participants")
+        .insert({
+          contest_id: contestId,
+          user_id: user.id, // Supabase user ID from AuthContext
+          active: true,
+        });
+
+      if (error) throw error;
+
+      // Update local state
+      setContests((prevContests) =>
+        prevContests.map((contest) =>
+          contest.id === contestId
+            ? {
+                ...contest,
+                participants: [
+                  ...(contest.participants || []),
+                  { user_id: user.id, active: true },
+                ],
+              }
+            : contest
+        )
+      );
+    } catch (err) {
+      console.error("Failed to join contest:", (err as Error).message);
+      setError("Failed to join contest. Please try again later.");
+    }
+  };
+
+  // Check if the user is registered
+  const isUserRegistered = (contest: ContestWithParticipants) => {
+    return (
+      Array.isArray(contest.participants) &&
+      contest.participants.some((participant) => participant?.user_id === user?.id)
+    );
+  };
+
+  if (isLoading) {
+    return <div>Loading contests...</div>;
+  }
+
+  return (
+    <div className={styles.joinContestsScreen}>
+      <div className={styles.pregameHeader}>
+        <Header />
+      </div>
+      <div className={styles.screenContent}>
+        <h1 className={styles.contestHeader}>Contests</h1>
+        {error && <p className={styles.error}>{error}</p>}
+        <div className={styles.contestList}>
+          {contests.map((contest) => (
+            <ContestCard
+              key={contest.id}
+              contest={contest}
+              onJoin={handleJoinContest}
+              isRegistered={isUserRegistered(contest)}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default JoinContestsScreen;
+
+--- css: src\screens\JoinContests\JoinContestsScreen.module.css ---
+.joinContestsScreen {
+    height: 100vh; 
+    justify-content: center;
+    align-items: center;
+}
+
+.pregameHeader {
+    width: 100%;
+}
+
+.screenContent {
+    display: flex;
+    padding-top: 40px;
+    flex: 1;
+    flex-direction: column;
+    gap: 16px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .contestList {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  .contestHeader {
+  color: var(--Monkey, #675A4A);
+  text-align: center;
+
+  /* H1 */
+  font-family: Poppins;
+  font-size: 44px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: 0px;
+  }
+
+=== src\screens\Lobby\LobbyScreen.tsx ===
+--- component ---
+import React, { useState, useEffect, useCallback } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import PlayerList from "../../components/PlayersList/PlayersList";
+import styles from "./LobbyScreen.module.css";
+import { supabase } from "../../supabase";
+import type { ContestRow } from "../../types/sbhq";
+
+function LobbyScreen() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { contest } = (location.state || {}) as { contest?: ContestRow }; // Access contest object directly from location state
+  const gradientStyle = "linear-gradient(167deg, #54627B, #303845)";
+  const [players, setPlayers] = useState<string[]>([]);
+  const [timeRemaining, setTimeRemaining] = useState(0);
+
+  const fetchParticipants = useCallback(async () => {
+    if (!contest?.id) {
+      console.error("Contest ID is missing");
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("participants")
+        .select("user_id, active, users(username)")
+        .eq("contest_id", contest.id)
+        .eq("active", true);
+
+      if (error) throw error;
+
+      type ParticipantWithUser = { users?: { username?: string | null } | null };
+      const participantRows = ((data as ParticipantWithUser[]) || []) as ParticipantWithUser[];
+      const activePlayers =
+        participantRows
+          .map((participant) => participant.users?.username || "")
+          .filter((name): name is string => Boolean(name)) || [];
+      setPlayers(activePlayers);
+    } catch (err) {
+      console.error("Failed to fetch participants:", (err as Error).message);
+    }
+  }, [contest?.id]);
+
+  const setupRealtimeListener = useCallback(() => {
+    if (!contest?.id) return null;
+    return supabase
+      .channel(`contest-updates-${contest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "contests",
+          filter: `id=eq.${contest.id}`,
+        },
+        (payload: { new: ContestRow }) => {
+          const updatedContest = payload.new;
+          if (updatedContest?.submission_open) {
+            navigate("/question", { state: { contest: updatedContest } });
+          }
+        }
+      )
+      .subscribe();
+  }, [contest, navigate]);
+
+  // Listen for updates to 'submission_open' in the current contest
+  useEffect(() => {
+    if (!contest?.id) return;
+
+    let subscription: ReturnType<typeof setupRealtimeListener> | null = null;
+
+    const checkSubmissionOpen = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("contests")
+          .select("submission_open")
+          .eq("id", contest.id)
+          .single();
+
+        if (error) {
+          console.error("Error fetching contest:", error);
+          return;
+        }
+
+        if (data?.submission_open) {
+          navigate("/question", { state: { contest } });
+        } else {
+          subscription = setupRealtimeListener();
+          fetchParticipants();
+        }
+      } catch (err) {
+        console.error("Failed to check submission_open:", (err as Error).message);
+      }
+    };
+
+    checkSubmissionOpen();
+
+    return () => {
+      if (subscription) {
+        supabase.removeChannel(subscription);
+      }
+    };
+  }, [contest, contest?.id, fetchParticipants, navigate, setupRealtimeListener]);
+
+  // Update countdown timer
+  useEffect(() => {
+    if (!contest?.start_time) return;
+
+    const contestStartTime = new Date(contest.start_time).getTime();
+
+    const updateTimer = () => {
+      const remaining = calculateTimeRemaining(contestStartTime);
+      setTimeRemaining(remaining);
+
+      if (remaining <= 0) {
+        setTimeRemaining(0); // Prevent negative values
+        if (timerRef) clearInterval(timerRef);
+      }
+    };
+
+    const timerRef = setInterval(updateTimer, 1000);
+
+    updateTimer(); // Set initial timer value
+
+    return () => clearInterval(timerRef);
+  }, [contest?.start_time]);
+
+  // Helper functions
+  function calculateTimeRemaining(startTime: number) {
+    const now = new Date().getTime();
+    return Math.max(startTime - now, 0); // Ensure no negative values
+  }
+
+  function formatTime(ms: number) {
+    const totalSeconds = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, "0")}:${seconds
+      .toString()
+      .padStart(2, "0")}`;
+  }
+
+  if (!contest) {
+    return <div>Loading contest details...</div>;
+  }
+
+  return (
+    <div className={styles.lobbyScreen}>
+      <Header />
+      <div className={styles.content}>
+        <div className={styles.textWithIcon}>
+          <span
+            className={styles.timer}
+            style={{
+              background: gradientStyle,
+              WebkitBackgroundClip: "text",
+              color: "transparent",
+            }}
+          >
+            {formatTime(timeRemaining)}
+          </span>
+        </div>
+        <MainText header=" " subheader="until the game starts..." gradient={gradientStyle} />
+        <PlayerList players={players} />
+      </div>
+    </div>
+  );
+}
+
+export default LobbyScreen;
+
+--- css: src\screens\Lobby\LobbyScreen.module.css ---
+.lobbyScreen {
+    height: 100vh; 
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin-top: 64px;
+}
+
+.timer {
+    font-family: 'Poppins', sans-serif;
+    font-size: 64px;
+    font-weight: 600;
+    background: linear-gradient(167deg, #54627B, #303845);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    line-height: 50%;
+}
+
+
+
+=== src\screens\Pregame\PregameScreen.tsx ===
+--- component ---
+import React from "react";
+import MainText from "../../components/MainText/MainText";
+import Header from "../../components/Header/Header";
+
+import pregameGif from "../../assets/catch_nobg.gif";
+
+import styles from "./PregameScreen.module.css";
+
+function PregameScreen() {
+  return (
+    <div className={styles.pregameScreen}>
+      <div className={styles.pregameHeader}>
+        <Header />
+      </div>
+      <div className={styles.screenContent}>
+        <MainText
+          header="Starting Soon"
+          subheader="Make sure to join the Whatsapp group to stay updated!"
+        />
+        <img
+          src={pregameGif}
+          alt="Pregame Gif"
+          className={styles.pregameGif}
+          style={{ width: 250, height: 250 }}
+        />
+      </div>
+    </div>
+  );
+}
+
+export default PregameScreen;
+
+--- css: src\screens\Pregame\PregameScreen.module.css ---
+.pregameScreen {
+    height: 100vh; 
+    justify-content: center;
+    align-items: center;
+}
+
+.screenContent {
+    display: flex;
+    padding-top: 64px;
+    flex: 1;
+    flex-direction: column;
+    gap: 32px;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .pregameGif {
+    justify-self: center;
+  }
+
+=== src\screens\Question\QuestionScreen.tsx ===
+--- component ---
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import AnswersContainer from "../../components/AnswersContainer/AnswersContainer";
+import styles from "./QuestionScreen.module.css";
+import { useAuth } from "../../contexts/AuthContext";
+import useRequireState from "../../hooks/useRequireState";
+import { supabase } from "../../supabase";
+import type { ContestRow, QuestionRow } from "../../types/sbhq";
+
+type Question = Pick<QuestionRow, "id" | "question" | "options" | "round">;
+
+function QuestionScreen() {
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading } = useAuth();
+  const { contest } = useRequireState<{ contest: ContestRow }>(["contest"], "/login");
+
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [loadingQuestions, setLoadingQuestions] = useState(true);
+  const [errorFetchingQuestions, setErrorFetchingQuestions] = useState<string | null>(null);
+  const [currentRound, setCurrentRound] = useState<number | null>(null);
+
+  // We'll store a local error message if an inactive user tries to submit
+  const [inactiveError, setInactiveError] = useState("");
+
+  const handleBlankSubmission = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const { data: participant, error: participantError } = await supabase
+        .from("participants")
+        .select("id, active")
+        .eq("user_id", user.id)
+        .eq("contest_id", contest.id)
+        .single();
+
+      if (participantError || !participant) {
+        return;
+      }
+
+      const participantId = participant.id;
+
+      const { error } = await supabase.from("answers").insert({
+        contest_id: contest.id,
+        participant_id: participantId,
+        round: currentRound,
+        answer: null,
+        timestamp: new Date().toISOString(),
+      });
+
+      if (error) {
+        throw new Error("Failed to submit blank answer.");
+      }
+    } catch (err) {
+      console.error("Error submitting blank answer:", (err as Error).message);
+    }
+  }, [contest.id, currentRound, user?.id]);
+
+  // 1) On mount, fetch the current contest data & questions
+  useEffect(() => {
+    if (!contest) {
+      console.error("Contest data is missing.");
+      return;
+    }
+
+    const fetchContestData = async () => {
+      try {
+        const { data: contestData, error: contestError } = await supabase
+          .from("contests")
+          .select("submission_open, current_round")
+          .eq("id", contest.id)
+          .single();
+
+        if (contestError) throw contestError;
+
+        setCurrentRound(contestData.current_round);
+
+        if (!contestData.submission_open) {
+          await handleBlankSubmission();
+          navigate("/eliminated", { state: { contest } });
+          return;
+        }
+
+        const { data: questionsData, error: questionsError } = await supabase
+          .from("questions")
+          .select("id, question, options, round")
+          .eq("contest_id", contest.id)
+          .eq("round", contestData.current_round);
+
+        if (questionsError) throw questionsError;
+
+        if (!questionsData || questionsData.length === 0) {
+          setQuestions([]);
+          setErrorFetchingQuestions("No questions found for this round.");
+        } else {
+          setQuestions(questionsData as Question[]);
+        }
+      } catch (err) {
+        console.error("Error fetching contest data:", (err as Error).message);
+        setErrorFetchingQuestions("There was an error fetching contest data.");
+      } finally {
+        setLoadingQuestions(false);
+      }
+    };
+
+    fetchContestData();
+
+    // Real-time subscription to see if submissions get closed for this contest
+    const contestChannel = supabase
+      .channel(`contest-${contest.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "contests",
+          filter: `id=eq.${contest.id}`,
+        },
+        async (payload) => {
+          if (payload.new.submission_open === false) {
+            await handleBlankSubmission();
+            navigate("/eliminated", { state: { contest } });
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(contestChannel);
+    };
+  }, [contest, navigate, handleBlankSubmission]);
+
+  // 4) Handle Submit
+  const handleSubmit = async (selectedAnswer: string, questionId: string) => {
+    if (!user?.id) {
+      setInactiveError("You must be logged in to submit.");
+      return;
+    }
+    setInactiveError("");
+  
+    if (!selectedAnswer) {
+      alert("Please select an answer before submitting.");
+      return;
+    }
+  
+    try {
+      const { data: participant, error: participantError } = await supabase
+        .from("participants")
+        .select("id, active")
+        .eq("user_id", user.id)
+        .eq("contest_id", contest.id)
+        .single();
+  
+      if (participantError || !participant) {
+        throw new Error("Could not find participant information.");
+      }
+  
+      if (!participant.active) {
+        setInactiveError("You are no longer active in this contest.");
+        return;
+      }
+  
+      const { error: answerError } = await supabase.from("answers").insert({
+        contest_id: contest.id,
+        participant_id: participant.id,
+        round: currentRound,
+        question_id: questionId, 
+        answer: selectedAnswer,
+        timestamp: new Date().toISOString(),
+      });
+  
+      if (answerError) {
+        throw new Error("Failed to submit the answer.");
+      }
+  
+      navigate("/submitted", {
+        state: {
+          contest,
+          questionId,
+          selectedAnswer,
+          userId: user.id,
+        },
+      });
+    } catch (err) {
+      console.error("Error during submission:", (err as Error).message);
+      alert("There was an error submitting your answer. Please try again.");
+    }
+  };
+
+
+  // 6) Loading states
+  if (authLoading) return <div>Loading user information...</div>;
+  if (loadingQuestions) return <div>Loading questions...</div>;
+  if (errorFetchingQuestions) return <div>Error: {errorFetchingQuestions}</div>;
+
+  // 7) UI display
+  const currentQuestion = questions[currentQuestionIndex];
+  const questionText = currentQuestion
+    ? currentQuestion.question
+    : "No question available";
+  const questionAnswers = currentQuestion ? currentQuestion.options : [];
+
+  return (
+    <div className={styles.questionScreen}>
+      <div className={styles.header}>
+        <Header />
+      </div>
+      <div className={styles.screenContent}>
+        <MainText
+          header={`Round ${currentRound || "..."}`}
+          subheader="Choose Wisely!"
+        />
+        {/* Show an error if user tries to submit while inactive */}
+        {inactiveError && (
+          <div className={styles.errorMessage}>{inactiveError}</div>
+        )}
+        <div className={styles.questionBlock}>
+          <div className={styles.questionText}>{questionText}</div>
+          {currentQuestion && (
+            <AnswersContainer
+              answers={questionAnswers}
+              onSubmit={(selectedAnswer: string) => handleSubmit(selectedAnswer, currentQuestion.id)}
+            />
+          )}
+          {questions.length > 1 && (
+            <div className={styles.navigationButtons}>
+              <button
+                className={styles.actionButton}
+                onClick={() => setCurrentQuestionIndex((prev) => prev - 1)}
+                disabled={currentQuestionIndex === 0}
+              >
+                Previous
+              </button>
+              <button
+                className={styles.actionButton}
+                onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}
+                disabled={currentQuestionIndex === questions.length - 1}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default QuestionScreen;
+
+--- css: src\screens\Question\QuestionScreen.module.css ---
+.questionScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh; /* Ensures the screen takes at least the full height of the viewport */
+    overflow-x: hidden;
+}
+
+.header {
+    width: 100%; /* Full width */
+    margin-bottom: 20px; /* Space below the header */
+}
+
+.screenContent {
+    width: 100%; /* Full width */
+    max-width: 600px; /* Max width for larger screens, adjust as needed */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px; /* Padding inside the content area */
+    border-radius: 10px; /* Optional: rounded corners */
+}
+
+.questionText {
+    font-size: 18px; /* Adjust font size as necessary */
+    margin-bottom: 20px; /* Space below the question text */
+    text-align: center; /* Center-align the text */
+    color: var(--Sernity, #54627B);
+    text-align: center;
+    font-family: Poppins;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 27px; /* 150% */
+    max-width: 216px;
+}
+
+.questionBlock {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* gap: 12px; Space between each question block */
+    width: 100%; /* Full width */
+}
+
+=== src\screens\Submitted\SubmittedScreen.tsx ===
+--- component ---
+import React, { useState, useEffect, useCallback } from "react";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import styles from "./SubmittedScreen.module.css";
+import ballGif from "../../assets/ball.gif";
+import { useNavigate, useLocation } from "react-router-dom";
+import { supabase } from "../../supabase";
+import type { ContestRow } from "../../types/sbhq";
+import type { RealtimePostgresChangesPayload } from "@supabase/supabase-js";
+
+function SubmittedScreen() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { contest, questionId, selectedAnswer } = (location.state || {}) as {
+    contest?: ContestRow;
+    questionId?: string;
+    selectedAnswer?: string;
+  };
+
+  const [correctAnswer, setCorrectAnswer] = useState<string | null>(null);
+  const [statusChecked, setStatusChecked] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [hasNavigated, setHasNavigated] = useState(false);
+
+  // Validate required state and redirect if missing
+  useEffect(() => {
+    if (!contest?.id || !questionId || selectedAnswer === undefined) {
+      navigate("/", {
+        replace: true,
+        state: { message: "Invalid submission data." },
+      });
+    }
+  }, [contest, questionId, selectedAnswer, navigate]);
+
+  // Initial fetch for the correct answer
+  useEffect(() => {
+    if (!questionId) return;
+
+    const fetchCorrectAnswer = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("questions")
+          .select("correct_option")
+          .eq("id", questionId)
+          .single();
+
+        if (error) throw error;
+
+        if (data?.correct_option !== null) {
+          setCorrectAnswer(data.correct_option);
+          setStatusChecked(true);
+        }
+      } catch (err) {
+        console.error("Error fetching correct answer:", (err as Error).message);
+        setError("Error fetching correct answer.");
+      }
+    };
+
+    fetchCorrectAnswer();
+  }, [questionId]);
+
+  // Real-time listener for the correct_option field
+  const setupRealtimeListener = useCallback(() => {
+    if (!questionId) return undefined;
+
+    const channel = supabase
+      .channel(`question-${questionId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "questions",
+          filter: `id=eq.${questionId}`,
+        },
+        (payload: RealtimePostgresChangesPayload<{ correct_option: string | null }>) => {
+          const updatedCorrectOption =
+            (payload.new as { correct_option: string | null } | undefined)?.correct_option;
+
+          if (updatedCorrectOption !== null && updatedCorrectOption !== undefined) {
+            setCorrectAnswer(updatedCorrectOption);
+            setStatusChecked(true);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [questionId]);
+
+  useEffect(() => {
+    const cleanup = setupRealtimeListener();
+    return cleanup;
+  }, [questionId, setupRealtimeListener]);
+
+  // Handle visibility changes to re-establish connection
+  useEffect(() => {
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState === "visible") {
+        // Perform a manual poll to fetch the latest correct_option
+        try {
+          const { data, error } = await supabase
+            .from("questions")
+            .select("correct_option")
+            .eq("id", questionId)
+            .single();
+
+          if (error) {
+          console.error("Error during manual poll:", error);
+          return;
+        }
+
+          if (data?.correct_option !== null) {
+            setCorrectAnswer(data.correct_option);
+            setStatusChecked(true);
+          }
+
+          setupRealtimeListener();
+        } catch (err) {
+          console.error("Error fetching correct answer during visibility check:", (err as Error).message);
+        }
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [questionId, setupRealtimeListener]);
+
+  // Evaluate the user's answer when the correct answer is set
+  useEffect(() => {
+    if (statusChecked && !hasNavigated) {
+      if (selectedAnswer === correctAnswer) {
+        setHasNavigated(true);
+        navigate("/correct", { replace: true, state: { contest, questionId } });
+      } else {
+        setHasNavigated(true);
+        navigate("/eliminated", {
+          replace: true,
+          state: { contest, questionId },
+        });
+      }
+    }
+  }, [
+    statusChecked,
+    selectedAnswer,
+    correctAnswer,
+    navigate,
+    contest,
+    questionId,
+    hasNavigated,
+  ]);
+
+  return (
+    <div className={styles.submittedScreen}>
+      <div className={styles.headerContainer}>
+        <Header />
+      </div>
+      <div className={styles.mainTextContainer}>
+        <MainText header="Submitted!" subheader="Awaiting Results..." />
+      </div>
+      <div className={styles.gifContainer}>
+        <img
+          src={ballGif}
+          alt="Awaiting results"
+          className={styles.ballGif}
+          style={{ width: 250, height: 250 }}
+        />
+      </div>
+
+      {/* Display error message if any */}
+      {error && <p className={styles.error}>{error}</p>}
+    </div>
+  );
+}
+
+export default SubmittedScreen;
+
+--- css: src\screens\Submitted\SubmittedScreen.module.css ---
+.submittedScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+.headerContainer {
+    width: 100%;  
+    margin-bottom: 20px; 
+}
+
+.mainTextContainer {
+    width: 100%;      
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;  
+    padding: 20px;
+}
+
+.gifContainer {
+    width: 100%;  
+    display: flex;
+    justify-content: center;
+}
+
+.ballGif {
+    justify-self: center;
+}
+
+.waitingContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.message {
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+.error {
+    color: red;
+    font-size: 1.2em;
+    margin-top: 10px;
+}
+
+=== src\screens\VerificationScreen\VerificationScreen.tsx ===
+--- component ---
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import Header from "../../components/Header/Header";
+import MainText from "../../components/MainText/MainText";
+import UsernameInput from "../../components/UsernameInput/UsernameInput";
+import styles from "./VerificationScreen.module.css";
+import { supabase } from "../../supabase";
+import type { Role } from "../../types/sbhq";
+
+function VerificationScreen() {
+  const navigate = useNavigate();
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [userHasUsername, setUserHasUsername] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [role, setRole] = useState<Role>(null);
+  const hasFetchedData = useRef(false);
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      if (hasFetchedData.current) return;
+      hasFetchedData.current = true;
+
+      try {
+        const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError || !sessionData?.session) {
+          console.error("Failed to fetch session:", sessionError);
+          throw new Error("Failed to get current session");
+        }
+
+        const { user } = sessionData.session;
+        setCurrentUserId(user.id);
+
+        const { data, error } = await supabase
+          .from("users")
+          .select("username, role")
+          .eq("id", user.id)
+          .single();
+
+        if (error) throw new Error("Error checking user details in the database");
+
+        setUserHasUsername(!!data?.username);
+        setRole(data?.role);
+
+        if (data?.username) {
+          // Determine redirect path based on role
+          const redirectPath = data?.role === 'admin' ? '/admin' : '/join-contests';
+          setTimeout(() => {
+            navigate(redirectPath);
+          }, 1000);
+        }
+      } catch (err) {
+        console.error("Error in fetchUserData:", (err as Error).message);
+        setError((err as Error).message || "An unexpected error occurred.");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+
+    return () => {
+      hasFetchedData.current = false;
+    };
+  }, [navigate]);
+
+  const handleUsernameSubmit = async (username: string) => {
+    setIsLoading(true);
+    try {
+      const { error } = await supabase
+        .from("users")
+        .update({ username })
+        .eq("id", currentUserId);
+
+      if (error) throw new Error("Failed to save username");
+
+      // Redirect based on role after username submission
+      const redirectPath = role === 'admin' ? '/admin' : '/join-contests';
+      navigate(redirectPath);
+    } catch (err) {
+      console.error("Error in handleUsernameSubmit:", (err as Error).message);
+      setError((err as Error).message || "An unexpected error occurred.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  return (
+    <div className={styles.verificationScreen}>
+      <div className={styles.header}>
+        <Header />
+      </div>
+      <div className={styles.content}>
+        {userHasUsername ? (
+          <MainText
+            header={`Welcome Back, ${role === "admin" ? "Admin" : "User"}!`}
+            subheader={`Redirecting you to ${role === 'admin' ? 'the admin dashboard' : 'your contests'}...`}
+          />
+        ) : (
+          <>
+            <MainText
+              header="Set Your Username"
+              subheader="Please choose a unique username to complete your profile."
+            />
+            <UsernameInput onSubmit={handleUsernameSubmit} />
+          </>
+        )}
+        {error && <div className={styles.error}>{error}</div>}
+      </div>
+    </div>
+  );
+}
+
+export default VerificationScreen;
+
+--- css: src\screens\VerificationScreen\VerificationScreen.module.css ---
+.verificationScreen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+    overflow-x: hidden;
+}
+
+.content {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 0px;
+}
+
+.header {
+    width: 100%; 
+    margin-bottom: 20px; 
+} 
+
+
