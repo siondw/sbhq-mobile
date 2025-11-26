@@ -7,14 +7,14 @@ import { PLAYER_STATE } from '../logic/constants';
 import Text from '../ui/primitives/Text';
 import Countdown from '../ui/primitives/Countdown';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
 import Header from '../ui/Header';
 
 const PregameScreen = () => {
   const params = useLocalSearchParams<{ contestId?: string; startTime?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
-  const { playerState, contest } = useContestState(params.contestId, derivedUser?.id);
+  const { playerState, contest, loading } = useContestState(params.contestId, derivedUser?.id);
 
   const targetTime = params.startTime
     ? new Date(params.startTime).getTime()
@@ -23,7 +23,7 @@ const PregameScreen = () => {
       : Date.now();
 
   useEffect(() => {
-    if (!params.contestId) return;
+    if (!params.contestId || loading) return;
     if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: '/lobby', params: { contestId: params.contestId } });
     } else if (playerState === PLAYER_STATE.ANSWERING) {
@@ -37,21 +37,23 @@ const PregameScreen = () => {
     } else if (playerState === PLAYER_STATE.WINNER) {
       router.replace('/winner');
     }
-  }, [playerState, router, params.contestId]);
+  }, [playerState, router, params.contestId, loading]);
 
   return (
     <View style={styles.container}>
       <Header />
-      <Card>
-        <Text weight="bold" style={styles.title}>
-          Starting Soon
-        </Text>
-        <Text style={styles.body}>Contest: {contest?.name ?? params.contestId ?? 'Unknown'}</Text>
-        <View style={styles.countdown}>
-          <Countdown targetTime={targetTime} />
-        </View>
-        <Text style={styles.body}>We’ll move you into the lobby when it opens.</Text>
-      </Card>
+      <View style={styles.content}>
+        <Card>
+          <Text weight="bold" style={styles.title}>
+            Starting Soon
+          </Text>
+          <Text style={styles.body}>Contest: {contest?.name ?? params.contestId ?? 'Unknown'}</Text>
+          <View style={styles.countdown}>
+            <Countdown targetTime={targetTime} />
+          </View>
+          <Text style={styles.body}>We’ll move you into the lobby when it opens.</Text>
+        </Card>
+      </View>
     </View>
   );
 };
@@ -59,8 +61,12 @@ const PregameScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.MD,
+    paddingHorizontal: SPACING.MD,
+    paddingTop: HEADER_HEIGHT + SPACING.MD,
     backgroundColor: COLORS.BACKGROUND,
+  },
+  content: {
+    flex: 1,
     justifyContent: 'center',
   },
   title: {

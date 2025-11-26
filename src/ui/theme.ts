@@ -27,6 +27,8 @@ export const RADIUS = {
   LG: 16,
 };
 
+export const HEADER_HEIGHT = 64;
+
 export const TYPOGRAPHY = {
   TITLE: 24,
   SUBTITLE: 18,

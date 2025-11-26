@@ -156,15 +156,15 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-  }, [contestId, participant?.id, contest?.current_round]);
+  }, [contestId, participant?.id]);
 
   useEffect(() => {
     const loadCurrentQuestion = async () => {
-      if (!contest || !contestId) return;
+      if (!contestId || !contest?.current_round) return;
       try {
-        const roundQuestion = await getQuestionForRound(contest.id, contest.current_round);
+        const roundQuestion = await getQuestionForRound(contestId, contest.current_round);
         setQuestion(roundQuestion);
-        if (participant && roundQuestion) {
+        if (participant?.id && roundQuestion) {
           const existingAnswer = await getAnswerForQuestion(participant.id, roundQuestion.id);
           setAnswer(existingAnswer);
         } else {
@@ -176,7 +176,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     };
 
     void loadCurrentQuestion();
-  }, [contest, contestId, participant]);
+  }, [contest?.current_round, contestId, participant?.id]);
 
   const playerState = useMemo(
     () => derivePlayerState(contest, participant, question, answer),

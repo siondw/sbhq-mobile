@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ImageBackground, TextInput } from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, TextInput } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, RADIUS, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import Header from '../ui/Header';
 
 const LoginScreen = () => {
   const { loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
@@ -42,23 +43,9 @@ const LoginScreen = () => {
     setVerifying(false);
   };
 
-  const heroGradient = useMemo(
-    () => ({
-      backgroundColor: COLORS.PRIMARY_DARK,
-    }),
-    [],
-  );
-
   return (
-    <ImageBackground style={styles.container} source={undefined} resizeMode="cover">
-      <View style={styles.header}>
-        <View style={[styles.hero, heroGradient]}>
-          <Text weight="bold" style={styles.heroText}>
-            SBHQ
-          </Text>
-          <Text style={styles.heroSubtext}>Live sports-prop contests</Text>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <Header />
       <View style={styles.card}>
         <Text weight="bold" style={styles.title}>
           Login
@@ -108,7 +95,7 @@ const LoginScreen = () => {
           )}
         </View>
       </View>
-    </ImageBackground>
+    </View>
   );
 };
 
@@ -117,22 +104,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
     paddingHorizontal: SPACING.MD,
-    paddingTop: SPACING.XL,
-  },
-  header: {
-    marginBottom: SPACING.LG,
-  },
-  hero: {
-    borderRadius: RADIUS.LG,
-    padding: SPACING.LG,
-  },
-  heroText: {
-    color: '#fff',
-    fontSize: TYPOGRAPHY.TITLE,
-  },
-  heroSubtext: {
-    color: '#E5E7EB',
-    marginTop: 4,
+    paddingTop: HEADER_HEIGHT + SPACING.LG,
   },
   card: {
     backgroundColor: COLORS.SURFACE,

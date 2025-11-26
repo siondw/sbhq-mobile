@@ -8,7 +8,7 @@ import { useAuth } from '../logic/auth/useAuth';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
 import Header from '../ui/Header';
 
 const ContestListScreen = () => {
@@ -82,9 +82,10 @@ const ContestListScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <Text weight="bold" style={styles.title}>
-        Contests
-      </Text>
+      <View style={styles.content}>
+        <Text weight="bold" style={styles.title}>
+          Contests
+        </Text>
       <FlatList
         data={contests}
         keyExtractor={(item) => item.id}
@@ -103,6 +104,7 @@ const ContestListScreen = () => {
         ItemSeparatorComponent={() => <View style={styles.spacer} />}
         ListEmptyComponent={<Text>No contests available.</Text>}
       />
+      </View>
     </View>
   );
 };
@@ -110,8 +112,12 @@ const ContestListScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.MD,
     backgroundColor: COLORS.BACKGROUND,
+    paddingTop: HEADER_HEIGHT + SPACING.MD,
+  },
+  content: {
+    paddingHorizontal: SPACING.MD,
+    flex: 1,
   },
   center: {
     flex: 1,

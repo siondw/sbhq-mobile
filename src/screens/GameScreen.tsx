@@ -8,7 +8,7 @@ import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
 import AnswerOption from '../ui/primitives/AnswerOption';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
 import Header from '../ui/Header';
 
 interface GameScreenProps {
@@ -38,7 +38,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   };
 
   useEffect(() => {
-    if (!contestId) return;
+    if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
     if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: '/lobby', params: { contestId, startTime: contest?.start_time } });
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
@@ -50,7 +50,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     } else if (playerState === PLAYER_STATE.WINNER) {
       router.replace('/winner');
     }
-  }, [playerState, router, contestId, contest?.start_time]);
+  }, [playerState, router, contestId, contest?.start_time, loading]);
 
   if (loading) {
     return (
@@ -74,28 +74,30 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   return (
     <View style={styles.container}>
       <Header />
-      <Text weight="bold" style={styles.title}>
-        {contest?.name ?? 'Contest'}
-      </Text>
-      <Text style={styles.subtitle}>{`Round ${contest?.current_round ?? '?'}`}</Text>
-      <Text weight="medium" style={styles.state}>
-        State: {playerState}
-      </Text>
-
-      <Card>
-        <Text weight="bold" style={styles.question}>
-          {question?.question ?? 'Waiting for question…'}
+      <View style={styles.content}>
+        <Text weight="bold" style={styles.title}>
+          {contest?.name ?? 'Contest'}
         </Text>
-        {options.map((option) => (
-          <AnswerOption
-            key={option.key}
-            label={option.label}
-            selected={answer?.answer === option.key}
-            disabled={playerState !== PLAYER_STATE.ANSWERING}
-            onPress={() => handleSubmit(option.key)}
-          />
-        ))}
-      </Card>
+        <Text style={styles.subtitle}>{`Round ${contest?.current_round ?? '?'}`}</Text>
+        <Text weight="medium" style={styles.state}>
+          State: {playerState}
+        </Text>
+
+        <Card>
+          <Text weight="bold" style={styles.question}>
+            {question?.question ?? 'Waiting for question…'}
+          </Text>
+          {options.map((option) => (
+            <AnswerOption
+              key={option.key}
+              label={option.label}
+              selected={answer?.answer === option.key}
+              disabled={playerState !== PLAYER_STATE.ANSWERING}
+              onPress={() => handleSubmit(option.key)}
+            />
+          ))}
+        </Card>
+      </View>
     </View>
   );
 };
@@ -103,8 +105,12 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.MD,
     backgroundColor: COLORS.BACKGROUND,
+    paddingTop: HEADER_HEIGHT + SPACING.MD,
+  },
+  content: {
+    paddingHorizontal: SPACING.MD,
+    flex: 1,
   },
   center: {
     flex: 1,

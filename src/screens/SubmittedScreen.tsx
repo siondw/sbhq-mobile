@@ -7,7 +7,7 @@ import { PLAYER_STATE } from '../logic/constants';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
 import Header from '../ui/Header';
 
 const SubmittedScreen = () => {
@@ -53,12 +53,14 @@ const SubmittedScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <Card>
-        <Text weight="bold" style={styles.title}>
-          Submitted
-        </Text>
-        <Text style={styles.body}>You are locked in. Waiting for the result…</Text>
-      </Card>
+      <View style={styles.content}>
+        <Card>
+          <Text weight="bold" style={styles.title}>
+            Submitted
+          </Text>
+          <Text style={styles.body}>You are locked in. Waiting for the result…</Text>
+        </Card>
+      </View>
     </View>
   );
 };
@@ -66,9 +68,12 @@ const SubmittedScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.MD,
     backgroundColor: COLORS.BACKGROUND,
-    alignItems: 'center',
+    paddingTop: HEADER_HEIGHT + SPACING.MD,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING.MD,
     justifyContent: 'center',
   },
   center: {

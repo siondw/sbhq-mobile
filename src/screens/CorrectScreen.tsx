@@ -7,7 +7,7 @@ import { PLAYER_STATE } from '../logic/constants';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
 import Header from '../ui/Header';
 
 const CorrectScreen = () => {
@@ -53,12 +53,14 @@ const CorrectScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <Card>
-        <Text weight="bold" style={styles.title}>
-          Correct!
-        </Text>
-        <Text style={styles.body}>Nice work. Waiting for the next round.</Text>
-      </Card>
+      <View style={styles.content}>
+        <Card>
+          <Text weight="bold" style={styles.title}>
+            Correct!
+          </Text>
+          <Text style={styles.body}>Nice work. Waiting for the next round.</Text>
+        </Card>
+      </View>
     </View>
   );
 };
@@ -66,9 +68,12 @@ const CorrectScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: SPACING.MD,
     backgroundColor: COLORS.BACKGROUND,
-    alignItems: 'center',
+    paddingTop: HEADER_HEIGHT + SPACING.MD,
+  },
+  content: {
+    flex: 1,
+    paddingHorizontal: SPACING.MD,
     justifyContent: 'center',
   },
   center: {
