@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+echo "🧹 Cleaning node_modules and lockfile..."
+rm -rf node_modules package-lock.json yarn.lock
+
+echo "📦 Reinstalling dependencies..."
+npm install
+
+echo "✓ Clean reinstall done."

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -e
+
+if [ -z "$1" ]; then
+  echo "❗ Usage: ./scripts/push \"commit message\""
+  exit 1
+fi
+
+echo "📦 Staging all changes..."
+git add .
+
+echo "📝 Committing with message: $1"
+git commit -m "$1"
+
+echo "⬆️  Pushing..."
+git push
+
+echo "✓ Done."

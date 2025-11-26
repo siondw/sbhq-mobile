@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+echo "🎨 Formatting code with Prettier..."
+npx prettier . --write
+
+echo "🔍 Running ESLint..."
+npx eslint . --ext .ts,.tsx --fix
+
+echo "✓ Formatting complete."

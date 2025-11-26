@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -e
+
+echo "📁 Full repo structure (ignoring .gitignore):"
+echo
+
+tracked=$(git ls-files)
+
+# Extract folder paths
+dirs=$(echo "$tracked" | sed 's|/[^/]*$||' | sort -u | awk 'NF')
+
+# Pretty print
+while IFS= read -r dir; do
+  IFS='/' read -ra PARTS <<< "$dir"
+  indent=""
+  for ((i=1; i<${#PARTS[@]}; i++)); do
+    indent="$indent  "
+  done
+  echo "${indent}${PARTS[-1]}/"
+done <<< "$dirs"
+
+echo
+echo "✓ Done."

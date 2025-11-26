@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+if command -v tree >/dev/null 2>&1; then
+  echo "📁 src/ folder structure:"
+  tree -d src
+else
+  echo "📁 src/ folder structure (via find):"
+  find src -type d | sed 's/^\.\///'
+fi
