@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, TextInput } from 'react-native';
+import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
+import Header from '../ui/Header';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT, RADIUS } from '../ui/theme';
-import Header from '../ui/Header';
+import { COLORS, HEADER_HEIGHT, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const LoginScreen = () => {
   const { loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
@@ -47,107 +47,212 @@ const LoginScreen = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <Header />
-      <View style={styles.content}>
-        <Text weight="bold" style={styles.title}>
-          Login
-        </Text>
-        {error ? (
-          <Text style={styles.errorText} weight="medium">
-            {error}
-          </Text>
-        ) : null}
-        {message ? (
-          <Text style={styles.message} weight="medium">
-            {message}
-          </Text>
-        ) : null}
-        <View style={styles.field}>
-          <TextInput
-            style={styles.input}
-            placeholder="Email"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={email}
-            onChangeText={setEmail}
-            editable={!sending && !verifying}
-          />
-        </View>
-        {otpSent && (
-          <View style={styles.field}>
-            <TextInput
-              style={styles.input}
-              placeholder="Enter code"
-              keyboardType="number-pad"
-              value={otp}
-              onChangeText={setOtp}
-              editable={!verifying}
-            />
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.select({ ios: 'padding', android: undefined })}
+        keyboardVerticalOffset={HEADER_HEIGHT}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+          <View style={styles.hero}>
+            <Text weight="bold" style={styles.title}>
+              Welcome!
+            </Text>
+            <Text weight="medium" style={styles.subtitle}>
+              Sign in to continue.
+            </Text>
           </View>
-        )}
-        <View style={styles.buttons}>
-          <Button label="Continue with Google" onPress={handleGoogle} disabled={loading || sending || verifying} />
-          <View style={styles.spacer} />
-          <Button label={otpSent ? 'Resend Email OTP' : 'Send Email OTP'} onPress={() => void handleEmailOtp()} disabled={loading || sending} />
-          {otpSent && (
-            <>
-              <View style={styles.spacer} />
-              <Button variant="secondary" label="Verify Email OTP" onPress={() => void handleVerifyOtp()} disabled={loading || verifying} />
-            </>
-          )}
-        </View>
-      </View>
+
+          <View style={styles.form}>
+            <Pressable
+              style={({ pressed }) => [styles.googleButton, pressed && styles.googlePressed]}
+              onPress={handleGoogle}
+              disabled={loading || sending || verifying}
+              >
+              <Text weight="semibold" style={styles.googleLabel}>
+                Continue with Google
+              </Text>
+            </Pressable>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <View style={styles.field}>
+              <TextInput
+                style={styles.input}
+                placeholder="Email"
+                placeholderTextColor="rgba(255,255,255,0.75)"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                value={email}
+                onChangeText={setEmail}
+                editable={!sending && !verifying}
+              />
+            </View>
+
+            {otpSent && (
+              <View style={styles.field}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter code"
+                  placeholderTextColor="rgba(255,255,255,0.75)"
+                  keyboardType="number-pad"
+                  value={otp}
+                  onChangeText={setOtp}
+                  editable={!verifying}
+                />
+              </View>
+            )}
+
+            {error ? (
+              <Text style={styles.errorText} weight="medium">
+                {error}
+              </Text>
+            ) : null}
+            {message ? (
+              <Text style={styles.message} weight="medium">
+                {message}
+              </Text>
+            ) : null}
+
+            <View style={styles.buttons}>
+              <View style={styles.buttonWrapper}>
+                <Button
+                  label={otpSent ? 'Resend Email OTP' : 'Send Email OTP'}
+                  onPress={() => void handleEmailOtp()}
+                  disabled={loading || sending}
+                />
+              </View>
+              {otpSent && (
+                <View style={styles.buttonWrapper}>
+                  <Button
+                    variant="secondary"
+                    label="Verify Email OTP"
+                    onPress={() => void handleVerifyOtp()}
+                    disabled={loading || verifying}
+                  />
+                </View>
+              )}
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingHorizontal: SPACING.MD,
-    paddingTop: HEADER_HEIGHT + SPACING.XL,
-    paddingBottom: SPACING.LG,
   },
-  content: {
+  flex: {
     flex: 1,
-    justifyContent: 'center',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: HEADER_HEIGHT + SPACING.XXL,
+    paddingBottom: SPACING.XXL,
+    paddingHorizontal: SPACING.LG,
     alignItems: 'center',
   },
+  hero: {
+    alignItems: 'center',
+    marginBottom: SPACING.XL,
+  },
   title: {
-    fontSize: TYPOGRAPHY.TITLE,
-    marginBottom: SPACING.SM,
+    fontSize: 32,
+    textAlign: 'center',
+    color: COLORS.PRIMARY_DARK,
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: TYPOGRAPHY.SUBTITLE,
+    color: COLORS.MUTED,
     textAlign: 'center',
   },
-  buttons: {
+  form: {
     width: '100%',
-    marginTop: SPACING.SM,
+    maxWidth: 360,
+    alignItems: 'center',
   },
-  spacer: {
-    height: SPACING.SM,
-  },
-  errorText: {
-    color: '#DC2626',
+  googleButton: {
+    width: 320,
+    height: 56,
+    backgroundColor: '#608ce5',
+    borderRadius: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#507ac5',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 10,
     marginBottom: SPACING.SM,
   },
-  message: {
-    color: COLORS.PRIMARY_DARK,
-    marginBottom: SPACING.SM,
+  googlePressed: {
+    backgroundColor: '#507ac5',
+  },
+  googleLabel: {
+    color: '#F3F4F6',
+    fontSize: 18,
+  },
+  divider: {
+    width: '100%',
+    maxWidth: 360,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: SPACING.SM,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#C7CED4',
+  },
+  dividerText: {
+    color: '#4B5563',
+    marginHorizontal: SPACING.XS,
   },
   field: {
     width: '100%',
+    maxWidth: 360,
     marginBottom: SPACING.SM,
   },
   input: {
     width: '100%',
-    borderRadius: RADIUS.MD,
+    height: 64,
+    borderRadius: RADIUS.SM,
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    paddingHorizontal: SPACING.SM,
-    paddingVertical: SPACING.XS,
-    backgroundColor: COLORS.SURFACE,
+    borderColor: 'rgba(255,255,255,0.4)',
+    paddingHorizontal: SPACING.MD,
+    backgroundColor: '#54627B',
+    color: '#F8FAFC',
     fontSize: TYPOGRAPHY.BODY,
+  },
+  errorText: {
+    color: '#DC2626',
+    width: '100%',
+    maxWidth: 360,
+    textAlign: 'center',
+    marginBottom: SPACING.SM,
+  },
+  message: {
+    color: COLORS.PRIMARY,
+    width: '100%',
+    maxWidth: 360,
+    textAlign: 'center',
+    marginBottom: SPACING.MD,
+  },
+  buttons: {
+    width: '100%',
+    maxWidth: 360,
+  },
+  buttonWrapper: {
+    width: '100%',
+    marginBottom: SPACING.SM,
   },
 });
 
