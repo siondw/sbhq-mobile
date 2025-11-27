@@ -1,16 +1,15 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { createClient } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
-import { createClient, type SupabaseClientOptions } from '@supabase/supabase-js';
 import { ENV } from '../configs/env';
 import type { Database } from './types';
 
-const authOptions: SupabaseClientOptions<Database>['auth'] =
+const authOptions =
   Platform.OS === 'web'
     ? {
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: true,
-        // On web, supabase-js will default to localStorage; no AsyncStorage to avoid `window` reference on the server.
       }
     : {
         storage: AsyncStorage,

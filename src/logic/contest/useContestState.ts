@@ -102,7 +102,9 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
       setParticipant(ensuredParticipant ?? null);
 
       if (contestResult) {
-        const roundQuestion = await getQuestionForRound(contestResult.id, contestResult.current_round);
+        const roundQuestion = contestResult.current_round 
+          ? await getQuestionForRound(contestResult.id, contestResult.current_round)
+          : null;
         setQuestion(roundQuestion);
         if (ensuredParticipant && roundQuestion) {
           const existingAnswer = await getAnswerForQuestion(ensuredParticipant.id, roundQuestion.id);
@@ -142,8 +144,8 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
       const answersUnsub = subscribeToAnswersForParticipant(
         participant.id,
         (payload: RealtimePostgresChangesPayload<AnswerRow>) => {
-          if (payload.new) {
-            setAnswer(payload.new);
+          if (payload.new && typeof payload.new === 'object') {
+            setAnswer(payload.new as AnswerRow);
           }
         },
       );

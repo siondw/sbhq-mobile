@@ -1,8 +1,8 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { DB_TABLES } from './constants';
 import { SUPABASE_CLIENT } from './client';
-import type { QuestionRow } from './types';
+import { DB_TABLES } from './constants';
 import { subscribeToTable } from './realtime';
+import type { QuestionRow } from './types';
 
 export const getQuestionsForContest = async (contestId: string): Promise<QuestionRow[]> => {
   const { data, error } = await SUPABASE_CLIENT
@@ -15,7 +15,7 @@ export const getQuestionsForContest = async (contestId: string): Promise<Questio
     throw new Error(`Failed to fetch questions for contest ${contestId}: ${error.message}`);
   }
 
-  return data ?? [];
+  return (data as QuestionRow[]) ?? [];
 };
 
 export const getQuestionForRound = async (
@@ -35,7 +35,7 @@ export const getQuestionForRound = async (
     );
   }
 
-  return data ?? null;
+  return (data as QuestionRow) ?? null;
 };
 
 export const subscribeToQuestions = (

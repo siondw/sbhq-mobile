@@ -1,8 +1,8 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { DB_TABLES } from './constants';
 import { SUPABASE_CLIENT } from './client';
-import type { AnswerInsert, AnswerRow } from './types';
+import { DB_TABLES } from './constants';
 import { subscribeToTable } from './realtime';
+import type { AnswerInsert, AnswerRow } from './types';
 
 export interface SubmitAnswerParams {
   participantId: string;
@@ -31,8 +31,11 @@ export const submitAnswer = async ({
 
   if (existing) {
     const { data, error } = await SUPABASE_CLIENT
-      .from(DB_TABLES.ANSWERS)
-      .update(payload)
+      .from('answers')
+      .update({
+        answer: payload.answer,
+        timestamp: payload.timestamp,
+      })
       .eq('id', existing.id)
       .select()
       .single();
@@ -41,11 +44,11 @@ export const submitAnswer = async ({
       throw new Error(`Failed to update answer: ${error.message}`);
     }
 
-    return data;
+    return data as AnswerRow;
   }
 
   const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.ANSWERS)
+    .from('answers')
     .insert(payload)
     .select()
     .single();
@@ -54,7 +57,7 @@ export const submitAnswer = async ({
     throw new Error(`Failed to submit answer: ${error.message}`);
   }
 
-  return data;
+  return data as AnswerRow;
 };
 
 export const getAnswerForQuestion = async (
@@ -72,7 +75,7 @@ export const getAnswerForQuestion = async (
     throw new Error(`Failed to fetch answer for question ${questionId}: ${error.message}`);
   }
 
-  return data ?? null;
+  return (data as AnswerRow) ?? null;
 };
 
 export const getAnswerForRound = async (
@@ -94,7 +97,7 @@ export const getAnswerForRound = async (
     );
   }
 
-  return data ?? null;
+  return (data as AnswerRow) ?? null;
 };
 
 export const subscribeToAnswersForParticipant = (

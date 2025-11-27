@@ -1,5 +1,5 @@
-import { DB_TABLES } from './constants';
 import { SUPABASE_CLIENT } from './client';
+import { DB_TABLES } from './constants';
 import type { UserRow } from './types';
 
 export const getUserById = async (userId: string): Promise<UserRow | null> => {
@@ -9,5 +9,5 @@ export const getUserById = async (userId: string): Promise<UserRow | null> => {
     throw new Error(`Failed to fetch user ${userId}: ${error.message}`);
   }
 
-  return data ?? null;
+  return (data as UserRow) ?? null;
 };

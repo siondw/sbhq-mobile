@@ -23,7 +23,8 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
 
   const options = useMemo(() => {
     if (!question?.options) return [];
-    return Object.entries(question.options).map(([key, value]) => ({ key, label: value }));
+    const opts = question.options as Record<string, string>;
+    return Object.entries(opts).map(([key, value]) => ({ key, label: value }));
   }, [question]);
 
   const handleSubmit = (optionKey: string) => {

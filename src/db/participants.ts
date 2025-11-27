@@ -1,8 +1,8 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
-import { DB_TABLES } from './constants';
 import { SUPABASE_CLIENT } from './client';
-import type { ParticipantInsert, ParticipantRow } from './types';
+import { DB_TABLES } from './constants';
 import { subscribeToTable } from './realtime';
+import type { ParticipantInsert, ParticipantRow } from './types';
 
 export const getParticipantForUser = async (
   contestId: string,
@@ -19,14 +19,14 @@ export const getParticipantForUser = async (
     throw new Error(`Failed to fetch participant for contest ${contestId}: ${error.message}`);
   }
 
-  return data ?? null;
+  return (data as ParticipantRow) ?? null;
 };
 
 export const createParticipant = async (
   payload: ParticipantInsert,
 ): Promise<ParticipantRow> => {
   const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.PARTICIPANTS)
+    .from('participants')
     .insert(payload)
     .select()
     .single();
@@ -35,7 +35,7 @@ export const createParticipant = async (
     throw new Error(`Failed to create participant: ${error.message}`);
   }
 
-  return data;
+  return data as ParticipantRow;
 };
 
 export const getOrCreateParticipant = async (
@@ -65,8 +65,8 @@ export const subscribeToParticipant = (
     table: DB_TABLES.PARTICIPANTS,
     filter: `id=eq.${participantId}`,
     callback: (payload: RealtimePostgresChangesPayload<ParticipantRow>) => {
-      if (payload.new) {
-        onChange(payload.new);
+      if (payload.new && typeof payload.new === 'object') {
+        onChange(payload.new as ParticipantRow);
       }
     },
   });

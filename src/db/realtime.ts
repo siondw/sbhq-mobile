@@ -3,7 +3,7 @@ import { SUPABASE_CLIENT } from './client';
 
 export type PostgresEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
-export interface RealtimeSubscriptionConfig<TRow> {
+export interface RealtimeSubscriptionConfig<TRow extends Record<string, unknown>> {
   channel: string;
   event: PostgresEvent;
   table: string;
@@ -12,7 +12,7 @@ export interface RealtimeSubscriptionConfig<TRow> {
   callback: (payload: RealtimePostgresChangesPayload<TRow>) => void;
 }
 
-export const subscribeToTable = <TRow>({
+export const subscribeToTable = <TRow extends Record<string, unknown>>({
   channel,
   event,
   table,
@@ -21,9 +21,9 @@ export const subscribeToTable = <TRow>({
   callback,
 }: RealtimeSubscriptionConfig<TRow>): (() => void) => {
   const realtimeChannel: RealtimeChannel = SUPABASE_CLIENT.channel(channel).on(
-    'postgres_changes',
-    { event, schema, table, filter },
-    (payload: RealtimePostgresChangesPayload<TRow>) => callback(payload),
+    'postgres_changes' as 'system',
+    { event, schema, table, filter } as Parameters<RealtimeChannel['on']>[1],
+    callback as Parameters<RealtimeChannel['on']>[2],
   );
 
   void realtimeChannel.subscribe();
