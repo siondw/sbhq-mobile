@@ -1,5 +1,5 @@
 import { Link } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../src/logic/auth/useAuth';
 import ContestListScreen from '../src/screens/ContestListScreen';
@@ -9,9 +9,18 @@ const DEV_MODE = true; // Set to false for production
 
 const Index = () => {
   const { session } = useAuth();
+  const [previewScreen, setPreviewScreen] = useState<'picker' | 'login' | 'contests'>('picker');
 
   // Development screen picker
   if (DEV_MODE) {
+    if (previewScreen === 'login') {
+      return <LoginScreen />;
+    }
+    
+    if (previewScreen === 'contests') {
+      return <ContestListScreen />;
+    }
+
     return (
       <ScrollView style={styles.container}>
         <View style={styles.content}>
@@ -21,6 +30,16 @@ const Index = () => {
           <Text style={styles.subtitle}>Select a screen to preview:</Text>
 
           <View style={styles.buttonGroup}>
+            <Pressable style={styles.button} onPress={() => setPreviewScreen('login')}>
+              <Text style={styles.buttonText}>Login Screen</Text>
+            </Pressable>
+
+            <Pressable style={styles.button} onPress={() => setPreviewScreen('contests')}>
+              <Text style={styles.buttonText}>Contest List Screen</Text>
+            </Pressable>
+
+            <View style={styles.divider} />
+
             <Link href="/lobby" asChild>
               <Pressable style={styles.button}>
                 <Text style={styles.buttonText}>Lobby Screen</Text>
@@ -65,11 +84,11 @@ const Index = () => {
 
             <View style={styles.divider} />
 
-            <Pressable style={[styles.button, styles.buttonSecondary]}>
-              <Text style={styles.buttonText}>
-                {session ? 'Contest List (Current)' : 'Login Screen (Current)'}
+            <View style={styles.infoBox}>
+              <Text style={styles.infoText}>
+                {session ? '✓ Logged in' : '○ Not logged in'}
               </Text>
-            </Pressable>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -129,6 +148,17 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#ddd',
     marginVertical: 12,
+  },
+  infoBox: {
+    padding: 12,
+    backgroundColor: '#e8f4f8',
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  infoText: {
+    color: '#0066cc',
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
 

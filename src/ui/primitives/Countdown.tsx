@@ -1,7 +1,8 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { COLORS, RADIUS, SPACING } from '../theme';
 import Text from './Text';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
 
 interface CountdownProps {
   /** Target time in milliseconds since epoch */
@@ -36,24 +37,31 @@ const Countdown = ({ targetTime, onComplete }: CountdownProps) => {
     .padStart(2, '0')}`;
 
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[COLORS.GRADIENT_START, COLORS.GRADIENT_END]}
+      start={{ x: 0, y: 0 }}
+      end={{ x: 1, y: 1 }}
+      style={styles.container}
+    >
       <Text weight="bold" style={styles.text}>
         {display}
       </Text>
-    </View>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: SPACING.SM + 2,
-    paddingVertical: SPACING.XS,
-    borderRadius: RADIUS.MD,
-    backgroundColor: COLORS.ACCENT,
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.MD,
+    borderRadius: RADIUS.LG,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-    color: COLORS.PRIMARY_DARK,
+    fontSize: 64,
+    color: '#FFFFFF',
+    letterSpacing: 4,
   },
 });
 

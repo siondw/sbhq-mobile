@@ -1,14 +1,13 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
-import { useContestState } from '../logic/contest/useContestState';
 import { PLAYER_STATE } from '../logic/constants';
-import Text from '../ui/primitives/Text';
-import Countdown from '../ui/primitives/Countdown';
-import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import { useContestState } from '../logic/contest/useContestState';
 import Header from '../ui/Header';
+import Countdown from '../ui/primitives/Countdown';
+import Text from '../ui/primitives/Text';
+import { COLORS, HEADER_HEIGHT, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const LobbyScreen = () => {
   const params = useLocalSearchParams<{ contestId?: string; startTime?: string }>();
@@ -37,44 +36,58 @@ const LobbyScreen = () => {
   }, [playerState, router, params.contestId, loading]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <Header />
-      <View style={styles.content}>
-        <Card>
-          <Text weight="bold" style={styles.title}>
-            Lobby
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.content}>
+          <Text weight="bold" style={styles.contestName}>
+            {contest?.name || 'Contest Lobby'}
           </Text>
-          <Text style={styles.body}>Contest: {contest?.name ?? params.contestId ?? 'Unknown'}</Text>
-          <View style={styles.countdown}>
+          
+          <View style={styles.countdownSection}>
+            <Text weight="medium" style={styles.startingLabel}>
+              Starting in:
+            </Text>
             <Countdown targetTime={targetTime} />
           </View>
-          <Text style={styles.body}>Waiting for the Game Master to start…</Text>
-        </Card>
-      </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.MD,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: HEADER_HEIGHT + SPACING.LG,
+    paddingBottom: SPACING.XXL,
+    paddingHorizontal: SPACING.LG,
   },
   content: {
-    paddingHorizontal: SPACING.MD,
-    flex: 1,
-    justifyContent: 'center',
+    alignItems: 'center',
+    gap: SPACING.XL,
   },
-  title: {
-    fontSize: TYPOGRAPHY.TITLE,
-    marginBottom: SPACING.XS,
+  contestName: {
+    fontSize: 32,
+    textAlign: 'center',
+    color: COLORS.PRIMARY_DARK,
+    letterSpacing: 0.5,
   },
-  body: {
+  countdownSection: {
+    alignItems: 'center',
+    gap: SPACING.SM,
+  },
+  startingLabel: {
     fontSize: TYPOGRAPHY.BODY,
-  },
-  countdown: {
-    marginVertical: SPACING.SM,
+    color: COLORS.MUTED,
+    textAlign: 'center',
   },
 });
 
