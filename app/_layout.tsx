@@ -1,23 +1,24 @@
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
 import {
   Poppins_400Regular,
   Poppins_500Medium,
   Poppins_600SemiBold,
   Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
-import { StatusBar } from 'expo-status-bar';
+import FontAwesome from '@expo/vector-icons/FontAwesome';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
+import { AuthProvider } from '../src/logic/auth/AuthProvider';
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -60,18 +61,20 @@ function RootLayoutNav() {
   const colorScheme = useColorScheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <StatusBar style="dark" />
-      <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="contest/[contestId]" options={{ headerShown: false }} />
-        <Stack.Screen name="lobby/index" options={{ headerShown: false }} />
-        <Stack.Screen name="pregame/index" options={{ headerShown: false }} />
-        <Stack.Screen name="submitted/index" options={{ headerShown: false }} />
-        <Stack.Screen name="correct/index" options={{ headerShown: false }} />
-        <Stack.Screen name="eliminated/index" options={{ headerShown: false }} />
-        <Stack.Screen name="winner/index" options={{ headerShown: false }} />
-      </Stack>
-    </ThemeProvider>
+    <AuthProvider>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <StatusBar style="dark" />
+        <Stack>
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="contest/[contestId]" options={{ headerShown: false }} />
+          <Stack.Screen name="lobby/index" options={{ headerShown: false }} />
+          <Stack.Screen name="pregame/index" options={{ headerShown: false }} />
+          <Stack.Screen name="submitted/index" options={{ headerShown: false }} />
+          <Stack.Screen name="correct/index" options={{ headerShown: false }} />
+          <Stack.Screen name="eliminated/index" options={{ headerShown: false }} />
+          <Stack.Screen name="winner/index" options={{ headerShown: false }} />
+        </Stack>
+      </ThemeProvider>
+    </AuthProvider>
   );
 }

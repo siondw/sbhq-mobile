@@ -11,18 +11,20 @@ export const COLORS = {
   ACCENT: '#E08A5C',       // warm terracotta accent, complements champagne
   ELIMINATED_START: '#9F2430', // softer, still “error”
   ELIMINATED_END: '#354A57',   // re-use PRIMARY_DARK for consistency
+  OVERLAY: 'rgba(0,0,0,0.03)',
 };
 
 
-export const SPACING = {
+export const SPACING: { [key: string]: number } = {
   XS: 8,
   SM: 12,
   MD: 16,
   LG: 20,
   XL: 24,
+  XXL: 32,
 };
 
-export const RADIUS = {
+export const RADIUS: { [key: string]: number } = {
   SM: 8,
   MD: 12,
   LG: 16,

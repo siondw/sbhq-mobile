@@ -1,18 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+    getAnswerForQuestion,
+    submitAnswer,
+    subscribeToAnswersForParticipant,
+    type SubmitAnswerParams,
+} from '../../db/answers';
 import { getContestById, subscribeToContest } from '../../db/contests';
 import {
-  getOrCreateParticipant,
-  getParticipantForUser,
-  subscribeToParticipant,
+    getOrCreateParticipant,
+    getParticipantForUser,
+    subscribeToParticipant,
 } from '../../db/participants';
 import { getQuestionForRound, subscribeToQuestions } from '../../db/questions';
-import {
-  getAnswerForQuestion,
-  subscribeToAnswersForParticipant,
-  type SubmitAnswerParams,
-  submitAnswer,
-} from '../../db/answers';
 import type { AnswerRow, ContestRow, ParticipantRow, QuestionRow } from '../../db/types';
 import { PLAYER_STATE, type PlayerState } from '../constants';
 
@@ -51,6 +51,9 @@ const derivePlayerState = (
   }
 
   if (contest.submission_open) {
+    if (answer) {
+      return PLAYER_STATE.SUBMITTED_WAITING;
+    }
     return PLAYER_STATE.ANSWERING;
   }
 
@@ -80,6 +83,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   const [participant, setParticipant] = useState<ParticipantRow | null>(null);
   const [question, setQuestion] = useState<QuestionRow | null>(null);
   const [answer, setAnswer] = useState<AnswerRow | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchContestState = useCallback(async () => {
     if (!contestId) return;
@@ -107,6 +111,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
           setAnswer(null);
         }
       }
+      setIsInitialized(true);
     } catch (err) {
       setError((err as Error).message);
     } finally {
@@ -119,7 +124,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   }, [fetchContestState]);
 
   useEffect(() => {
-    if (!contestId) return undefined;
+    if (!contestId || !isInitialized) return undefined;
 
     const unsubscribes: Array<() => void> = [];
 
@@ -156,19 +161,27 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-  }, [contestId, participant?.id]);
+  }, [contestId, participant?.id, isInitialized]);
 
   useEffect(() => {
     const loadCurrentQuestion = async () => {
-      if (!contestId || !contest?.current_round) return;
+      if (!contestId || !contest?.current_round || !isInitialized) return;
       try {
         const roundQuestion = await getQuestionForRound(contestId, contest.current_round);
-        setQuestion(roundQuestion);
+        // Only update if we actually got a different question
+        setQuestion((prev) => {
+          if (!roundQuestion) return prev;
+          if (prev?.id === roundQuestion.id) return prev;
+          return roundQuestion;
+        });
+        
         if (participant?.id && roundQuestion) {
           const existingAnswer = await getAnswerForQuestion(participant.id, roundQuestion.id);
-          setAnswer(existingAnswer);
-        } else {
-          setAnswer(null);
+          setAnswer((prev) => {
+            // Don't clear answer unnecessarily
+            if (prev?.question_id === roundQuestion.id) return prev;
+            return existingAnswer;
+          });
         }
       } catch (err) {
         setError((err as Error).message);
@@ -176,7 +189,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     };
 
     void loadCurrentQuestion();
-  }, [contest?.current_round, contestId, participant?.id]);
+  }, [contest?.current_round, contestId, participant?.id, isInitialized]);
 
   const playerState = useMemo(
     () => derivePlayerState(contest, participant, question, answer),

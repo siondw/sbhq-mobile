@@ -86,24 +86,27 @@ const ContestListScreen = () => {
         <Text weight="bold" style={styles.title}>
           Contests
         </Text>
-      <FlatList
-        data={contests}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Card>
-            <Text weight="bold" style={styles.cardTitle}>
-              {item.name}
-            </Text>
-            <Text style={styles.meta}>{`Starts: ${new Date(item.start_time).toLocaleString()}`}</Text>
-            <Text style={styles.status}>{item.lobby_open ? 'Lobby Open' : item.submission_open ? 'In Progress' : 'Starting Soon'}</Text>
-            <View style={styles.cardFooter}>
-              <Button label="Enter" onPress={() => void handleEnterContest(item)} />
-            </View>
-          </Card>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.spacer} />}
-        ListEmptyComponent={<Text>No contests available.</Text>}
-      />
+        <FlatList
+          data={contests}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => (
+            <Card>
+              <Text weight="bold" style={styles.cardTitle}>
+                {item.name}
+              </Text>
+              <Text style={styles.meta}>{`Starts: ${new Date(item.start_time).toLocaleString()}`}</Text>
+              <Text style={styles.status}>
+                {item.lobby_open ? 'Lobby Open' : item.submission_open ? 'In Progress' : 'Starting Soon'}
+              </Text>
+              <View style={styles.cardFooter}>
+                <Button label="Enter" onPress={() => void handleEnterContest(item)} />
+              </View>
+            </Card>
+          )}
+          ItemSeparatorComponent={() => <View style={styles.spacer} />}
+          ListEmptyComponent={<Text>No contests available.</Text>}
+          contentContainerStyle={styles.listContent}
+        />
       </View>
     </View>
   );
@@ -118,6 +121,10 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: SPACING.MD,
     flex: 1,
+    gap: SPACING.SM,
+  },
+  listContent: {
+    paddingBottom: SPACING.LG,
   },
   center: {
     flex: 1,

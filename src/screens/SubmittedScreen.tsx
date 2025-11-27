@@ -1,14 +1,14 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../logic/auth/useAuth';
-import { useContestState } from '../logic/contest/useContestState';
 import { PLAYER_STATE } from '../logic/constants';
-import Text from '../ui/primitives/Text';
+import { useContestState } from '../logic/contest/useContestState';
+import Header from '../ui/Header';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
-import Header from '../ui/Header';
+import Text from '../ui/primitives/Text';
+import { COLORS, HEADER_HEIGHT, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const SubmittedScreen = () => {
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
@@ -17,7 +17,10 @@ const SubmittedScreen = () => {
   const { loading, error, playerState, refresh } = useContestState(contestId, derivedUser?.id);
 
   useEffect(() => {
-    if (!contestId) return;
+    if (!contestId || loading) return;
+    console.warn('SubmittedScreen state', { playerState, contestId });
+    
+    // Only navigate away from submitted screen if we're NOT in a waiting state
     if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${contestId}`);
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
@@ -29,7 +32,8 @@ const SubmittedScreen = () => {
     } else if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: '/lobby', params: { contestId } });
     }
-  }, [playerState, router, contestId]);
+    // Note: SUBMITTED_WAITING should stay on this screen, so we don't navigate
+  }, [playerState, router, contestId, loading]);
 
   if (loading) {
     return (

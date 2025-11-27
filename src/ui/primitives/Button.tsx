@@ -40,9 +40,9 @@ const styles = StyleSheet.create({
   primary: {
     backgroundColor: COLORS.PRIMARY,
     shadowColor: COLORS.PRIMARY_DARK,
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 6 },
-    shadowRadius: 12,
+    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 8 },
+    shadowRadius: 14,
   },
   secondary: {
     backgroundColor: COLORS.SURFACE,

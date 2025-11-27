@@ -45,9 +45,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: SPACING.SM,
     shadowColor: COLORS.PRIMARY_DARK,
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 6 },
   },
   pressed: {
     opacity: 0.9,

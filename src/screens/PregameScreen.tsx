@@ -68,6 +68,7 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
+    paddingHorizontal: SPACING.MD,
   },
   title: {
     fontSize: TYPOGRAPHY.TITLE,

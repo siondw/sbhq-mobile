@@ -19,6 +19,7 @@ export const submitAnswer = async ({
   round,
   answer,
 }: SubmitAnswerParams): Promise<AnswerRow> => {
+  const existing = await getAnswerForQuestion(participantId, questionId);
   const payload: AnswerInsert = {
     participant_id: participantId,
     contest_id: contestId,
@@ -28,9 +29,24 @@ export const submitAnswer = async ({
     timestamp: new Date().toISOString(),
   };
 
+  if (existing) {
+    const { data, error } = await SUPABASE_CLIENT
+      .from(DB_TABLES.ANSWERS)
+      .update(payload)
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    if (error) {
+      throw new Error(`Failed to update answer: ${error.message}`);
+    }
+
+    return data;
+  }
+
   const { data, error } = await SUPABASE_CLIENT
     .from(DB_TABLES.ANSWERS)
-    .upsert(payload, { onConflict: 'participant_id,question_id' })
+    .insert(payload)
     .select()
     .single();
 

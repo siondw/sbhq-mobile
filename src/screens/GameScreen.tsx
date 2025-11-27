@@ -1,15 +1,15 @@
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useRouter } from 'expo-router';
 import { useAuth } from '../logic/auth/useAuth';
-import { useContestState } from '../logic/contest/useContestState';
 import { PLAYER_STATE } from '../logic/constants';
-import Text from '../ui/primitives/Text';
-import Button from '../ui/primitives/Button';
-import AnswerOption from '../ui/primitives/AnswerOption';
-import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import { useContestState } from '../logic/contest/useContestState';
 import Header from '../ui/Header';
+import AnswerOption from '../ui/primitives/AnswerOption';
+import Button from '../ui/primitives/Button';
+import Card from '../ui/primitives/Card';
+import Text from '../ui/primitives/Text';
+import { COLORS, HEADER_HEIGHT, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 interface GameScreenProps {
   contestId?: string;
@@ -28,6 +28,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
 
   const handleSubmit = (optionKey: string) => {
     if (!participant || !contest || !question) return;
+    if (answer) return;
     void submit({
       participantId: participant.id,
       contestId: contest.id,
@@ -39,6 +40,8 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
+    
+    // Only navigate away from game screen if we're NOT in answering state
     if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: '/lobby', params: { contestId, startTime: contest?.start_time } });
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
@@ -50,6 +53,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     } else if (playerState === PLAYER_STATE.WINNER) {
       router.replace('/winner');
     }
+    // Note: ANSWERING should stay on this screen, so we don't navigate
   }, [playerState, router, contestId, contest?.start_time, loading]);
 
   if (loading) {

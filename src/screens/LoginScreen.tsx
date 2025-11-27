@@ -3,7 +3,7 @@ import { View, StyleSheet, TextInput } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
-import { COLORS, SPACING, RADIUS, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT, RADIUS } from '../ui/theme';
 import Header from '../ui/Header';
 
 const LoginScreen = () => {
@@ -16,6 +16,9 @@ const LoginScreen = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   const handleGoogle = () => {
+    setMessage('Opening Google login…');
+    // eslint-disable-next-line no-console
+    console.log('Pressed Continue with Google');
     void loginWithGoogle();
   };
 
@@ -47,54 +50,52 @@ const LoginScreen = () => {
     <View style={styles.container}>
       <Header />
       <View style={styles.content}>
-        <View style={styles.card}>
-          <Text weight="bold" style={styles.title}>
-            Login
+        <Text weight="bold" style={styles.title}>
+          Login
+        </Text>
+        {error ? (
+          <Text style={styles.errorText} weight="medium">
+            {error}
           </Text>
-          {error ? (
-            <Text style={styles.error} weight="medium">
-              {error}
-            </Text>
-          ) : null}
-          {message ? (
-            <Text style={styles.message} weight="medium">
-              {message}
-            </Text>
-          ) : null}
+        ) : null}
+        {message ? (
+          <Text style={styles.message} weight="medium">
+            {message}
+          </Text>
+        ) : null}
+        <View style={styles.field}>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            editable={!sending && !verifying}
+          />
+        </View>
+        {otpSent && (
           <View style={styles.field}>
             <TextInput
               style={styles.input}
-              placeholder="Email"
-              keyboardType="email-address"
-              autoCapitalize="none"
-              value={email}
-              onChangeText={setEmail}
-              editable={!sending && !verifying}
+              placeholder="Enter code"
+              keyboardType="number-pad"
+              value={otp}
+              onChangeText={setOtp}
+              editable={!verifying}
             />
           </View>
+        )}
+        <View style={styles.buttons}>
+          <Button label="Continue with Google" onPress={handleGoogle} disabled={loading || sending || verifying} />
+          <View style={styles.spacer} />
+          <Button label={otpSent ? 'Resend Email OTP' : 'Send Email OTP'} onPress={() => void handleEmailOtp()} disabled={loading || sending} />
           {otpSent && (
-            <View style={styles.field}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter code"
-                keyboardType="number-pad"
-                value={otp}
-                onChangeText={setOtp}
-                editable={!verifying}
-              />
-            </View>
+            <>
+              <View style={styles.spacer} />
+              <Button variant="secondary" label="Verify Email OTP" onPress={() => void handleVerifyOtp()} disabled={loading || verifying} />
+            </>
           )}
-          <View style={styles.buttons}>
-            <Button label="Continue with Google" onPress={handleGoogle} disabled={loading || sending || verifying} />
-            <View style={styles.spacer} />
-            <Button label={otpSent ? 'Resend Email OTP' : 'Send Email OTP'} onPress={() => void handleEmailOtp()} disabled={loading || sending} />
-            {otpSent && (
-              <>
-                <View style={styles.spacer} />
-                <Button variant="secondary" label="Verify Email OTP" onPress={() => void handleVerifyOtp()} disabled={loading || verifying} />
-              </>
-            )}
-          </View>
         </View>
       </View>
     </View>
@@ -112,19 +113,12 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
     justifyContent: 'center',
-  },
-  card: {
-    backgroundColor: COLORS.SURFACE,
-    borderRadius: RADIUS.LG,
-    padding: SPACING.LG,
-    shadowColor: COLORS.PRIMARY_DARK,
-    shadowOpacity: 0.16,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
+    alignItems: 'center',
   },
   title: {
     fontSize: TYPOGRAPHY.TITLE,
     marginBottom: SPACING.SM,
+    textAlign: 'center',
   },
   buttons: {
     width: '100%',
@@ -133,7 +127,7 @@ const styles = StyleSheet.create({
   spacer: {
     height: SPACING.SM,
   },
-  error: {
+  errorText: {
     color: '#DC2626',
     marginBottom: SPACING.SM,
   },
