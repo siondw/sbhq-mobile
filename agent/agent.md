@@ -203,6 +203,57 @@ src/db/answers.ts
 * No DB logic.
 * No complicated conditional state (push logic to hooks).
 
+### ✔ Minimize container nesting
+
+* **Fewer containers, better cohesion**: Avoid 5+ nested Views in a single component.
+* Each container should serve a clear structural purpose (layout, spacing, scroll).
+* Don't wrap content in redundant Views - use flex properties on existing containers.
+* **Avoid unnecessary filled/styled containers**: Don't add background colors, borders, or padding to intermediate containers unless they serve a clear visual purpose. Let content breathe.
+* Keep component trees flat and readable.
+
+### ✔ Color usage patterns
+
+* **BACKGROUND**: Main champagne background for all screens
+* **SURFACE**: Warm off-white for cards and elevated containers
+* **PRIMARY/PRIMARY_DARK**: Main brand colors for buttons, links, emphasis
+* **GRADIENT_START/GRADIENT_END**: Use for high-impact elements (hero text, important CTAs)
+* **ACCENT**: Terracotta for secondary actions, warnings, highlights
+* **TEXT**: Default text color
+* **MUTED**: Secondary text, metadata, labels
+* **Avoid pure white (#FFFFFF)**: Use SURFACE instead for better cohesion with champagne background
+
+### ✔ Typography hierarchy
+
+* **Title (24px, bold)**: Page headers, main section titles
+* **Subtitle (18px, bold)**: Card titles, secondary headers
+* **Body (16px, regular)**: Primary content, descriptions
+* **Small (14px, regular/medium)**: Metadata, labels, helper text
+* **Use weight prop on Text component**: "regular", "medium", "semibold", "bold"
+* **Letter spacing**: Use sparingly for uppercase labels (0.3-0.5) or large display text
+
+### ✔ Spacing consistency
+
+* Use theme tokens (SPACING.XS, SM, MD, LG, XL, XXL) - never hardcode pixels
+* **Card gaps**: SPACING.XS for tight internal spacing
+* **Section gaps**: SPACING.MD for list items, card grids
+* **Page padding**: SPACING.MD horizontal, SPACING.XXL bottom for scroll content
+* **Button margins**: SPACING.SM top margin for separation from content
+
+### ✔ Data formatting standards
+
+* **Dates**: Use concise format like "11/27 @ 8PM EST" not verbose date strings
+* **Money**: "$10.00" or "Free" (not "Free entry")
+* **Labels**: Use "Title: Value" format for metadata lists
+* **Status indicators**: Minimal badges with subtle backgrounds, not solid colors
+* **Round numbers**: "Round: 3" not "Current round: 3"
+
+### ✔ Interactive states
+
+* **Disabled buttons**: Reduce opacity or use muted colors, show clear visual feedback
+* **Locked states**: Apply opacity: 0.6 to entire card/component
+* **Live indicators**: Subtle backgrounds with border, small dot, colored text (not solid backgrounds)
+* **Press states**: Use native Pressable with subtle opacity changes
+
 ### ✔ Reusability and consistency
 
 * Typography, spacing, colors should come from theme tokens.

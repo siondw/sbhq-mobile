@@ -1,7 +1,8 @@
+import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
-import { StyleSheet } from 'react-native';
-import { COLORS, RADIUS, SPACING } from '../theme';
+import { StyleSheet, View } from 'react-native';
+import { COLORS } from '../theme';
 import Text from './Text';
 
 interface CountdownProps {
@@ -37,30 +38,39 @@ const Countdown = ({ targetTime, onComplete }: CountdownProps) => {
     .padStart(2, '0')}`;
 
   return (
-    <LinearGradient
-      colors={[COLORS.GRADIENT_START, COLORS.GRADIENT_END]}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
+    <MaskedView
+      maskElement={
+        <View style={styles.maskContainer}>
+          <Text weight="bold" style={styles.text}>
+            {display}
+          </Text>
+        </View>
+      }
     >
-      <Text weight="bold" style={styles.text}>
-        {display}
-      </Text>
-    </LinearGradient>
+      <LinearGradient
+        colors={[COLORS.GRADIENT_START, COLORS.GRADIENT_END]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.gradient}
+      >
+        <Text weight="bold" style={styles.text}>
+          {display}
+        </Text>
+      </LinearGradient>
+    </MaskedView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    paddingHorizontal: SPACING.LG,
-    paddingVertical: SPACING.MD,
-    borderRadius: RADIUS.LG,
+  maskContainer: {
+    backgroundColor: 'transparent',
+  },
+  gradient: {
     alignItems: 'center',
     justifyContent: 'center',
   },
   text: {
     fontSize: 64,
-    color: '#FFFFFF',
     letterSpacing: 4,
   },
 });

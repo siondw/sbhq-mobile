@@ -4,12 +4,12 @@ export const COLORS = {
   PRIMARY_DARK: '#354A57', // muted blue-gray
   GRADIENT_START: '#5F8C78', // sage/teal-ish, closer to PRIMARY
   GRADIENT_END: '#354A57',   // ties into PRIMARY_DARK
-  SURFACE: '#FFFFFF',
+  SURFACE: '#F5EFE7',      // warm off-white, blends with champagne
   TEXT: '#1F2933',         // slightly softer than pure near-black
   MUTED: '#6B7280',        // more neutral gray
   BORDER: '#E5D6C5',       // warmer border to match BACKGROUND
   ACCENT: '#E08A5C',       // warm terracotta accent, complements champagne
-  ELIMINATED_START: '#9F2430', // softer, still “error”
+  ELIMINATED_START: '#9F2430', // softer, still "error"
   ELIMINATED_END: '#354A57',   // re-use PRIMARY_DARK for consistency
   OVERLAY: 'rgba(0,0,0,0.03)',
 };
