@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, type ViewProps } from 'react-native';
-import { COLORS, RADIUS, SPACING } from '../theme';
+import { RADIUS, SPACING } from '../theme';
 
 const Card = ({ style, children, ...rest }: ViewProps) => {
   return (
@@ -13,15 +13,15 @@ const Card = ({ style, children, ...rest }: ViewProps) => {
 const styles = StyleSheet.create({
   card: {
     width: '100%',
-    padding: SPACING.MD,
+    padding: SPACING.LG,
     borderRadius: RADIUS.LG,
-    backgroundColor: COLORS.SURFACE,
-    shadowColor: COLORS.PRIMARY_DARK,
-    shadowOpacity: 0.16,
-    shadowRadius: 18,
-    shadowOffset: { width: 0, height: 10 },
-    elevation: 6,
-    marginBottom: SPACING.MD,
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+    marginBottom: SPACING.SM,
   },
 });
 

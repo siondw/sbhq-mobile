@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import Header from '../ui/Header';
-import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
+import Text from '../ui/primitives/Text';
 import { COLORS, HEADER_HEIGHT, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const LoginScreen = () => {
@@ -70,7 +70,7 @@ const LoginScreen = () => {
               onPress={handleGoogle}
               disabled={loading || sending || verifying}
               >
-              <Text weight="semibold" style={styles.googleLabel}>
+              <Text weight="bold" style={styles.googleLabel}>
                 Continue with Google
               </Text>
             </Pressable>

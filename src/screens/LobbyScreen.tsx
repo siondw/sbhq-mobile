@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View, ScrollView } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../logic/auth/useAuth';
 import { useContestState } from '../logic/contest/useContestState';
@@ -7,7 +7,7 @@ import { PLAYER_STATE } from '../logic/constants';
 import Text from '../ui/primitives/Text';
 import Countdown from '../ui/primitives/Countdown';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT, RADIUS } from '../ui/theme';
 import Header from '../ui/Header';
 
 const LobbyScreen = () => {
@@ -37,44 +37,120 @@ const LobbyScreen = () => {
   }, [playerState, router, params.contestId, loading]);
 
   return (
-    <View style={styles.container}>
+    <View style={styles.screen}>
       <Header />
-      <View style={styles.content}>
-        <Card>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.hero}>
           <Text weight="bold" style={styles.title}>
             Lobby
           </Text>
-          <Text style={styles.body}>Contest: {contest?.name ?? params.contestId ?? 'Unknown'}</Text>
-          <View style={styles.countdown}>
-            <Countdown targetTime={targetTime} />
-          </View>
-          <Text style={styles.body}>Waiting for the Game Master to start…</Text>
-        </Card>
-      </View>
+          <Text style={styles.subtitle}>
+            {contest?.name ?? 'Contest'}
+          </Text>
+        </View>
+
+        <View style={styles.mainContent}>
+          <Card style={styles.countdownCard}>
+            <Text weight="medium" style={styles.label}>
+              Contest Starts In
+            </Text>
+            <View style={styles.countdownWrapper}>
+              <Countdown targetTime={targetTime} />
+            </View>
+          </Card>
+
+          <Card style={styles.infoCard}>
+            <Text weight="medium" style={styles.waitingText}>
+              Waiting for the Game Master to start…
+            </Text>
+            <View style={styles.statusIndicator}>
+              <View style={styles.pulsingDot} />
+              <Text style={styles.statusText}>Lobby Open</Text>
+            </View>
+          </Card>
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
+  screen: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.MD,
   },
-  content: {
-    paddingHorizontal: SPACING.MD,
-    flex: 1,
-    justifyContent: 'center',
+  scrollContent: {
+    flexGrow: 1,
+    paddingTop: HEADER_HEIGHT + SPACING.XXL,
+    paddingBottom: SPACING.XXL,
+    paddingHorizontal: SPACING.LG,
+    alignItems: 'center',
+  },
+  hero: {
+    alignItems: 'center',
+    marginBottom: SPACING.XL,
   },
   title: {
-    fontSize: TYPOGRAPHY.TITLE,
-    marginBottom: SPACING.XS,
+    fontSize: 32,
+    textAlign: 'center',
+    color: COLORS.PRIMARY_DARK,
+    marginBottom: 4,
   },
-  body: {
+  subtitle: {
+    fontSize: TYPOGRAPHY.SUBTITLE,
+    color: COLORS.MUTED,
+    textAlign: 'center',
+  },
+  mainContent: {
+    width: '100%',
+    maxWidth: 400,
+    gap: SPACING.MD,
+  },
+  countdownCard: {
+    alignItems: 'center',
+    paddingVertical: SPACING.LG,
+    backgroundColor: COLORS.SURFACE,
+  },
+  label: {
     fontSize: TYPOGRAPHY.BODY,
+    color: COLORS.PRIMARY_DARK,
+    marginBottom: SPACING.SM,
   },
-  countdown: {
-    marginVertical: SPACING.SM,
+  countdownWrapper: {
+    marginVertical: SPACING.XS,
+  },
+  infoCard: {
+    alignItems: 'center',
+    paddingVertical: SPACING.LG,
+  },
+  waitingText: {
+    fontSize: TYPOGRAPHY.BODY,
+    color: COLORS.PRIMARY_DARK,
+    textAlign: 'center',
+    marginBottom: SPACING.MD,
+  },
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: SPACING.XS,
+    paddingHorizontal: SPACING.MD,
+    paddingVertical: SPACING.XS,
+    backgroundColor: COLORS.ACCENT,
+    borderRadius: RADIUS.MD,
+  },
+  pulsingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: COLORS.PRIMARY,
+  },
+  statusText: {
+    fontSize: TYPOGRAPHY.SMALL,
+    color: COLORS.PRIMARY_DARK,
+    fontWeight: '500',
   },
 });
 

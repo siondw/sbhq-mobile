@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, StyleSheet } from 'react-native';
 import Text from './Text';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { COLORS, RADIUS, SPACING } from '../theme';
 
 interface CountdownProps {
   /** Target time in milliseconds since epoch */
@@ -46,14 +46,22 @@ const Countdown = ({ targetTime, onComplete }: CountdownProps) => {
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: SPACING.SM + 2,
-    paddingVertical: SPACING.XS,
-    borderRadius: RADIUS.MD,
-    backgroundColor: COLORS.ACCENT,
+    paddingHorizontal: SPACING.LG,
+    paddingVertical: SPACING.MD,
+    borderRadius: RADIUS.LG,
+    backgroundColor: COLORS.PRIMARY,
+    shadowColor: COLORS.PRIMARY_DARK,
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-    color: COLORS.PRIMARY_DARK,
+    fontSize: 48,
+    color: '#FFFFFF',
+    letterSpacing: 4,
   },
 });
 
