@@ -98,7 +98,8 @@ const ContestListScreen = () => {
         router.push(`/contest/${contest.id}`);
         return;
       }
-      router.push({ pathname: '/pregame', params: { contestId: contest.id, startTime: contest.start_time } });
+      // If registered but lobby not open yet, stay on contest list
+      // User can see "Registered" badge on the card
     } catch (err) {
       setError((err as Error).message);
     }
@@ -143,20 +144,28 @@ const ContestListScreen = () => {
             typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : 'Free';
 
           let buttonLabel = 'Register';
+          let buttonVariant: 'primary' | 'success' = 'primary';
+          
           if (isLocked) {
-            buttonLabel = 'Locked';
+            buttonLabel = '🔒 Locked';
+            buttonVariant = 'primary'; // Will be styled gray via disabled
           } else if (isRegistered && (item.lobby_open || item.submission_open)) {
             buttonLabel = 'Join';
+            buttonVariant = 'success';
+          } else if (isRegistered) {
+            buttonLabel = 'Registered';
+            buttonVariant = 'success';
           } else if (item.lobby_open) {
-            buttonLabel = 'Jump In';
+            buttonLabel = 'Register';
+            buttonVariant = 'primary';
           }
 
           return (
             <Card style={[styles.card, numColumns > 1 && styles.cardGridItem, isLocked && styles.cardLocked]}>
               <View style={styles.cardHeader}>
-              <Text weight="bold" style={styles.cardTitle}>
-                {item.name}
-              </Text>
+                <Text weight="bold" style={styles.cardTitle}>
+                  {item.name}
+                </Text>
                 {isLive && (
                   <View style={styles.liveIndicator}>
                     <View style={styles.liveDot} />
@@ -171,11 +180,14 @@ const ContestListScreen = () => {
               <Text style={styles.meta}>Entry: {priceLabel}</Text>
               {item.current_round ? (
                 <Text style={styles.meta}>Round: {item.current_round}</Text>
-              ) : null}              <View style={styles.cardFooter}>
+              ) : null}
+
+              <View style={styles.cardFooter}>
                 <Button 
-                  label={buttonLabel} 
+                  label={buttonLabel}
+                  variant={buttonVariant}
                   onPress={() => void handleEnterContest(item)}
-                  disabled={!!isLocked}
+                  disabled={!!isLocked || (isRegistered && !item.lobby_open && !item.submission_open)}
                 />
               </View>
             </Card>

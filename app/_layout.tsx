@@ -1,8 +1,8 @@
 import {
-    Poppins_400Regular,
-    Poppins_500Medium,
-    Poppins_600SemiBold,
-    Poppins_700Bold,
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
 } from '@expo-google-fonts/poppins';
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -16,8 +16,8 @@ import 'react-native-reanimated';
 import { AuthProvider } from '../src/logic/auth/AuthProvider';
 
 export {
-    // Catch any errors thrown by the Layout component.
-    ErrorBoundary
+  // Catch any errors thrown by the Layout component.
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -61,15 +61,15 @@ function RootLayoutNav() {
     <AuthProvider>
       <ThemeProvider value={DefaultTheme}>
         <StatusBar style="dark" />
-        <Stack>
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="contest/[contestId]" options={{ headerShown: false }} />
-          <Stack.Screen name="lobby/index" options={{ headerShown: false }} />
-          <Stack.Screen name="pregame/index" options={{ headerShown: false }} />
-          <Stack.Screen name="submitted/index" options={{ headerShown: false }} />
-          <Stack.Screen name="correct/index" options={{ headerShown: false }} />
-          <Stack.Screen name="eliminated/index" options={{ headerShown: false }} />
-          <Stack.Screen name="winner/index" options={{ headerShown: false }} />
+        <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
+          <Stack.Screen name="index" />
+          <Stack.Screen name="contests" />
+          <Stack.Screen name="contest/[contestId]" />
+          <Stack.Screen name="lobby/index" />
+          <Stack.Screen name="submitted/index" />
+          <Stack.Screen name="correct/index" />
+          <Stack.Screen name="eliminated/index" />
+          <Stack.Screen name="winner/index" />
         </Stack>
       </ThemeProvider>
     </AuthProvider>

@@ -44,15 +44,15 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     
     // Only navigate away from game screen if we're NOT in answering state
     if (playerState === PLAYER_STATE.LOBBY) {
-      router.replace({ pathname: '/lobby', params: { contestId, startTime: contest?.start_time } });
+      router.push({ pathname: '/lobby', params: { contestId, startTime: contest?.start_time } });
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace({ pathname: '/submitted', params: { contestId } });
+      router.push({ pathname: '/submitted', params: { contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace({ pathname: '/correct', params: { contestId } });
+      router.push({ pathname: '/correct', params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace('/eliminated');
+      router.push('/eliminated');
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace('/winner');
+      router.push('/winner');
     }
     // Note: ANSWERING should stay on this screen, so we don't navigate
   }, [playerState, router, contestId, contest?.start_time, loading]);

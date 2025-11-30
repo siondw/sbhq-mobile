@@ -1,14 +1,14 @@
-import { Link } from 'expo-router';
-import React, { useState } from 'react';
+import { Link, useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useAuth } from '../src/logic/auth/useAuth';
-import ContestListScreen from '../src/screens/ContestListScreen';
 import LoginScreen from '../src/screens/LoginScreen';
 
 const DEV_MODE = true; // Set to false for production
 
 const Index = () => {
   const { session } = useAuth();
+  const router = useRouter();
   const [previewScreen, setPreviewScreen] = useState<'picker' | 'login' | 'contests'>('picker');
 
   // Development screen picker
@@ -18,7 +18,8 @@ const Index = () => {
     }
     
     if (previewScreen === 'contests') {
-      return <ContestListScreen />;
+      router.push('/contests');
+      return null;
     }
 
     return (
@@ -43,12 +44,6 @@ const Index = () => {
             <Link href="/lobby" asChild>
               <Pressable style={styles.button}>
                 <Text style={styles.buttonText}>Lobby Screen</Text>
-              </Pressable>
-            </Link>
-
-            <Link href="/pregame" asChild>
-              <Pressable style={styles.button}>
-                <Text style={styles.buttonText}>Pregame Screen</Text>
               </Pressable>
             </Link>
 
@@ -95,9 +90,15 @@ const Index = () => {
     );
   }
 
-  // Production flow
+  // Production flow - navigate to contests if logged in
+  useEffect(() => {
+    if (session && !DEV_MODE) {
+      router.push('/contests');
+    }
+  }, [session, router]);
+
   if (session) {
-    return <ContestListScreen />;
+    return null; // Will navigate to /contests
   }
 
   return <LoginScreen />;
