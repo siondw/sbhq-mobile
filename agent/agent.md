@@ -58,6 +58,13 @@ Never invent new features or flows.
 Never deviate from the domain logic unless instructed.
 ---
 
+# Avoid AI SLOP in this repo!
+
+1. Avoid adding extra comments that a human wouldnt add. The code should be self-dcoumenting through proper naming and readability. Dont add comments that are inconsistnet with the rest of the file
+2. Avoid extra defensive checks and try catches thata re abnormal for that are of the codebase. Ecspecially if called in a trusted / validated code path
+3. Avoid castst to any to get around type issues
+
+
 # SBHQ Player App – Code Guidelines
 
 These are the standards and conventions for writing code in this repository.
