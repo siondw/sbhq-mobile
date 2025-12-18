@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Header from '../ui/Header';
 import Button from '../ui/primitives/Button';
 import Text from '../ui/primitives/Text';
-import { COLORS, HEADER_HEIGHT, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const LoginScreen = () => {
   const { loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
+  const headerHeight = useHeaderHeight();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
@@ -52,9 +54,9 @@ const LoginScreen = () => {
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.select({ ios: 'padding', android: undefined })}
-        keyboardVerticalOffset={HEADER_HEIGHT}
+        keyboardVerticalOffset={headerHeight}
       >
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight + SPACING.XXL }]} keyboardShouldPersistTaps="handled">
           <View style={styles.hero}>
             <Text weight="bold" style={styles.title}>
               Welcome!
@@ -155,7 +157,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: HEADER_HEIGHT + SPACING.XXL,
     paddingBottom: SPACING.XXL,
     paddingHorizontal: SPACING.LG,
     alignItems: 'center',

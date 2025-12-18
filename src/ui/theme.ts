@@ -30,7 +30,7 @@ export const RADIUS: { [key: string]: number } = {
   LG: 16,
 };
 
-export const HEADER_HEIGHT = 64;
+export const HEADER_CONTENT_HEIGHT = 56;
 
 export const TYPOGRAPHY = {
   TITLE: 24,

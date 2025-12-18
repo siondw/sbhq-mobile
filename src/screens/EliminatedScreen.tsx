@@ -1,19 +1,21 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Text from '../ui/primitives/Text';
 import Card from '../ui/primitives/Card';
 import Button from '../ui/primitives/Button';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 import Header from '../ui/Header';
 
 const EliminatedScreen = () => {
   const router = useRouter();
+  const headerHeight = useHeaderHeight();
 
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Card style={styles.card}>
           <Text weight="bold" style={styles.title}>
             Eliminated
@@ -32,7 +34,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.MD,
   },
   content: {
     flex: 1,

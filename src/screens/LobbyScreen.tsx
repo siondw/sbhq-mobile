@@ -4,15 +4,17 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/contest/useContestState';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Header from '../ui/Header';
 import Countdown from '../ui/primitives/Countdown';
 import Text from '../ui/primitives/Text';
-import { COLORS, HEADER_HEIGHT, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const LobbyScreen = () => {
   const params = useLocalSearchParams<{ contestId?: string; startTime?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
+  const headerHeight = useHeaderHeight();
   const { playerState, contest, loading } = useContestState(params.contestId, derivedUser?.id);
   const targetTime = params.startTime
     ? new Date(params.startTime).getTime()
@@ -38,8 +40,8 @@ const LobbyScreen = () => {
   return (
     <View style={styles.screen}>
       <Header />
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight + SPACING.LG }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
@@ -66,7 +68,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingTop: HEADER_HEIGHT + SPACING.LG,
     paddingBottom: SPACING.XXL,
     paddingHorizontal: SPACING.LG,
   },

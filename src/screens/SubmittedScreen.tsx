@@ -4,16 +4,18 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/contest/useContestState';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Header from '../ui/Header';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
-import { COLORS, HEADER_HEIGHT, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const SubmittedScreen = () => {
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
+  const headerHeight = useHeaderHeight();
   const { loading, error, playerState, refresh } = useContestState(contestId, derivedUser?.id);
 
   useEffect(() => {
@@ -57,7 +59,7 @@ const SubmittedScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Card>
           <Text weight="bold" style={styles.title}>
             Submitted
@@ -73,7 +75,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.MD,
   },
   content: {
     flex: 1,

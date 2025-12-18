@@ -4,12 +4,13 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/contest/useContestState';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Header from '../ui/Header';
 import AnswerOption from '../ui/primitives/AnswerOption';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
-import { COLORS, HEADER_HEIGHT, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 interface GameScreenProps {
   contestId?: string;
@@ -18,6 +19,7 @@ interface GameScreenProps {
 const GameScreen = ({ contestId }: GameScreenProps) => {
   const { derivedUser } = useAuth();
   const router = useRouter();
+  const headerHeight = useHeaderHeight();
   const { loading, error, contest, participant, question, answer, playerState, submit, refresh } =
     useContestState(contestId, derivedUser?.id);
 
@@ -79,7 +81,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Text weight="bold" style={styles.title}>
           {contest?.name ?? 'Contest'}
         </Text>
@@ -111,7 +113,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.MD,
   },
   content: {
     paddingHorizontal: SPACING.MD,

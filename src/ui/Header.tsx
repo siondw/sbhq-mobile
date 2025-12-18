@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../logic/auth/useAuth';
 import Text from './primitives/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from './theme';
+import { COLORS, HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY } from './theme';
 
 const Header = memo(() => {
   const { derivedUser } = useAuth();
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: SPACING.MD,
     paddingBottom: SPACING.XS,
-    minHeight: 56,
+    minHeight: HEADER_CONTENT_HEIGHT,
     backgroundColor: 'transparent',
   },
   brandRow: {

@@ -11,11 +11,12 @@ import { getContests } from '../db/contests';
 import { getOrCreateParticipant, getParticipantForUser } from '../db/participants';
 import type { ContestRow, ParticipantRow } from '../db/types';
 import { useAuth } from '../logic/auth/useAuth';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Header from '../ui/Header';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
-import { COLORS, HEADER_HEIGHT, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const ContestListScreen = () => {
   const router = useRouter();
@@ -24,6 +25,7 @@ const ContestListScreen = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { derivedUser } = useAuth();
+  const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
 
   const numColumns = width >= 1100 ? 3 : width >= 760 ? 2 : 1;
@@ -72,8 +74,6 @@ const ContestListScreen = () => {
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
     
-    // Get timezone abbreviation (EST, PST, etc)
-    const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     const shortTz = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
     
     return `${month}/${day} @ ${displayHours}${ampm} ${shortTz}`;
@@ -132,7 +132,7 @@ const ContestListScreen = () => {
         keyExtractor={(item) => item.id}
         numColumns={numColumns}
         columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingTop: headerHeight + SPACING.SM }]}
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
           const isRegistered = !!participant;
@@ -212,7 +212,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.SM,
   },
   listContent: {
     paddingHorizontal: SPACING.MD,

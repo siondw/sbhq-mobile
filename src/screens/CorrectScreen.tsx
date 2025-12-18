@@ -4,16 +4,18 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../logic/auth/useAuth';
 import { useContestState } from '../logic/contest/useContestState';
 import { PLAYER_STATE } from '../logic/constants';
+import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
 import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
-import { COLORS, SPACING, TYPOGRAPHY, HEADER_HEIGHT } from '../ui/theme';
+import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 import Header from '../ui/Header';
 
 const CorrectScreen = () => {
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
+  const headerHeight = useHeaderHeight();
   const { loading, error, playerState, refresh } = useContestState(contestId, derivedUser?.id);
 
   useEffect(() => {
@@ -53,7 +55,7 @@ const CorrectScreen = () => {
   return (
     <View style={styles.container}>
       <Header />
-      <View style={styles.content}>
+      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Card>
           <Text weight="bold" style={styles.title}>
             Correct!
@@ -69,7 +71,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.BACKGROUND,
-    paddingTop: HEADER_HEIGHT + SPACING.MD,
   },
   content: {
     flex: 1,
