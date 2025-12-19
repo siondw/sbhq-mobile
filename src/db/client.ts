@@ -16,6 +16,7 @@ const authOptions =
         autoRefreshToken: true,
         persistSession: true,
         detectSessionInUrl: false,
+        flowType: 'pkce',
       };
 
 export const SUPABASE_CLIENT = createClient<Database>(ENV.SUPABASE_URL, ENV.SUPABASE_ANON_KEY, {

@@ -1,12 +1,26 @@
-import type { Session, User } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { AppStateStatus } from 'react-native';
 import { AppState, Platform } from 'react-native';
-import { SUPABASE_CLIENT } from '../../db/client';
+
+import type { Session, User } from '../../db/auth';
+import {
+  exchangeCodeForSession,
+  getSession,
+  onAuthStateChange,
+  setSession as setSupabaseSession,
+  signInWithOAuth,
+  signInWithOtp,
+  signOut,
+  startAutoRefresh,
+  stopAutoRefresh,
+  verifyOtp,
+} from '../../db/auth';
 import type { UserRow } from '../../db/types';
 import { getUserById } from '../../db/users';
+
+WebBrowser.maybeCompleteAuthSession();
 
 export interface AuthState {
   session: Session | null;
@@ -34,11 +48,27 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const startAuthRefreshListeners = () =>
   AppState.addEventListener('change', (state: AppStateStatus) => {
     if (state === 'active') {
-      void SUPABASE_CLIENT.auth.startAutoRefresh();
+      void startAutoRefresh();
     } else {
-      void SUPABASE_CLIENT.auth.stopAutoRefresh();
+      void stopAutoRefresh();
     }
   });
+
+const parseAuthCallbackUrl = (url: string) => {
+  const parsedUrl = new URL(url);
+  const errorDescription =
+    parsedUrl.searchParams.get('error_description') ??
+    parsedUrl.searchParams.get('error') ??
+    parsedUrl.searchParams.get('error_code');
+
+  const code = parsedUrl.searchParams.get('code');
+
+  const hashParams = new URLSearchParams(parsedUrl.hash.replace(/^#/, ''));
+  const accessToken = hashParams.get('access_token');
+  const refreshToken = hashParams.get('refresh_token');
+
+  return { errorDescription, code, accessToken, refreshToken };
+};
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -59,11 +89,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     let isMounted = true;
+
     const init = async () => {
       try {
-        const {
-          data: { session: initialSession },
-        } = await SUPABASE_CLIENT.auth.getSession();
+        const initialSession = await getSession();
         if (!isMounted) return;
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
@@ -85,7 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     void init();
 
-    const { data } = SUPABASE_CLIENT.auth.onAuthStateChange(async (_event, nextSession) => {
+    const unsubscribe = onAuthStateChange(async (_event, nextSession) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       if (nextSession?.user) {
@@ -99,63 +128,97 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => {
       isMounted = false;
-      data.subscription.unsubscribe();
+      unsubscribe();
       appStateSubscription.remove();
     };
   }, [fetchProfile]);
 
   const loginWithGoogle = useCallback(async () => {
     setError(null);
-    const redirectTo = Linking.createURL('/auth/callback');
-    console.warn('Starting Google OAuth with redirect:', redirectTo);
-    const { data, error: authError } = await SUPABASE_CLIENT.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        skipBrowserRedirect: Platform.OS !== 'web',
-        redirectTo,
-      },
-    });
-    console.warn('Google OAuth response data:', data);
-    if (!authError && data?.url && Platform.OS !== 'web') {
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      console.warn('WebBrowser auth session result:', result);
+
+    if (Platform.OS === 'web') {
+      try {
+        await signInWithOAuth({
+          provider: 'google',
+          options: {
+            skipBrowserRedirect: false,
+          },
+        });
+      } catch (err) {
+        setError((err as Error).message);
+      }
+      return;
     }
-    if (authError) {
-      console.error('Google OAuth error:', authError);
-      setError(authError.message);
+
+    const redirectTo = Linking.createURL('auth/callback');
+
+    try {
+      const data = await signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+        },
+      });
+
+      if (!data?.url) {
+        setError('No auth URL returned from Supabase');
+        return;
+      }
+
+      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+      if (result.type !== 'success' || !result.url) {
+        setError('Authentication was cancelled or failed');
+        return;
+      }
+
+      const { errorDescription, code, accessToken, refreshToken } = parseAuthCallbackUrl(result.url);
+
+      if (errorDescription) {
+        setError(errorDescription);
+        return;
+      }
+
+      if (code) {
+        await exchangeCodeForSession(code);
+        return;
+      }
+
+      if (accessToken && refreshToken) {
+        await setSupabaseSession({ access_token: accessToken, refresh_token: refreshToken });
+        return;
+      }
+
+      setError('No auth code returned from Supabase');
+    } catch (err) {
+      setError((err as Error).message);
     }
   }, []);
 
   const sendEmailOtp = useCallback(async (email: string) => {
     setError(null);
-    const { error: authError } = await SUPABASE_CLIENT.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: true,
-      },
-    });
-    if (authError) {
-      setError(authError.message);
+    try {
+      await signInWithOtp(email);
+    } catch (err) {
+      setError((err as Error).message);
     }
   }, []);
 
   const verifyEmailOtp = useCallback(async (email: string, token: string) => {
     setError(null);
-    const { error: authError } = await SUPABASE_CLIENT.auth.verifyOtp({
-      email,
-      token,
-      type: 'email',
-    });
-    if (authError) {
-      setError(authError.message);
+    try {
+      await verifyOtp(email, token);
+    } catch (err) {
+      setError((err as Error).message);
     }
   }, []);
 
   const logout = useCallback(async () => {
     setError(null);
-    const { error: authError } = await SUPABASE_CLIENT.auth.signOut();
-    if (authError) {
-      setError(authError.message);
+    try {
+      await signOut();
+    } catch (err) {
+      setError((err as Error).message);
     }
   }, []);
 
@@ -182,18 +245,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       logout,
       derivedUser,
     }),
-    [
-      session,
-      user,
-      profile,
-      loading,
-      error,
-      loginWithGoogle,
-      sendEmailOtp,
-      verifyEmailOtp,
-      logout,
-      derivedUser,
-    ],
+    [session, user, profile, loading, error, loginWithGoogle, sendEmailOtp, verifyEmailOtp, logout, derivedUser],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

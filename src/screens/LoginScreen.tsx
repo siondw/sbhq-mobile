@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
+import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
@@ -8,7 +9,8 @@ import Text from '../ui/primitives/Text';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const LoginScreen = () => {
-  const { loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
+  const { session, loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
+  const router = useRouter();
   const headerHeight = useHeaderHeight();
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
@@ -16,6 +18,12 @@ const LoginScreen = () => {
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading && session) {
+      router.replace('/contests');
+    }
+  }, [loading, session, router]);
 
   const handleGoogle = () => {
     setMessage('Opening Google login…');
