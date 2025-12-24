@@ -50,3 +50,22 @@ export const subscribeToContest = (
       }
     },
   });
+
+// State check helpers
+export const isContestActive = (contest: ContestRow): boolean => {
+  return contest.state === 'LOBBY_OPEN' ||
+         contest.state === 'ROUND_IN_PROGRESS' ||
+         contest.state === 'ROUND_CLOSED';
+};
+
+export const canAcceptParticipants = (contest: ContestRow): boolean => {
+  return contest.state === 'LOBBY_OPEN';
+};
+
+export const canSubmitAnswers = (contest: ContestRow): boolean => {
+  return contest.state === 'ROUND_IN_PROGRESS';
+};
+
+export const isContestFinished = (contest: ContestRow): boolean => {
+  return contest.state === 'FINISHED';
+};

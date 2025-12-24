@@ -70,41 +70,34 @@ export type Database = {
         Row: {
           created_at: string | null
           current_round: number | null
-          finished: boolean | null
           id: string
-          lobby_open: boolean | null
           name: string
           price: number | null
           start_time: string
-          submission_open: boolean | null
+          state: Database["public"]["Enums"]["contest_state"]
         }
         Insert: {
           created_at?: string | null
           current_round?: number | null
-          finished?: boolean | null
           id?: string
-          lobby_open?: boolean | null
           name: string
           price?: number | null
           start_time: string
-          submission_open?: boolean | null
+          state?: Database["public"]["Enums"]["contest_state"]
         }
         Update: {
           created_at?: string | null
           current_round?: number | null
-          finished?: boolean | null
           id?: string
-          lobby_open?: boolean | null
           name?: string
           price?: number | null
           start_time?: string
-          submission_open?: boolean | null
+          state?: Database["public"]["Enums"]["contest_state"]
         }
         Relationships: []
       }
       participants: {
         Row: {
-          active: boolean | null
           contest_id: string | null
           created_at: string
           elimination_round: number | null
@@ -112,7 +105,6 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
-          active?: boolean | null
           contest_id?: string | null
           created_at?: string
           elimination_round?: number | null
@@ -120,7 +112,6 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
-          active?: boolean | null
           contest_id?: string | null
           created_at?: string
           elimination_round?: number | null
@@ -214,7 +205,12 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      contest_state:
+        | "UPCOMING"
+        | "LOBBY_OPEN"
+        | "ROUND_IN_PROGRESS"
+        | "ROUND_CLOSED"
+        | "FINISHED"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -341,7 +337,15 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      contest_state: [
+        "UPCOMING",
+        "LOBBY_OPEN",
+        "ROUND_IN_PROGRESS",
+        "ROUND_CLOSED",
+        "FINISHED",
+      ],
+    },
   },
 } as const
 
@@ -363,3 +367,5 @@ export type ContestUpdate = TablesUpdate<'contests'>
 export type ParticipantUpdate = TablesUpdate<'participants'>
 export type QuestionUpdate = TablesUpdate<'questions'>
 export type AnswerUpdate = TablesUpdate<'answers'>
+
+export type ContestState = Database['public']['Enums']['contest_state']

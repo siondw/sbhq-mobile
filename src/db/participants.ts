@@ -29,7 +29,7 @@ export const getActiveParticipantCount = async (contestId: string): AsyncResult<
   const { count, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('id', { count: 'exact', head: true })
     .eq('contest_id', contestId)
-    .eq('active', true);
+    .is('elimination_round', null);
 
   if (error) {
     return Err(networkError(`Failed to fetch participant count for contest ${contestId}: ${error.message}`));
@@ -68,7 +68,6 @@ export const getOrCreateParticipant = async (
   return createParticipant({
     contest_id: contestId,
     user_id: userId,
-    active: true,
     elimination_round: null,
   });
 };

@@ -9,3 +9,13 @@ export const PLAYER_STATE = {
 } as const;
 
 export type PlayerState = (typeof PLAYER_STATE)[keyof typeof PLAYER_STATE];
+
+export const CONTEST_STATE = {
+  UPCOMING: 'UPCOMING',
+  LOBBY_OPEN: 'LOBBY_OPEN',
+  ROUND_IN_PROGRESS: 'ROUND_IN_PROGRESS',
+  ROUND_CLOSED: 'ROUND_CLOSED',
+  FINISHED: 'FINISHED',
+} as const;
+
+export type ContestStateValue = (typeof CONTEST_STATE)[keyof typeof CONTEST_STATE];

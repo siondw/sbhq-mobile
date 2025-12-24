@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } fr
 
 import { ROUTES } from '../configs/routes';
 import type { ContestRow } from '../db/types';
+import { CONTEST_STATE } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
@@ -34,7 +35,7 @@ const ContestListScreen = () => {
   const numColumns = width >= 1100 ? 3 : width >= 760 ? 2 : 1;
 
   const filteredContests = useMemo(
-    () => contests.filter((contest) => !contest.finished),
+    () => contests.filter((contest) => contest.state !== CONTEST_STATE.FINISHED),
     [contests],
   );
 
@@ -58,18 +59,18 @@ const ContestListScreen = () => {
 
     await registerForContest(contest.id);
 
-    if (contest.finished) {
+    if (contest.state === CONTEST_STATE.FINISHED) {
       router.push(ROUTES.INDEX);
       return;
     }
-    if (contest.lobby_open) {
+    if (contest.state === CONTEST_STATE.LOBBY_OPEN) {
       router.push({
         pathname: ROUTES.LOBBY,
         params: { contestId: contest.id, startTime: contest.start_time },
       });
       return;
     }
-    if (contest.submission_open) {
+    if (contest.state === CONTEST_STATE.ROUND_IN_PROGRESS) {
       router.push({
         pathname: `${ROUTES.CONTEST}/[contestId]`,
         params: { contestId: contest.id },
@@ -109,8 +110,8 @@ const ContestListScreen = () => {
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
           const isRegistered = !!participant;
-          const isLive = item.lobby_open || item.submission_open;
-          const isLocked = item.submission_open && !isRegistered;
+          const isLive = item.state === CONTEST_STATE.LOBBY_OPEN || item.state === CONTEST_STATE.ROUND_IN_PROGRESS;
+          const isLocked = item.state === CONTEST_STATE.ROUND_IN_PROGRESS && !isRegistered;
 
           const startLabel = formatStart(item.start_time);
           const priceLabel = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : 'Free';
@@ -121,13 +122,13 @@ const ContestListScreen = () => {
           if (isLocked) {
             buttonLabel = '🔒 Locked';
             buttonVariant = 'primary';
-          } else if (isRegistered && (item.lobby_open || item.submission_open)) {
+          } else if (isRegistered && (item.state === CONTEST_STATE.LOBBY_OPEN || item.state === CONTEST_STATE.ROUND_IN_PROGRESS)) {
             buttonLabel = 'Join';
             buttonVariant = 'success';
           } else if (isRegistered) {
             buttonLabel = 'Registered';
             buttonVariant = 'success';
-          } else if (item.lobby_open) {
+          } else if (item.state === CONTEST_STATE.LOBBY_OPEN) {
             buttonLabel = 'Register';
             buttonVariant = 'primary';
           }
@@ -166,7 +167,7 @@ const ContestListScreen = () => {
                   variant={buttonVariant}
                   onPress={() => void handleEnterContest(item)}
                   disabled={
-                    !!isLocked || (isRegistered && !item.lobby_open && !item.submission_open)
+                    !!isLocked || (isRegistered && item.state !== CONTEST_STATE.LOBBY_OPEN && item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
                   }
                 />
               </View>
