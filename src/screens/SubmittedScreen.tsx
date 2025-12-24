@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/contest/useContestState';
@@ -10,6 +10,7 @@ import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import ballGif from '../../assets/gifs/ball.gif';
 
 const SubmittedScreen = () => {
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
@@ -21,8 +22,7 @@ const SubmittedScreen = () => {
   useEffect(() => {
     if (!contestId || loading) return;
     console.warn('SubmittedScreen state', { playerState, contestId });
-    
-    // Only navigate away from submitted screen if we're NOT in a waiting state
+
     if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${contestId}`);
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
@@ -34,7 +34,6 @@ const SubmittedScreen = () => {
     } else if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: '/lobby', params: { contestId } });
     }
-    // Note: SUBMITTED_WAITING should stay on this screen, so we don't navigate
   }, [playerState, router, contestId, loading]);
 
   if (loading) {
@@ -64,7 +63,8 @@ const SubmittedScreen = () => {
           <Text weight="bold" style={styles.title}>
             Submitted
           </Text>
-          <Text style={styles.body}>You are locked in. Waiting for the result…</Text>
+          <Text style={styles.body}>You are locked in. Waiting for the result...</Text>
+          <Image source={ballGif} style={styles.submittedGif} />
         </Card>
       </View>
     </View>
@@ -93,6 +93,12 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: TYPOGRAPHY.BODY,
+  },
+  submittedGif: {
+    width: 250,
+    height: 250,
+    alignSelf: 'center',
+    marginTop: SPACING.MD,
   },
   spacer: {
     height: SPACING.SM,

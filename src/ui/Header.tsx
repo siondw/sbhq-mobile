@@ -1,7 +1,7 @@
-import { FontAwesome } from '@expo/vector-icons';
 import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import TrophyIcon from '../../assets/icons/trophy.svg';
 import { useAuth } from '../logic/auth/useAuth';
 import Text from './primitives/Text';
 import { COLORS, HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY } from './theme';
@@ -13,7 +13,7 @@ const Header = memo(() => {
     <SafeAreaView style={styles.safeArea} edges={['top']} pointerEvents="box-none">
       <View style={styles.container} pointerEvents="box-none">
         <View style={styles.brandRow}>
-          <FontAwesome name="trophy" size={14} color={COLORS.PRIMARY_DARK} />
+          <TrophyIcon width={14} height={14} />
           <Text weight="medium" style={styles.brand}>
             Superbowl HQ
           </Text>

@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useAuth } from '../logic/auth/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/contest/useContestState';
@@ -9,6 +9,7 @@ import Header from '../ui/Header';
 import Countdown from '../ui/primitives/Countdown';
 import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import pregameGif from '../../assets/gifs/catch_nobg.gif';
 
 const LobbyScreen = () => {
   const params = useLocalSearchParams<{ contestId?: string; startTime?: string }>();
@@ -55,6 +56,8 @@ const LobbyScreen = () => {
             </Text>
             <Countdown targetTime={targetTime} />
           </View>
+
+          <Image source={pregameGif} style={styles.pregameGif} />
         </View>
       </ScrollView>
     </View>
@@ -89,6 +92,11 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.BODY,
     color: COLORS.MUTED,
     textAlign: 'center',
+  },
+  pregameGif: {
+    width: 250,
+    height: 250,
+    alignSelf: 'center',
   },
 });
 

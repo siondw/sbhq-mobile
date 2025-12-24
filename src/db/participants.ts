@@ -22,6 +22,20 @@ export const getParticipantForUser = async (
   return (data as ParticipantRow) ?? null;
 };
 
+export const getActiveParticipantCount = async (contestId: string): Promise<number> => {
+  const { count, error } = await SUPABASE_CLIENT
+    .from(DB_TABLES.PARTICIPANTS)
+    .select('id', { count: 'exact', head: true })
+    .eq('contest_id', contestId)
+    .eq('active', true);
+
+  if (error) {
+    throw new Error(`Failed to fetch participant count for contest ${contestId}: ${error.message}`);
+  }
+
+  return count ?? 0;
+};
+
 export const createParticipant = async (
   payload: ParticipantInsert,
 ): Promise<ParticipantRow> => {

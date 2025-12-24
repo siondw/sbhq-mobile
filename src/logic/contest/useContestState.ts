@@ -86,7 +86,15 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   const [isInitialized, setIsInitialized] = useState(false);
 
   const fetchContestState = useCallback(async () => {
-    if (!contestId) return;
+    if (!contestId) {
+      setContest(null);
+      setParticipant(null);
+      setQuestion(null);
+      setAnswer(null);
+      setError('Missing contest. Please pick a contest from the list and try again.');
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
