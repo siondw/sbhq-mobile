@@ -38,9 +38,9 @@ const DevLandingScreen = () => {
             </Pressable>
           </Link>
 
-          <Link href={{ pathname: '/contest/[contestId]', params: { contestId: 'test' } }} asChild>
+          <Link href={{ pathname: '/contest/[contestId]', params: { contestId: '00000000-0000-0000-0000-0000000000aa' } }} asChild>
             <Pressable style={styles.button}>
-              <Text style={styles.buttonText}>Game Screen</Text>
+              <Text style={styles.buttonText}>Game Screen (Sunday Showdown)</Text>
             </Pressable>
           </Link>
 
