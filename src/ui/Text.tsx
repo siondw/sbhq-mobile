@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text as RNText, StyleSheet, type TextProps as RNTextProps } from 'react-native';
-import { TYPOGRAPHY, COLORS } from '../theme';
+import { TYPOGRAPHY, COLORS } from './theme';
 
 export interface TextProps extends RNTextProps {
   weight?: 'regular' | 'medium' | 'bold';

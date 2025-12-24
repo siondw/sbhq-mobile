@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Text from './Text';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from './theme';
 
 interface AnswerOptionProps {
   label: string;

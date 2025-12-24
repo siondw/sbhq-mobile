@@ -13,10 +13,10 @@ import {
 import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import Button from '../ui/primitives/Button';
-import Text from '../ui/primitives/Text';
+import Button from '../ui/Button';
+import Text from '../ui/Text';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/Header';
+import Header from '../ui/AppHeader';
 
 const LoginScreen = () => {
   const { session, loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();

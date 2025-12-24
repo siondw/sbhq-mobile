@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
-import { RADIUS, SPACING } from '../theme';
+import { RADIUS, SPACING } from './theme';
 
 const Card = ({ style, children, ...rest }: ViewProps) => {
   return (

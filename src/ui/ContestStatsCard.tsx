@@ -4,10 +4,10 @@ import { StyleSheet, View } from 'react-native';
 import DollarSignIcon from '../../assets/icons/DollarSignIcon.svg';
 import LeaderboardIcon from '../../assets/icons/leaderboard.svg';
 import PersonIcon from '../../assets/icons/person.svg';
-import Text from './primitives/Text';
+import Text from './Text';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from './theme';
 
-type GameStatsSummaryProps = {
+type ContestStatsCardProps = {
   numberOfRemainingPlayers: number;
   roundNumber: number;
   style?: StyleProp<ViewStyle>;
@@ -15,11 +15,11 @@ type GameStatsSummaryProps = {
 
 const ICON_SIZE = 18;
 
-const GameStatsSummary = ({
+const ContestStatsCard = ({
   numberOfRemainingPlayers,
   roundNumber,
   style,
-}: GameStatsSummaryProps) => {
+}: ContestStatsCardProps) => {
   const chanceOfWinning =
     numberOfRemainingPlayers > 0 ? ((1 / numberOfRemainingPlayers) * 100).toFixed(2) : '0.00';
 
@@ -62,4 +62,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default GameStatsSummary;
+export default ContestStatsCard;

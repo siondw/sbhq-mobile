@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import TrophyIcon from '../../assets/icons/trophy.svg';
 import { APP_NAME } from '../configs/constants';
 import type { DerivedUser } from '../logic/hooks/AuthProvider';
-import Text from './primitives/Text';
+import Text from './Text';
 import { COLORS, HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY } from './theme';
 
 interface HeaderProps {

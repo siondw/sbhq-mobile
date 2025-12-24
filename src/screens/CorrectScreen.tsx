@@ -8,12 +8,12 @@ import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { PLAYER_STATE } from '../logic/constants';
-import Button from '../ui/primitives/Button';
-import Card from '../ui/primitives/Card';
-import Text from '../ui/primitives/Text';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
+import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import GameStatsSummary from '../ui/GameStatsSummary';
-import Header from '../ui/Header';
+import ContestStatsCard from '../ui/ContestStatsCard';
+import Header from '../ui/AppHeader';
 
 const CorrectScreen = () => {
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
@@ -71,7 +71,7 @@ const CorrectScreen = () => {
           <Text style={styles.body}>Nice work. Waiting for the next round.</Text>
         </Card>
         <View style={styles.summary}>
-          <GameStatsSummary
+          <ContestStatsCard
             numberOfRemainingPlayers={remainingPlayers}
             roundNumber={contest?.current_round ?? 1}
           />

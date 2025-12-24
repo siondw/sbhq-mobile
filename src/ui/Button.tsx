@@ -1,6 +1,6 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text } from 'react-native';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../theme';
+import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from './theme';
 
 interface ButtonProps {
   label: string;

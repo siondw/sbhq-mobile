@@ -7,10 +7,10 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import Countdown from '../ui/primitives/Countdown';
-import Text from '../ui/primitives/Text';
+import Countdown from '../ui/Countdown';
+import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/Header';
+import Header from '../ui/AppHeader';
 import pregameGif from '../../assets/gifs/catch_nobg.gif';
 
 const LobbyScreen = () => {

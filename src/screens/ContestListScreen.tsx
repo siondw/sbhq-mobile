@@ -8,10 +8,10 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import Header from '../ui/Header';
-import Button from '../ui/primitives/Button';
-import Card from '../ui/primitives/Card';
-import Text from '../ui/primitives/Text';
+import Header from '../ui/AppHeader';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
+import Text from '../ui/Text';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const ContestListScreen = () => {

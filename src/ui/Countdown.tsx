@@ -2,7 +2,7 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { COLORS } from '../theme';
+import { COLORS } from './theme';
 import Text from './Text';
 
 interface CountdownProps {

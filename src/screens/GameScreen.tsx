@@ -7,12 +7,12 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import AnswerOption from '../ui/primitives/AnswerOption';
-import Button from '../ui/primitives/Button';
-import Card from '../ui/primitives/Card';
-import Text from '../ui/primitives/Text';
+import AnswerOption from '../ui/AnswerOption';
+import Button from '../ui/Button';
+import Card from '../ui/Card';
+import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/Header';
+import Header from '../ui/AppHeader';
 
 interface GameScreenProps {
   contestId?: string;
