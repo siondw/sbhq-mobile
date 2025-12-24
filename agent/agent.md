@@ -61,7 +61,125 @@ Never invent new features or flows.
 
 1. Avoid adding extra comments that a human wouldnt add. The code should be self-dcoumenting through proper naming and readability. Dont add comments that are inconsistnet with the rest of the file
 2. Avoid extra defensive checks and try catches thata re abnormal for that are of the codebase. Ecspecially if called in a trusted / validated code path
-3. Avoid castst to any to get around type issues
+3. Avoid casts to any to get around type issues
+4. NEVER use `as unknown as Type` or similar cheap shortcuts to bypass type errors - fix them properly or leave them to address later
+
+# Functional Programming Patterns
+
+This codebase follows functional TypeScript patterns for better type safety and maintainability:
+
+## 1. Result Type for Explicit Error Handling
+
+All `src/db/` functions return `AsyncResult<T, DbError>` instead of throwing:
+
+```typescript
+// Good - Error is part of the type
+export const getUser = async (id: string): AsyncResult<User, DbError> => {
+  const { data, error } = await SUPABASE_CLIENT.from('users')...
+  if (error) {
+    return Err(networkError(error.message));
+  }
+  return Ok(data);
+};
+
+// Bad - Error is hidden, can be forgotten
+export const getUser = async (id: string): Promise<User> => {
+  const { data, error } = await SUPABASE_CLIENT.from('users')...
+  if (error) {
+    throw new Error(error.message); // ❌ Not in type signature
+  }
+  return data;
+};
+```
+
+**Hooks handle Results explicitly:**
+```typescript
+const fetchData = async () => {
+  const result = await getUser(userId);
+  if (result.ok) {
+    setUser(result.value);
+  } else {
+    setError(getErrorMessage(result.error));
+  }
+};
+```
+
+## 2. Pure Logic Separation
+
+- **Pure functions** in `src/logic/<domain>/` - No React, no side effects
+- **Effect hooks** in `src/logic/hooks/` - Call pure functions, manage subscriptions
+- **DB operations** in `src/db/` - Isolated side effects
+
+Example:
+```typescript
+// src/logic/contest/derivePlayerState.ts - Pure
+export const derivePlayerState = (
+  contest: ContestRow | null,
+  participant: ParticipantRow | null,
+  question: QuestionRow | null,
+  answer: AnswerRow | null,
+): PlayerState => {
+  // Pure computation, no side effects
+};
+
+// src/logic/hooks/useContestState.ts - Uses pure function
+const playerState = useMemo(
+  () => derivePlayerState(contest, participant, question, answer),
+  [contest, participant, question, answer]
+);
+```
+
+## 3. Array Utilities for Composition
+
+Use `groupBy`, `keyBy`, `sum` from `src/utils/array.ts`:
+
+```typescript
+// Good
+const byContest = groupBy(participants, p => p.contest_id);
+const byId = keyBy(users, u => u.id);
+
+// Avoid
+const byContest = {};
+for (const p of participants) {
+  if (!byContest[p.contest_id]) byContest[p.contest_id] = [];
+  byContest[p.contest_id].push(p);
+}
+```
+
+## 4. Supabase Type Assertions
+
+Supabase's complex type inference system generates verbose generic types that TypeScript struggles to reconcile with application types. The `as RowType` pattern is the **standard practice** recommended by the Supabase community for bridging this gap.
+
+```typescript
+// ✅ Good - Direct type assertion (recommended pattern)
+const { data, error } = await SUPABASE_CLIENT
+  .from('contests')
+  .select('*')
+  .single();
+
+if (error) return Err(networkError(error.message));
+return Ok(data as ContestRow);  // Standard Supabase pattern
+
+// ❌ Bad - Using 'as unknown as' is a code smell
+return Ok(data as unknown as ContestRow);  // Avoid this
+```
+
+**Expected TypeScript Warnings:**
+Type errors like `"Conversion of type 'GetResult<...>' may be a mistake"` are **expected** in `src/db/` files. These are false positives from TypeScript's strict checks and can be safely ignored:
+
+```typescript
+// These warnings are EXPECTED and acceptable:
+src/db/answers.ts(55,15): error TS2352: Conversion of type '...' to type 'AnswerRow' may be a mistake
+src/db/contests.ts(23,12): error TS2352: Conversion of type '...' to type 'ContestRow[]' may be a mistake
+```
+
+**Why this happens:**
+- Supabase generates complex `GetResult<QueryResult<...>>` types
+- These types encode the full query structure but don't match our simpler `RowType` interfaces
+- The `as RowType` cast is safe because our types match the database schema
+- This is documented in Supabase's TypeScript guide and community patterns
+
+**Rule:** Only use `as RowType` casts in `src/db/` files. Never use `as unknown as Type`.
 
 # SBHQ Player App – Code Guidelines
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getContests } from '../../db/contests';
+import { getErrorMessage } from '../../db/errors';
 import type { ContestRow } from '../../db/types';
 
 export interface UseContestsResult {
@@ -17,14 +18,14 @@ export const useContests = (): UseContestsResult => {
   const fetchContests = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const data = await getContests();
-      setContests(data);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+
+    const result = await getContests();
+    if (result.ok) {
+      setContests(result.value);
+    } else {
+      setError(getErrorMessage(result.error));
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {

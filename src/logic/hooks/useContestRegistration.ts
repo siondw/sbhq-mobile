@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { getErrorMessage } from '../../db/errors';
 import { getOrCreateParticipant, getParticipantForUser } from '../../db/participants';
 import type { ContestRow, ParticipantRow } from '../../db/types';
 
@@ -23,22 +24,25 @@ export const useContestRegistration = (
 
     setLoading(true);
     setError(null);
-    try {
-      const participantMap = new Map<string, ParticipantRow>();
-      await Promise.all(
-        contests.map(async (contest) => {
-          const participant = await getParticipantForUser(contest.id, userId);
-          if (participant) {
-            participantMap.set(contest.id, participant);
-          }
-        }),
-      );
-      setParticipants(participantMap);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+
+    const participantMap = new Map<string, ParticipantRow>();
+    const results = await Promise.all(
+      contests.map(async (contest) => {
+        const result = await getParticipantForUser(contest.id, userId);
+        return { contestId: contest.id, result };
+      }),
+    );
+
+    for (const { contestId, result } of results) {
+      if (result.ok && result.value) {
+        participantMap.set(contestId, result.value);
+      } else if (!result.ok) {
+        setError(getErrorMessage(result.error));
+      }
     }
+
+    setParticipants(participantMap);
+    setLoading(false);
   }, [contests, userId]);
 
   useEffect(() => {
@@ -53,12 +57,12 @@ export const useContestRegistration = (
       }
 
       setError(null);
-      try {
-        const participant = await getOrCreateParticipant(contestId, userId);
-        setParticipants((prev) => new Map(prev).set(contestId, participant));
-        return participant;
-      } catch (err) {
-        setError((err as Error).message);
+      const result = await getOrCreateParticipant(contestId, userId);
+      if (result.ok) {
+        setParticipants((prev) => new Map(prev).set(contestId, result.value));
+        return result.value;
+      } else {
+        setError(getErrorMessage(result.error));
         return null;
       }
     },

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { getErrorMessage } from '../../db/errors';
 import { getActiveParticipantCount } from '../../db/participants';
 
 export interface UseParticipantCountResult {
@@ -24,20 +25,16 @@ export const useParticipantCount = (contestId?: string): UseParticipantCountResu
     const loadCount = async () => {
       setLoading(true);
       setError(null);
-      try {
-        const participantCount = await getActiveParticipantCount(contestId);
-        if (isMounted) {
-          setCount(participantCount);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError((err as Error).message);
+
+      const result = await getActiveParticipantCount(contestId);
+      if (isMounted) {
+        if (result.ok) {
+          setCount(result.value);
+        } else {
+          setError(getErrorMessage(result.error));
           setCount(0);
         }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        setLoading(false);
       }
     };
 

@@ -1,26 +1,30 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { AsyncResult } from '../utils/result';
+import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
+import { networkError } from './errors';
+import type { DbError } from './errors';
 import { subscribeToTable } from './realtime';
 import type { QuestionRow } from './types';
 
-export const getQuestionsForContest = async (contestId: string): Promise<QuestionRow[]> => {
+export const getQuestionsForContest = async (contestId: string): AsyncResult<QuestionRow[], DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.QUESTIONS)
     .select('*')
     .eq('contest_id', contestId)
     .order('round', { ascending: true });
 
   if (error) {
-    throw new Error(`Failed to fetch questions for contest ${contestId}: ${error.message}`);
+    return Err(networkError(`Failed to fetch questions for contest ${contestId}: ${error.message}`));
   }
 
-  return (data as QuestionRow[]) ?? [];
+  return Ok((data as QuestionRow[]) ?? []);
 };
 
 export const getQuestionForRound = async (
   contestId: string,
   round: number,
-): Promise<QuestionRow | null> => {
+): AsyncResult<QuestionRow | null, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.QUESTIONS)
     .select('*')
     .eq('contest_id', contestId)
@@ -28,12 +32,12 @@ export const getQuestionForRound = async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(
+    return Err(networkError(
       `Failed to fetch question for contest ${contestId} round ${round}: ${error.message}`,
-    );
+    ));
   }
 
-  return (data as QuestionRow) ?? null;
+  return Ok((data as QuestionRow | null) ?? null);
 };
 
 export const subscribeToQuestions = (

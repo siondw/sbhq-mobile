@@ -17,6 +17,7 @@ import {
   stopAutoRefresh,
   verifyOtp,
 } from '../../db/auth';
+import { getErrorMessage } from '../../db/errors';
 import type { UserRow } from '../../db/types';
 import { getUserById } from '../../db/users';
 
@@ -80,11 +81,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const nextProfile = await getUserById(userId);
-      setProfile(nextProfile);
-    } catch (err) {
-      setError((err as Error).message);
+    const result = await getUserById(userId);
+    if (result.ok) {
+      setProfile(result.value);
+    } else {
+      setError(getErrorMessage(result.error));
       setProfile(null);
     }
   }, []);
@@ -93,24 +94,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     let isMounted = true;
 
     const init = async () => {
-      try {
-        const initialSession = await getSession();
-        if (!isMounted) return;
+      const result = await getSession();
+      if (!isMounted) return;
+
+      if (result.ok) {
+        const initialSession = result.value;
         setSession(initialSession);
         setUser(initialSession?.user ?? null);
         if (initialSession?.user) {
           await fetchProfile(initialSession.user.id);
         }
-      } catch (err) {
-        if (!isMounted) return;
-        setError((err as Error).message);
+      } else {
+        setError(getErrorMessage(result.error));
         setSession(null);
         setUser(null);
         setProfile(null);
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+      }
+
+      if (isMounted) {
+        setLoading(false);
       }
     };
 
@@ -139,90 +141,97 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setError(null);
 
     if (Platform.OS === 'web') {
-      try {
-        await signInWithOAuth({
-          provider: 'google',
-          options: {
-            skipBrowserRedirect: false,
-          },
-        });
-      } catch (err) {
-        setError((err as Error).message);
+      const result = await signInWithOAuth({
+        provider: 'google',
+        options: {
+          skipBrowserRedirect: false,
+        },
+      });
+      if (!result.ok) {
+        setError(getErrorMessage(result.error));
       }
       return;
     }
 
     const redirectTo = Linking.createURL('auth/callback');
 
-    try {
-      const data = await signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo,
-          skipBrowserRedirect: true,
-        },
-      });
+    const oauthResult = await signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo,
+        skipBrowserRedirect: true,
+      },
+    });
 
-      if (!data?.url) {
-        setError('No auth URL returned from Supabase');
-        return;
-      }
-
-      const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-      if (result.type !== 'success' || !result.url) {
-        setError('Authentication was cancelled or failed');
-        return;
-      }
-
-      const { errorDescription, code, accessToken, refreshToken } = parseAuthCallbackUrl(
-        result.url,
-      );
-
-      if (errorDescription) {
-        setError(errorDescription);
-        return;
-      }
-
-      if (code) {
-        await exchangeCodeForSession(code);
-        return;
-      }
-
-      if (accessToken && refreshToken) {
-        await setSupabaseSession({ access_token: accessToken, refresh_token: refreshToken });
-        return;
-      }
-
-      setError('No auth code returned from Supabase');
-    } catch (err) {
-      setError((err as Error).message);
+    if (!oauthResult.ok) {
+      setError(getErrorMessage(oauthResult.error));
+      return;
     }
+
+    const data = oauthResult.value;
+    if (!data?.url) {
+      setError('No auth URL returned from Supabase');
+      return;
+    }
+
+    const browserResult = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
+    if (browserResult.type !== 'success' || !browserResult.url) {
+      setError('Authentication was cancelled or failed');
+      return;
+    }
+
+    const { errorDescription, code, accessToken, refreshToken } = parseAuthCallbackUrl(
+      browserResult.url,
+    );
+
+    if (errorDescription) {
+      setError(errorDescription);
+      return;
+    }
+
+    if (code) {
+      const codeResult = await exchangeCodeForSession(code);
+      if (!codeResult.ok) {
+        setError(getErrorMessage(codeResult.error));
+      }
+      return;
+    }
+
+    if (accessToken && refreshToken) {
+      const sessionResult = await setSupabaseSession({
+        access_token: accessToken,
+        refresh_token: refreshToken,
+      });
+      if (!sessionResult.ok) {
+        setError(getErrorMessage(sessionResult.error));
+      }
+      return;
+    }
+
+    setError('No auth code returned from Supabase');
   }, []);
 
   const sendEmailOtp = useCallback(async (email: string) => {
     setError(null);
-    try {
-      await signInWithOtp(email);
-    } catch (err) {
-      setError((err as Error).message);
+    const result = await signInWithOtp(email);
+    if (!result.ok) {
+      setError(getErrorMessage(result.error));
     }
   }, []);
 
   const verifyEmailOtp = useCallback(async (email: string, token: string) => {
     setError(null);
-    try {
-      await verifyOtp(email, token);
-    } catch (err) {
-      setError((err as Error).message);
+    const result = await verifyOtp(email, token);
+    if (!result.ok) {
+      setError(getErrorMessage(result.error));
     }
   }, []);
 
   const logout = useCallback(async () => {
     setError(null);
-    try {
-      await signOut();
-    } catch (err) {
-      setError((err as Error).message);
+    const result = await signOut();
+    if (!result.ok) {
+      setError(getErrorMessage(result.error));
     }
   }, []);
 

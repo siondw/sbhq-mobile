@@ -7,6 +7,7 @@ import {
   type SubmitAnswerParams,
 } from '../../db/answers';
 import { getContestById, subscribeToContest } from '../../db/contests';
+import { getErrorMessage } from '../../db/errors';
 import {
   getOrCreateParticipant,
   getParticipantForUser,
@@ -14,6 +15,7 @@ import {
 } from '../../db/participants';
 import { getQuestionForRound, subscribeToQuestions } from '../../db/questions';
 import type { AnswerRow, ContestRow, ParticipantRow, QuestionRow } from '../../db/types';
+import type { Result } from '../../utils/result';
 import type { PlayerState } from '../constants';
 import { derivePlayerState } from '../contest/derivePlayerState';
 
@@ -50,39 +52,70 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     }
     setLoading(true);
     setError(null);
-    try {
-      const [contestResult, participantResult] = await Promise.all([
-        getContestById(contestId),
-        userId ? getParticipantForUser(contestId, userId) : Promise.resolve(null),
-      ]);
-      setContest(contestResult);
-      const ensuredParticipant =
-        contestResult && userId
-          ? (participantResult ?? (await getOrCreateParticipant(contestResult.id, userId)))
-          : participantResult;
-      setParticipant(ensuredParticipant ?? null);
 
-      if (contestResult) {
-        const roundQuestion = contestResult.current_round
-          ? await getQuestionForRound(contestResult.id, contestResult.current_round)
-          : null;
+    const [contestResult, participantResult] = await Promise.all([
+      getContestById(contestId),
+      userId
+        ? getParticipantForUser(contestId, userId)
+        : Promise.resolve<Result<ParticipantRow | null, never>>({ ok: true, value: null }),
+    ]);
+
+    if (!contestResult.ok) {
+      setError(getErrorMessage(contestResult.error));
+      setLoading(false);
+      return;
+    }
+
+    if (!participantResult.ok) {
+      setError(getErrorMessage(participantResult.error));
+      setLoading(false);
+      return;
+    }
+
+    const contest = contestResult.value;
+    setContest(contest);
+
+    let ensuredParticipant = participantResult.value;
+    if (contest && userId && !ensuredParticipant) {
+      const createResult = await getOrCreateParticipant(contest.id, userId);
+      if (!createResult.ok) {
+        setError(getErrorMessage(createResult.error));
+        setLoading(false);
+        return;
+      }
+      ensuredParticipant = createResult.value;
+    }
+    setParticipant(ensuredParticipant);
+
+    if (contest) {
+      if (contest.current_round) {
+        const questionResult = await getQuestionForRound(contest.id, contest.current_round);
+        if (!questionResult.ok) {
+          setError(getErrorMessage(questionResult.error));
+          setLoading(false);
+          return;
+        }
+        const roundQuestion = questionResult.value;
         setQuestion(roundQuestion);
+
         if (ensuredParticipant && roundQuestion) {
-          const existingAnswer = await getAnswerForQuestion(
-            ensuredParticipant.id,
-            roundQuestion.id,
-          );
-          setAnswer(existingAnswer);
+          const answerResult = await getAnswerForQuestion(ensuredParticipant.id, roundQuestion.id);
+          if (!answerResult.ok) {
+            setError(getErrorMessage(answerResult.error));
+            setLoading(false);
+            return;
+          }
+          setAnswer(answerResult.value);
         } else {
           setAnswer(null);
         }
+      } else {
+        setQuestion(null);
+        setAnswer(null);
       }
-      setIsInitialized(true);
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
     }
+    setIsInitialized(true);
+    setLoading(false);
   }, [contestId, userId]);
 
   useEffect(() => {
@@ -134,25 +167,30 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   useEffect(() => {
     const loadCurrentQuestion = async () => {
       if (!contestId || !contest?.current_round || !isInitialized) return;
-      try {
-        const roundQuestion = await getQuestionForRound(contestId, contest.current_round);
-        // Only update if we actually got a different question
-        setQuestion((prev) => {
-          if (!roundQuestion) return prev;
-          if (prev?.id === roundQuestion.id) return prev;
-          return roundQuestion;
-        });
 
-        if (participant?.id && roundQuestion) {
-          const existingAnswer = await getAnswerForQuestion(participant.id, roundQuestion.id);
-          setAnswer((prev) => {
-            // Don't clear answer unnecessarily
-            if (prev?.question_id === roundQuestion.id) return prev;
-            return existingAnswer;
-          });
+      const questionResult = await getQuestionForRound(contestId, contest.current_round);
+      if (!questionResult.ok) {
+        setError(getErrorMessage(questionResult.error));
+        return;
+      }
+
+      const roundQuestion = questionResult.value;
+      setQuestion((prev) => {
+        if (!roundQuestion) return prev;
+        if (prev?.id === roundQuestion.id) return prev;
+        return roundQuestion;
+      });
+
+      if (participant?.id && roundQuestion) {
+        const answerResult = await getAnswerForQuestion(participant.id, roundQuestion.id);
+        if (!answerResult.ok) {
+          setError(getErrorMessage(answerResult.error));
+          return;
         }
-      } catch (err) {
-        setError((err as Error).message);
+        setAnswer((prev) => {
+          if (prev?.question_id === roundQuestion.id) return prev;
+          return answerResult.value;
+        });
       }
     };
 
@@ -165,7 +203,10 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   );
 
   const handleSubmit = useCallback(async (payload: SubmitAnswerParams) => {
-    await submitAnswer(payload);
+    const result = await submitAnswer(payload);
+    if (!result.ok) {
+      setError(getErrorMessage(result.error));
+    }
   }, []);
 
   return {

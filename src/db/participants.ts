@@ -1,13 +1,17 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { AsyncResult } from '../utils/result';
+import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
+import { networkError } from './errors';
+import type { DbError } from './errors';
 import { subscribeToTable } from './realtime';
 import type { ParticipantInsert, ParticipantRow } from './types';
 
 export const getParticipantForUser = async (
   contestId: string,
   userId: string,
-): Promise<ParticipantRow | null> => {
+): AsyncResult<ParticipantRow | null, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('*')
     .eq('contest_id', contestId)
@@ -15,45 +19,50 @@ export const getParticipantForUser = async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to fetch participant for contest ${contestId}: ${error.message}`);
+    return Err(networkError(`Failed to fetch participant for contest ${contestId}: ${error.message}`));
   }
 
-  return (data as ParticipantRow) ?? null;
+  return Ok((data as ParticipantRow | null) ?? null);
 };
 
-export const getActiveParticipantCount = async (contestId: string): Promise<number> => {
+export const getActiveParticipantCount = async (contestId: string): AsyncResult<number, DbError> => {
   const { count, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('id', { count: 'exact', head: true })
     .eq('contest_id', contestId)
     .eq('active', true);
 
   if (error) {
-    throw new Error(`Failed to fetch participant count for contest ${contestId}: ${error.message}`);
+    return Err(networkError(`Failed to fetch participant count for contest ${contestId}: ${error.message}`));
   }
 
-  return count ?? 0;
+  return Ok(count ?? 0);
 };
 
-export const createParticipant = async (payload: ParticipantInsert): Promise<ParticipantRow> => {
+export const createParticipant = async (payload: ParticipantInsert): AsyncResult<ParticipantRow, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from('participants')
     .insert(payload)
     .select()
     .single();
 
   if (error) {
-    throw new Error(`Failed to create participant: ${error.message}`);
+    return Err(networkError(`Failed to create participant: ${error.message}`));
   }
 
-  return data as ParticipantRow;
+  return Ok(data as ParticipantRow);
 };
 
 export const getOrCreateParticipant = async (
   contestId: string,
   userId: string,
-): Promise<ParticipantRow> => {
-  const existing = await getParticipantForUser(contestId, userId);
-  if (existing) {
-    return existing;
+): AsyncResult<ParticipantRow, DbError> => {
+  const existingResult = await getParticipantForUser(contestId, userId);
+
+  if (!existingResult.ok) {
+    return existingResult;
+  }
+
+  if (existingResult.value) {
+    return Ok(existingResult.value);
   }
 
   return createParticipant({

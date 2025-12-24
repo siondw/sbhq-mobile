@@ -1,6 +1,10 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { AsyncResult } from '../utils/result';
+import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
+import { networkError } from './errors';
+import type { DbError } from './errors';
 import { subscribeToTable } from './realtime';
 import type { AnswerInsert, AnswerRow } from './types';
 
@@ -18,8 +22,13 @@ export const submitAnswer = async ({
   questionId,
   round,
   answer,
-}: SubmitAnswerParams): Promise<AnswerRow> => {
-  const existing = await getAnswerForQuestion(participantId, questionId);
+}: SubmitAnswerParams): AsyncResult<AnswerRow, DbError> => {
+  const existingResult = await getAnswerForQuestion(participantId, questionId);
+
+  if (!existingResult.ok) {
+    return existingResult;
+  }
+
   const payload: AnswerInsert = {
     participant_id: participantId,
     contest_id: contestId,
@@ -29,36 +38,36 @@ export const submitAnswer = async ({
     timestamp: new Date().toISOString(),
   };
 
-  if (existing) {
+  if (existingResult.value) {
     const { data, error } = await SUPABASE_CLIENT.from('answers')
       .update({
         answer: payload.answer,
         timestamp: payload.timestamp,
       })
-      .eq('id', existing.id)
+      .eq('id', existingResult.value.id)
       .select()
       .single();
 
     if (error) {
-      throw new Error(`Failed to update answer: ${error.message}`);
+      return Err(networkError(`Failed to update answer: ${error.message}`));
     }
 
-    return data as AnswerRow;
+    return Ok(data as AnswerRow);
   }
 
   const { data, error } = await SUPABASE_CLIENT.from('answers').insert(payload).select().single();
 
   if (error) {
-    throw new Error(`Failed to submit answer: ${error.message}`);
+    return Err(networkError(`Failed to submit answer: ${error.message}`));
   }
 
-  return data as AnswerRow;
+  return Ok(data as AnswerRow);
 };
 
 export const getAnswerForQuestion = async (
   participantId: string,
   questionId: string,
-): Promise<AnswerRow | null> => {
+): AsyncResult<AnswerRow | null, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
     .select('*')
     .eq('participant_id', participantId)
@@ -66,18 +75,18 @@ export const getAnswerForQuestion = async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(`Failed to fetch answer for question ${questionId}: ${error.message}`);
+    return Err(networkError(`Failed to fetch answer for question ${questionId}: ${error.message}`));
   }
 
-  return (data as AnswerRow) ?? null;
+  return Ok((data as AnswerRow | null) ?? null);
 };
 
 export const getAnswerForRound = async (
   participantId: string,
   contestId: string,
   round: number,
-): Promise<AnswerRow | null> => {
-  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
+): AsyncResult<AnswerRow | null, DbError> => {
+  const { data, error} = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
     .select('*')
     .eq('participant_id', participantId)
     .eq('contest_id', contestId)
@@ -85,12 +94,12 @@ export const getAnswerForRound = async (
     .maybeSingle();
 
   if (error) {
-    throw new Error(
+    return Err(networkError(
       `Failed to fetch answer for participant ${participantId} round ${round}: ${error.message}`,
-    );
+    ));
   }
 
-  return (data as AnswerRow) ?? null;
+  return Ok((data as AnswerRow | null) ?? null);
 };
 
 export const subscribeToAnswersForParticipant = (
