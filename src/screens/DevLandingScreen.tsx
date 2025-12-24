@@ -1,7 +1,9 @@
 import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useAuth } from '../logic/auth/useAuth';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
 import LoginScreen from './LoginScreen';
 
 const DevLandingScreen = () => {

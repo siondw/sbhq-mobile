@@ -1,12 +1,22 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import { useAuth } from '../logic/auth/useAuth';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
-import Header from '../ui/Header';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  TextInput,
+  View,
+} from 'react-native';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Button from '../ui/primitives/Button';
 import Text from '../ui/primitives/Text';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import Header from '../ui/Header';
 
 const LoginScreen = () => {
   const { session, loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
@@ -21,14 +31,12 @@ const LoginScreen = () => {
 
   useEffect(() => {
     if (!loading && session) {
-      router.replace('/contests');
+      router.replace(ROUTES.CONTESTS);
     }
   }, [loading, session, router]);
 
   const handleGoogle = () => {
     setMessage('Opening Google login…');
-    // eslint-disable-next-line no-console
-    console.log('Pressed Continue with Google');
     void loginWithGoogle();
   };
 
@@ -58,13 +66,16 @@ const LoginScreen = () => {
 
   return (
     <View style={styles.screen}>
-      <Header />
+      <Header user={null} />
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.select({ ios: 'padding', android: undefined })}
         keyboardVerticalOffset={headerHeight}
       >
-        <ScrollView contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight + SPACING.XXL }]} keyboardShouldPersistTaps="handled">
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight + SPACING.XXL }]}
+          keyboardShouldPersistTaps="handled"
+        >
           <View style={styles.hero}>
             <Text weight="bold" style={styles.title}>
               Welcome!
@@ -79,7 +90,7 @@ const LoginScreen = () => {
               style={({ pressed }) => [styles.googleButton, pressed && styles.googlePressed]}
               onPress={handleGoogle}
               disabled={loading || sending || verifying}
-              >
+            >
               <Text weight="bold" style={styles.googleLabel}>
                 Continue with Google
               </Text>

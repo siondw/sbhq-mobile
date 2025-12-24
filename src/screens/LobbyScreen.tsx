@@ -1,14 +1,16 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
-import { useAuth } from '../logic/auth/useAuth';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
-import { useContestState } from '../logic/contest/useContestState';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
-import Header from '../ui/Header';
+import { useContestState } from '../logic/hooks/useContestState';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Countdown from '../ui/primitives/Countdown';
 import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import Header from '../ui/Header';
 import pregameGif from '../../assets/gifs/catch_nobg.gif';
 
 const LobbyScreen = () => {
@@ -28,11 +30,11 @@ const LobbyScreen = () => {
     if (playerState === PLAYER_STATE.ANSWERING || playerState === PLAYER_STATE.SUBMITTED_WAITING) {
       router.replace(`/contest/${params.contestId}`);
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace('/correct');
+      router.replace(ROUTES.CORRECT);
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace('/eliminated');
+      router.replace(ROUTES.ELIMINATED);
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace('/winner');
+      router.replace(ROUTES.WINNER);
     } else if (playerState === PLAYER_STATE.LOBBY) {
       // stay here
     }
@@ -40,7 +42,7 @@ const LobbyScreen = () => {
 
   return (
     <View style={styles.screen}>
-      <Header />
+      <Header user={derivedUser} />
       <ScrollView
         contentContainerStyle={[styles.scrollContent, { paddingTop: headerHeight + SPACING.LG }]}
         showsVerticalScrollIndicator={false}
@@ -49,7 +51,7 @@ const LobbyScreen = () => {
           <Text weight="bold" style={styles.contestName}>
             {contest?.name || 'Contest Lobby'}
           </Text>
-          
+
           <View style={styles.countdownSection}>
             <Text weight="medium" style={styles.startingLabel}>
               Starting in:

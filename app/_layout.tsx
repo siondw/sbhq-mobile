@@ -13,11 +13,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 
-import { AuthProvider } from '../src/logic/auth/AuthProvider';
+import { AuthProvider } from '../src/logic/hooks/AuthProvider';
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary
+  ErrorBoundary,
 } from 'expo-router';
 
 export const unstable_settings = {

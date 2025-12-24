@@ -30,8 +30,7 @@ export const submitAnswer = async ({
   };
 
   if (existing) {
-    const { data, error } = await SUPABASE_CLIENT
-      .from('answers')
+    const { data, error } = await SUPABASE_CLIENT.from('answers')
       .update({
         answer: payload.answer,
         timestamp: payload.timestamp,
@@ -47,11 +46,7 @@ export const submitAnswer = async ({
     return data as AnswerRow;
   }
 
-  const { data, error } = await SUPABASE_CLIENT
-    .from('answers')
-    .insert(payload)
-    .select()
-    .single();
+  const { data, error } = await SUPABASE_CLIENT.from('answers').insert(payload).select().single();
 
   if (error) {
     throw new Error(`Failed to submit answer: ${error.message}`);
@@ -64,8 +59,7 @@ export const getAnswerForQuestion = async (
   participantId: string,
   questionId: string,
 ): Promise<AnswerRow | null> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.ANSWERS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
     .select('*')
     .eq('participant_id', participantId)
     .eq('question_id', questionId)
@@ -83,8 +77,7 @@ export const getAnswerForRound = async (
   contestId: string,
   round: number,
 ): Promise<AnswerRow | null> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.ANSWERS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
     .select('*')
     .eq('participant_id', participantId)
     .eq('contest_id', contestId)

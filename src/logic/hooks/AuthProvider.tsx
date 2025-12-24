@@ -30,17 +30,19 @@ export interface AuthState {
   error: string | null;
 }
 
+export interface DerivedUser {
+  id: string;
+  email: string | null;
+  role: UserRow['role'];
+  username: string | null;
+}
+
 export interface AuthContextValue extends AuthState {
   loginWithGoogle: () => Promise<void>;
   sendEmailOtp: (email: string) => Promise<void>;
   verifyEmailOtp: (email: string, token: string) => Promise<void>;
   logout: () => Promise<void>;
-  derivedUser: {
-    id: string;
-    email: string | null;
-    role: UserRow['role'];
-    username: string | null;
-  } | null;
+  derivedUser: DerivedUser | null;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);

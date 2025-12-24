@@ -1,25 +1,29 @@
 import React, { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
 import TrophyIcon from '../../assets/icons/trophy.svg';
-import { useAuth } from '../logic/auth/useAuth';
+import { APP_NAME } from '../configs/constants';
+import type { DerivedUser } from '../logic/hooks/AuthProvider';
 import Text from './primitives/Text';
 import { COLORS, HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY } from './theme';
 
-const Header = memo(() => {
-  const { derivedUser } = useAuth();
+interface HeaderProps {
+  user?: DerivedUser | null;
+}
 
+const Header = memo(({ user }: HeaderProps) => {
   return (
     <SafeAreaView style={styles.safeArea} edges={['top']} pointerEvents="box-none">
       <View style={styles.container} pointerEvents="box-none">
         <View style={styles.brandRow}>
           <TrophyIcon width={14} height={14} />
           <Text weight="medium" style={styles.brand}>
-            Superbowl HQ
+            {APP_NAME}
           </Text>
         </View>
         <Text weight="medium" style={styles.user}>
-          {derivedUser?.username || derivedUser?.email || 'Guest'}
+          {user?.username || user?.email || 'Guest'}
         </Text>
       </View>
     </SafeAreaView>

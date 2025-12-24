@@ -1,16 +1,18 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useAuth } from '../logic/auth/useAuth';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
-import { useContestState } from '../logic/contest/useContestState';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
-import Header from '../ui/Header';
+import { useContestState } from '../logic/hooks/useContestState';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import AnswerOption from '../ui/primitives/AnswerOption';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import Header from '../ui/Header';
 
 interface GameScreenProps {
   contestId?: string;
@@ -43,10 +45,13 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
-    
+
     // Only navigate away from game screen if we're NOT in answering state
     if (playerState === PLAYER_STATE.LOBBY) {
-      router.push({ pathname: '/lobby', params: { contestId, startTime: contest?.start_time } });
+      router.push({
+        pathname: ROUTES.LOBBY,
+        params: { contestId, startTime: contest?.start_time },
+      });
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
       router.push({ pathname: '/submitted', params: { contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
@@ -80,7 +85,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Text weight="bold" style={styles.title}>
           {contest?.name ?? 'Contest'}

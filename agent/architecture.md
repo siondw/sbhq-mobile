@@ -2,13 +2,13 @@ Cool, that makes sense. Let’s collapse `db` + `queries` into a single folder a
 
 Here’s an updated `ARCHITECTURE.md` you can drop straight into the repo that matches:
 
-* `db/`
-* `logic/`
-* `ui/`
-* `screens/`
-* `configs/`
-* `utils/`
-* `app/` (for Expo Router)
+- `db/`
+- `logic/`
+- `ui/`
+- `screens/`
+- `configs/`
+- `utils/`
+- `app/` (for Expo Router)
 
 ---
 
@@ -22,18 +22,17 @@ This repo is **player-only**. All admin / Game Master tools are in a separate pr
 
 ## 1. Stack & Scope
 
-* **Runtime:** React Native + Expo (iOS, Android, Web via `react-native-web`)
-* **Backend:** Supabase
+- **Runtime:** React Native + Expo (iOS, Android, Web via `react-native-web`)
+- **Backend:** Supabase
+  - Auth (Google + Email OTP)
+  - Database: `users`, `contests`, `participants`, `questions`, `answers`
+  - Realtime: Postgres changes
 
-  * Auth (Google + Email OTP)
-  * Database: `users`, `contests`, `participants`, `questions`, `answers`
-  * Realtime: Postgres changes
-* **This app handles for a player:**
-
-  * Login / register (Supabase auth)
-  * Seeing available contests and registering
-  * Lobby (Kahoot-style pregame with countdown / participants)
-  * Question → Submitted → Correct / Eliminated → Winner flow
+- **This app handles for a player:**
+  - Login / register (Supabase auth)
+  - Seeing available contests and registering
+  - Lobby (Kahoot-style pregame with countdown / participants)
+  - Question → Submitted → Correct / Eliminated → Winner flow
 
 Admin controls (start game, open/close submissions, set correct answers, advance rounds) are all **external**.
 
@@ -60,34 +59,30 @@ src/
 
 This folder includes:
 
-* **Client setup**
+- **Client setup**
+  - `client.ts` – initializes Supabase client using env vars.
 
-  * `client.ts` – initializes Supabase client using env vars.
+- **Types**
+  - `types.ts` – TypeScript types that mirror table shapes:
+    - `UserRow`, `ContestRow`, `ParticipantRow`, `QuestionRow`, `AnswerRow`
 
-* **Types**
+  - Optionally generated from Supabase, or hand-written and kept in sync.
 
-  * `types.ts` – TypeScript types that mirror table shapes:
-
-    * `UserRow`, `ContestRow`, `ParticipantRow`, `QuestionRow`, `AnswerRow`
-  * Optionally generated from Supabase, or hand-written and kept in sync.
-
-* **DB operations (reads/writes/subscriptions)**
-
-  * You can break these into files by domain, for example:
-
-    * `auth.ts` – login/logout helpers, get current session.
-    * `contests.ts` – list contests, get contest by id, subscribe to contest updates.
-    * `participants.ts` – get/create participant, subscribe to participant changes.
-    * `questions.ts` – get questions, get current round question, subscribe to question changes.
-    * `answers.ts` – submit answer, fetch previous answer for reconnection.
+- **DB operations (reads/writes/subscriptions)**
+  - You can break these into files by domain, for example:
+    - `auth.ts` – login/logout helpers, get current session.
+    - `contests.ts` – list contests, get contest by id, subscribe to contest updates.
+    - `participants.ts` – get/create participant, subscribe to participant changes.
+    - `questions.ts` – get questions, get current round question, subscribe to question changes.
+    - `answers.ts` – submit answer, fetch previous answer for reconnection.
 
 Everything that talks to Supabase lives here.
 
 **Rules:**
 
-* Only `db/` imports Supabase.
-* No React imports in this folder.
-* Other folders don’t call Supabase directly; they call functions from `db/`.
+- Only `db/` imports Supabase.
+- No React imports in this folder.
+- Other folders don’t call Supabase directly; they call functions from `db/`.
 
 ---
 
@@ -97,55 +92,60 @@ Everything that talks to Supabase lives here.
 
 There are two flavours of logic here:
 
-### 4.1 Pure game logic
+### 4.1 `src/logic/hooks/` – React hooks
 
-These are just functions that take rows / data and return a result, no side effects:
+React hooks that connect the data layer to the UI layer:
 
-* Given:
+- `useAuth()` – Manages Supabase session, current user, login/logout flows. Returns derivedUser with id, email, role, username.
+- `useContests()` – Fetches available contests list with loading/error states and refresh functionality.
+- `useContestRegistration()` – Handles joining/registering for contests, tracks participant status per contest.
+- `useContestState(contestId)` – Main contest flow hook that:
+  - Subscribes to contest, questions, participant, answers in real-time
+  - Uses pure logic from `logic/contest/` to compute player state
+  - Returns what screen-state the player is in (answering/submitted/correct/eliminated/winner)
+  - Provides current question/round info and `submitAnswer` callback
+- `useParticipantCount(contestId)` – Tracks remaining active player count for a contest.
+- `useHeaderHeight()` – Returns header height for proper content padding.
 
-  * contest row
-  * participant row
-  * current question row
-  * user’s answer row (if any)
-* Return a **player status** like:
+These hooks:
 
-  * `LOBBY`
-  * `ANSWERING`
-  * `SUBMITTED_WAITING`
-  * `CORRECT_WAITING_NEXT`
-  * `ELIMINATED`
-  * `WINNER`
+- Can import from `db/` and from `logic/<domain>/` pure functions
+- Cannot import from `ui/` or `screens/`
+- Return `{ data, loading, error, ...actions }` shape
+- Handle subscription cleanup properly
 
-This is where you encode “what does it mean to be eliminated / alive / winner,” based purely on DB state.
+### 4.2 `src/logic/<domain>/` – Pure domain logic
 
-### 4.2 Feature hooks (React logic)
+Pure functions organized by domain (no React, no side effects):
 
-These are hooks that glue `db/` and the pure logic together for the UI:
+**`logic/contest/`**
 
-* `auth` logic:
+- `derivePlayerState.ts` – Given contest/participant/question/answer data, returns player status:
+  - `LOBBY`
+  - `ANSWERING`
+  - `SUBMITTED_WAITING`
+  - `CORRECT_WAITING_NEXT`
+  - `ELIMINATED`
+  - `WINNER`
+- `contestUtils.ts` – Contest-related calculations and helpers
 
-  * `useAuth()` – manages Supabase session, current user, login/logout flows.
+**`logic/constants.ts`**
 
-* `lobby` logic:
+- Domain-level constants (SCREAMING_SNAKE_CASE)
 
-  * `useLobby(contestId)` – subscribes to contest + participant changes, exposes:
+These functions:
 
-    * contest info
-    * countdown / lobby state
-    * whether user is registered / ready
-
-* `contest` logic:
-
-  * `useContestState(contestId)` – subscribes to contest, questions, participant, answers, and uses the pure logic to compute:
-
-    * what screen-state the player is in (answering/submitted/correct/eliminated/winner)
-    * current question/round info
-    * a `submitAnswer` callback
+- Take data as parameters, return computed results
+- No React imports, no hooks, no `useState/useEffect`
+- Can be tested in isolation
+- Used by hooks in `logic/hooks/`
 
 **Rules:**
 
-* `logic/` can import from `db/`, but not from `ui/` or `screens/`.
-* It’s the “brain” of the app that the screens will use.
+- `logic/hooks/` imports from `db/` and `logic/<domain>/`
+- `logic/<domain>/` should not import from `logic/hooks/` (one-way dependency)
+- Screens/UI never import pure logic directly - they use hooks from `logic/hooks/`
+- It's the "brain" of the app that the screens will use.
 
 ---
 
@@ -155,27 +155,26 @@ These are hooks that glue `db/` and the pure logic together for the UI:
 
 Examples:
 
-* Primitives:
+- Primitives:
+  - `Button`
+  - `Text`
+  - `Card`
+  - `LoadingSpinner`
+  - Layout wrappers (e.g. `ScreenContainer`)
 
-  * `Button`
-  * `Text`
-  * `Card`
-  * `LoadingSpinner`
-  * Layout wrappers (e.g. `ScreenContainer`)
-
-* SBHQ-specific UI components:
-
-  * `QuestionCard`
-  * `AnswerOption`
-  * `LobbyHeader`
-  * `CountdownDisplay`
-  * `StatusBanner` (for correct/eliminated/winner states)
+- SBHQ-specific UI components:
+  - `QuestionCard`
+  - `AnswerOption`
+  - `LobbyHeader`
+  - `CountdownDisplay`
+  - `StatusBanner` (for correct/eliminated/winner states)
 
 These components:
 
-* Receive data + callbacks via props.
-* Do not make DB calls.
-* Do not own navigation.
+- Receive data + callbacks via props.
+- Do not make DB calls.
+- Do not use logic hooks directly (e.g. Header receives user prop instead of calling useAuth).
+- Do not own navigation.
 
 You can organize them however you like, e.g.:
 
@@ -195,19 +194,19 @@ src/ui/
 
 Expected screens:
 
-* `LoginScreen` – uses `logic/useAuth`, shows login options.
-* `ContestListScreen` – shows available contests from `db/`/`logic`.
-* `LobbyScreen` – shows pregame/lobby state with countdown & participants.
-* `GameScreen` – main in-contest screen that:
+- `LoginScreen` – uses `logic/useAuth`, shows login options.
+- `ContestListScreen` – shows available contests from `db/`/`logic`.
+- `LobbyScreen` – shows pregame/lobby state with countdown & participants.
+- `GameScreen` – main in-contest screen that:
+  - renders Question / Submitted / Correct / Eliminated / Winner states based on `useContestState`.
 
-  * renders Question / Submitted / Correct / Eliminated / Winner states based on `useContestState`.
-* `WinnerScreen` (optional) – separate screen for final winner celebration if you don’t just handle it inside `GameScreen`.
+- `WinnerScreen` (optional) – separate screen for final winner celebration if you don’t just handle it inside `GameScreen`.
 
 Screens:
 
-* Use hooks from `logic/` to pull in state and actions.
-* Use components from `ui/` to render.
-* Handle navigation decisions (e.g., when to redirect to lobby, when to go back to contest list, etc.).
+- Use hooks from `logic/` to pull in state and actions.
+- Use components from `ui/` to render.
+- Handle navigation decisions (e.g., when to redirect to lobby, when to go back to contest list, etc.).
 
 ---
 
@@ -217,16 +216,14 @@ Screens:
 
 Examples:
 
-* `env.ts`:
+- `env.ts`:
+  - Reads Supabase URL & anon key from Expo env vars:
+    - `EXPO_PUBLIC_SUPABASE_URL`
+    - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
 
-  * Reads Supabase URL & anon key from Expo env vars:
-
-    * `EXPO_PUBLIC_SUPABASE_URL`
-    * `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-* Any other app-wide constants:
-
-  * default contest id for dev
-  * timeouts, feature flags, etc.
+- Any other app-wide constants:
+  - default contest id for dev
+  - timeouts, feature flags, etc.
 
 This keeps environment details out of `logic/` and `db/` files.
 
@@ -238,9 +235,9 @@ This keeps environment details out of `logic/` and `db/` files.
 
 Examples:
 
-* Date formatting: `formatCountdown`, `formatTimeRemaining`.
-* String helpers.
-* Simple pure utility functions that don’t belong in `logic/`.
+- Date formatting: `formatCountdown`, `formatTimeRemaining`.
+- String helpers.
+- Simple pure utility functions that don’t belong in `logic/`.
 
 Should not reference React or Supabase directly.
 
@@ -252,7 +249,7 @@ Expo Router uses `app/` as the route map.
 
 Pattern:
 
-* Files in `app/` are thin wrappers that import from `src/screens/`.
+- Files in `app/` are thin wrappers that import from `src/screens/`.
 
 Example:
 
@@ -269,25 +266,28 @@ app/
 
 These files:
 
-* Do minimal work: mostly `<ScreenComponent />` plus route params.
-* No Supabase logic here.
+- Do minimal work: mostly `<ScreenComponent />` plus route params.
+- No Supabase logic here.
 
 ---
 
 ### Summary
 
-* **Data layer** = `db/`
-* **Brains & state** = `logic/`
-* **Visual pieces** = `ui/`
-* **Actual pages** = `screens/`
-* **Routing** = `app/`
-* **Env/consts** = `configs/`
-* **Helpers** = `utils/`
+- **Data layer** = `db/`
+- **React hooks** = `logic/hooks/`
+- **Pure domain logic** = `logic/<domain>/`
+- **Visual pieces** = `ui/`
+- **Actual pages** = `screens/`
+- **Routing** = `app/`
+- **Env/consts** = `configs/`
+- **Helpers** = `utils/`
 
 You always know where to go:
 
-* “How do I fetch contests?” → `src/db/contests.ts`
-* “How do I decide if a player is eliminated?” → `src/logic/contest/…`
-* “Where’s the question UI?” → `src/ui/contest/QuestionCard.tsx` and `src/screens/GameScreen.tsx`
+- "How do I fetch contests?" → `src/db/contests.ts`
+- "How do I use contests in a screen?" → `src/logic/hooks/useContests.ts`
+- "How do I decide if a player is eliminated?" → `src/logic/contest/derivePlayerState.ts`
+- "Where's the question UI?" → `src/ui/primitives/AnswerOption.tsx` and `src/screens/GameScreen.tsx`
+- "What routes exist?" → `src/configs/routes.ts`
 
 If you want, next step we can write a tiny README stub for each folder (`src/db/README.md`, `src/logic/README.md`, etc.) so the structure is self-documenting when someone opens it in VS Code.

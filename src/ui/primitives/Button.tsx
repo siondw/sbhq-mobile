@@ -12,7 +12,7 @@ interface ButtonProps {
 const Button = ({ label, onPress, disabled, variant = 'primary' }: ButtonProps) => {
   const isPrimary = variant === 'primary';
   const isSuccess = variant === 'success';
-  
+
   return (
     <Pressable
       style={({ pressed }) => [
@@ -24,8 +24,15 @@ const Button = ({ label, onPress, disabled, variant = 'primary' }: ButtonProps) 
       onPress={onPress}
       disabled={disabled}
     >
-      <Text style={[styles.label, !isPrimary && !isSuccess && styles.secondaryLabel, disabled && isSuccess && styles.successLabelDisabled]}>
-        {isSuccess ? '✓ ' : ''}{label}
+      <Text
+        style={[
+          styles.label,
+          !isPrimary && !isSuccess && styles.secondaryLabel,
+          disabled && isSuccess && styles.successLabelDisabled,
+        ]}
+      >
+        {isSuccess ? '✓ ' : ''}
+        {label}
       </Text>
     </Pressable>
   );

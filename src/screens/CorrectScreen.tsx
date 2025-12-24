@@ -1,61 +1,45 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useAuth } from '../logic/auth/useAuth';
-import { useContestState } from '../logic/contest/useContestState';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
+import { useContestState } from '../logic/hooks/useContestState';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { PLAYER_STATE } from '../logic/constants';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
-import { getActiveParticipantCount } from '../db/participants';
-import Text from '../ui/primitives/Text';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
+import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/Header';
 import GameStatsSummary from '../ui/GameStatsSummary';
+import Header from '../ui/Header';
 
 const CorrectScreen = () => {
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
-  const { loading, error, playerState, refresh, contest } = useContestState(contestId, derivedUser?.id);
-  const [remainingPlayers, setRemainingPlayers] = useState(0);
+  const { loading, error, playerState, refresh, contest } = useContestState(
+    contestId,
+    derivedUser?.id,
+  );
+  const { count: remainingPlayers } = useParticipantCount(contestId);
 
   useEffect(() => {
     if (!contestId) return;
     if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${contestId}`);
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace('/submitted');
+      router.replace(ROUTES.SUBMITTED);
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace('/eliminated');
+      router.replace(ROUTES.ELIMINATED);
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace('/winner');
+      router.replace(ROUTES.WINNER);
     } else if (playerState === PLAYER_STATE.LOBBY) {
-      router.replace({ pathname: '/lobby', params: { contestId } });
+      router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
     }
   }, [playerState, router, contestId]);
-
-  useEffect(() => {
-    if (!contestId) return;
-    let isMounted = true;
-    const loadCount = async () => {
-      try {
-        const count = await getActiveParticipantCount(contestId);
-        if (isMounted) {
-          setRemainingPlayers(count);
-        }
-      } catch {
-        if (isMounted) {
-          setRemainingPlayers(0);
-        }
-      }
-    };
-    void loadCount();
-    return () => {
-      isMounted = false;
-    };
-  }, [contestId]);
 
   if (loading) {
     return (
@@ -78,7 +62,7 @@ const CorrectScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Card>
           <Text weight="bold" style={styles.title}>

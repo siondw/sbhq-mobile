@@ -5,9 +5,11 @@ import { subscribeToTable } from './realtime';
 import type { ContestRow } from './types';
 
 export const getContests = async (): Promise<ContestRow[]> => {
-  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.CONTESTS).select('*').order('start_time', {
-    ascending: true,
-  });
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.CONTESTS)
+    .select('*')
+    .order('start_time', {
+      ascending: true,
+    });
 
   if (error) {
     throw new Error(`Failed to fetch contests: ${error.message}`);
@@ -17,8 +19,7 @@ export const getContests = async (): Promise<ContestRow[]> => {
 };
 
 export const getContestById = async (contestId: string): Promise<ContestRow | null> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.CONTESTS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.CONTESTS)
     .select('*')
     .eq('id', contestId)
     .maybeSingle();

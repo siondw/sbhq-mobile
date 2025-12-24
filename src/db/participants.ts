@@ -8,8 +8,7 @@ export const getParticipantForUser = async (
   contestId: string,
   userId: string,
 ): Promise<ParticipantRow | null> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.PARTICIPANTS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('*')
     .eq('contest_id', contestId)
     .eq('user_id', userId)
@@ -23,8 +22,7 @@ export const getParticipantForUser = async (
 };
 
 export const getActiveParticipantCount = async (contestId: string): Promise<number> => {
-  const { count, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.PARTICIPANTS)
+  const { count, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('id', { count: 'exact', head: true })
     .eq('contest_id', contestId)
     .eq('active', true);
@@ -36,11 +34,8 @@ export const getActiveParticipantCount = async (contestId: string): Promise<numb
   return count ?? 0;
 };
 
-export const createParticipant = async (
-  payload: ParticipantInsert,
-): Promise<ParticipantRow> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from('participants')
+export const createParticipant = async (payload: ParticipantInsert): Promise<ParticipantRow> => {
+  const { data, error } = await SUPABASE_CLIENT.from('participants')
     .insert(payload)
     .select()
     .single();

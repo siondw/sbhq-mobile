@@ -1,17 +1,13 @@
 import { useRouter } from 'expo-router';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  View,
-  useWindowDimensions
-} from 'react-native';
-import { getContests } from '../db/contests';
-import { getOrCreateParticipant, getParticipantForUser } from '../db/participants';
-import type { ContestRow, ParticipantRow } from '../db/types';
-import { useAuth } from '../logic/auth/useAuth';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
+import React, { useMemo } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+
+import { ROUTES } from '../configs/routes';
+import type { ContestRow } from '../db/types';
+import { useAuth } from '../logic/hooks/useAuth';
+import { useContestRegistration } from '../logic/hooks/useContestRegistration';
+import { useContests } from '../logic/hooks/useContests';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Header from '../ui/Header';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
@@ -20,46 +16,22 @@ import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const ContestListScreen = () => {
   const router = useRouter();
-  const [contests, setContests] = useState<ContestRow[]>([]);
-  const [participants, setParticipants] = useState<Map<string, ParticipantRow>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
 
+  const { contests, loading: contestsLoading, error: contestsError, refresh } = useContests();
+  const {
+    participants,
+    loading: participantsLoading,
+    error: participantsError,
+    registerForContest,
+  } = useContestRegistration(contests, derivedUser?.id);
+
+  const loading = contestsLoading || participantsLoading;
+  const error = contestsError || participantsError;
+
   const numColumns = width >= 1100 ? 3 : width >= 760 ? 2 : 1;
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await getContests();
-      setContests(data);
-      
-      // Fetch participant status for each contest
-      if (derivedUser?.id) {
-        const participantMap = new Map<string, ParticipantRow>();
-        await Promise.all(
-          data.map(async (contest) => {
-            const participant = await getParticipantForUser(contest.id, derivedUser.id);
-            if (participant) {
-              participantMap.set(contest.id, participant);
-            }
-          })
-        );
-        setParticipants(participantMap);
-      }
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
-    }
-  }, [derivedUser?.id]);
-
-  useEffect(() => {
-    void fetchData();
-  }, [fetchData]);
 
   const filteredContests = useMemo(
     () => contests.filter((contest) => !contest.finished),
@@ -73,35 +45,36 @@ const ContestListScreen = () => {
     const hours = date.getHours();
     const ampm = hours >= 12 ? 'PM' : 'AM';
     const displayHours = hours % 12 || 12;
-    
+
     const shortTz = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
-    
+
     return `${month}/${day} @ ${displayHours}${ampm} ${shortTz}`;
   };
 
   const handleEnterContest = async (contest: ContestRow) => {
     if (!derivedUser?.id) {
-      setError('Please log in to enter a contest.');
       return;
     }
-    try {
-      await getOrCreateParticipant(contest.id, derivedUser.id);
-      if (contest.finished) {
-        router.push('/');
-        return;
-      }
-      if (contest.lobby_open) {
-        router.push({ pathname: '/lobby', params: { contestId: contest.id, startTime: contest.start_time } });
-        return;
-      }
-      if (contest.submission_open) {
-        router.push(`/contest/${contest.id}`);
-        return;
-      }
-      // If registered but lobby not open yet, stay on contest list
-      // User can see "Registered" badge on the card
-    } catch (err) {
-      setError((err as Error).message);
+
+    await registerForContest(contest.id);
+
+    if (contest.finished) {
+      router.push(ROUTES.INDEX);
+      return;
+    }
+    if (contest.lobby_open) {
+      router.push({
+        pathname: ROUTES.LOBBY,
+        params: { contestId: contest.id, startTime: contest.start_time },
+      });
+      return;
+    }
+    if (contest.submission_open) {
+      router.push({
+        pathname: `${ROUTES.CONTEST}/[contestId]`,
+        params: { contestId: contest.id },
+      });
+      return;
     }
   };
 
@@ -119,14 +92,14 @@ const ContestListScreen = () => {
         <Text weight="bold">Error loading contests</Text>
         <Text>{error}</Text>
         <View style={styles.spacer} />
-        <Button label="Retry" onPress={() => void fetchData()} />
+        <Button label="Retry" onPress={() => void refresh()} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header user={derivedUser} />
       <FlatList
         data={filteredContests}
         keyExtractor={(item) => item.id}
@@ -138,17 +111,16 @@ const ContestListScreen = () => {
           const isRegistered = !!participant;
           const isLive = item.lobby_open || item.submission_open;
           const isLocked = item.submission_open && !isRegistered;
-          
+
           const startLabel = formatStart(item.start_time);
-          const priceLabel =
-            typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : 'Free';
+          const priceLabel = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : 'Free';
 
           let buttonLabel = 'Register';
           let buttonVariant: 'primary' | 'success' = 'primary';
-          
+
           if (isLocked) {
             buttonLabel = '🔒 Locked';
-            buttonVariant = 'primary'; // Will be styled gray via disabled
+            buttonVariant = 'primary';
           } else if (isRegistered && (item.lobby_open || item.submission_open)) {
             buttonLabel = 'Join';
             buttonVariant = 'success';
@@ -161,7 +133,13 @@ const ContestListScreen = () => {
           }
 
           return (
-            <Card style={[styles.card, numColumns > 1 && styles.cardGridItem, isLocked && styles.cardLocked]}>
+            <Card
+              style={[
+                styles.card,
+                numColumns > 1 && styles.cardGridItem,
+                isLocked && styles.cardLocked,
+              ]}
+            >
               <View style={styles.cardHeader}>
                 <Text weight="bold" style={styles.cardTitle}>
                   {item.name}
@@ -183,11 +161,13 @@ const ContestListScreen = () => {
               ) : null}
 
               <View style={styles.cardFooter}>
-                <Button 
+                <Button
                   label={buttonLabel}
                   variant={buttonVariant}
                   onPress={() => void handleEnterContest(item)}
-                  disabled={!!isLocked || (isRegistered && !item.lobby_open && !item.submission_open)}
+                  disabled={
+                    !!isLocked || (isRegistered && !item.lobby_open && !item.submission_open)
+                  }
                 />
               </View>
             </Card>

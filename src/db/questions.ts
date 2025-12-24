@@ -5,8 +5,7 @@ import { subscribeToTable } from './realtime';
 import type { QuestionRow } from './types';
 
 export const getQuestionsForContest = async (contestId: string): Promise<QuestionRow[]> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.QUESTIONS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.QUESTIONS)
     .select('*')
     .eq('contest_id', contestId)
     .order('round', { ascending: true });
@@ -22,8 +21,7 @@ export const getQuestionForRound = async (
   contestId: string,
   round: number,
 ): Promise<QuestionRow | null> => {
-  const { data, error } = await SUPABASE_CLIENT
-    .from(DB_TABLES.QUESTIONS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.QUESTIONS)
     .select('*')
     .eq('contest_id', contestId)
     .eq('round', round)

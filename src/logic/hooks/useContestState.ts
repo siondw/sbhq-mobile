@@ -14,7 +14,8 @@ import {
 } from '../../db/participants';
 import { getQuestionForRound, subscribeToQuestions } from '../../db/questions';
 import type { AnswerRow, ContestRow, ParticipantRow, QuestionRow } from '../../db/types';
-import { PLAYER_STATE, type PlayerState } from '../constants';
+import type { PlayerState } from '../constants';
+import { derivePlayerState } from '../contest/derivePlayerState';
 
 export interface UseContestStateResult {
   loading: boolean;
@@ -27,54 +28,6 @@ export interface UseContestStateResult {
   refresh: () => Promise<void>;
   submit: (payload: SubmitAnswerParams) => Promise<void>;
 }
-
-const derivePlayerState = (
-  contest: ContestRow | null,
-  participant: ParticipantRow | null,
-  question: QuestionRow | null,
-  answer: AnswerRow | null,
-): PlayerState => {
-  if (!contest || !participant) {
-    return PLAYER_STATE.UNKNOWN;
-  }
-
-  if (participant.active === false || participant.elimination_round !== null) {
-    return PLAYER_STATE.ELIMINATED;
-  }
-
-  if (contest.finished) {
-    return participant.active ? PLAYER_STATE.WINNER : PLAYER_STATE.ELIMINATED;
-  }
-
-  if (contest.lobby_open) {
-    return PLAYER_STATE.LOBBY;
-  }
-
-  if (contest.submission_open) {
-    if (answer) {
-      return PLAYER_STATE.SUBMITTED_WAITING;
-    }
-    return PLAYER_STATE.ANSWERING;
-  }
-
-  if (!contest.submission_open && question) {
-    if (!answer) {
-      return PLAYER_STATE.ELIMINATED;
-    }
-
-    if (question.correct_option === null) {
-      return PLAYER_STATE.SUBMITTED_WAITING;
-    }
-
-    if (answer.answer === question.correct_option) {
-      return PLAYER_STATE.CORRECT_WAITING_NEXT;
-    }
-
-    return PLAYER_STATE.ELIMINATED;
-  }
-
-  return PLAYER_STATE.UNKNOWN;
-};
 
 export const useContestState = (contestId?: string, userId?: string): UseContestStateResult => {
   const [loading, setLoading] = useState(true);

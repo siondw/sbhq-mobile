@@ -1,20 +1,24 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
-import Text from '../ui/primitives/Text';
-import Card from '../ui/primitives/Card';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Button from '../ui/primitives/Button';
+import Card from '../ui/primitives/Card';
+import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 import Header from '../ui/Header';
 
 const WinnerScreen = () => {
   const router = useRouter();
+  const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Card>
           <Text weight="bold" style={styles.title}>
@@ -22,7 +26,7 @@ const WinnerScreen = () => {
           </Text>
           <Text style={styles.body}>Congratulations on being the last player standing.</Text>
           <View style={styles.footer}>
-            <Button label="Back to Contests" onPress={() => router.replace('/')} />
+            <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
           </View>
         </Card>
       </View>

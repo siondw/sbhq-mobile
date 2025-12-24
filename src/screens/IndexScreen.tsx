@@ -1,7 +1,9 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useAuth } from '../logic/auth/useAuth';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
 import { COLORS, SPACING } from '../ui/theme';
 import DevLandingScreen from './DevLandingScreen';
 import LoginScreen from './LoginScreen';
@@ -13,7 +15,7 @@ const IndexScreen = () => {
 
   useEffect(() => {
     if (!isDev && !loading && session) {
-      router.replace('/contests');
+      router.replace(ROUTES.CONTESTS);
     }
   }, [isDev, loading, session, router]);
 

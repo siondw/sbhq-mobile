@@ -1,15 +1,17 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
-import { useAuth } from '../logic/auth/useAuth';
+
+import { ROUTES } from '../configs/routes';
+import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
-import { useContestState } from '../logic/contest/useContestState';
-import { useHeaderHeight } from '../logic/layout/useHeaderHeight';
-import Header from '../ui/Header';
+import { useContestState } from '../logic/hooks/useContestState';
+import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Button from '../ui/primitives/Button';
 import Card from '../ui/primitives/Card';
 import Text from '../ui/primitives/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import Header from '../ui/Header';
 import ballGif from '../../assets/gifs/ball.gif';
 
 const SubmittedScreen = () => {
@@ -21,18 +23,17 @@ const SubmittedScreen = () => {
 
   useEffect(() => {
     if (!contestId || loading) return;
-    console.warn('SubmittedScreen state', { playerState, contestId });
 
     if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${contestId}`);
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace('/correct');
+      router.replace(ROUTES.CORRECT);
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace('/eliminated');
+      router.replace(ROUTES.ELIMINATED);
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace('/winner');
+      router.replace(ROUTES.WINNER);
     } else if (playerState === PLAYER_STATE.LOBBY) {
-      router.replace({ pathname: '/lobby', params: { contestId } });
+      router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
     }
   }, [playerState, router, contestId, loading]);
 
@@ -57,7 +58,7 @@ const SubmittedScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Header />
+      <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
         <Card>
           <Text weight="bold" style={styles.title}>
