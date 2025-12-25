@@ -21,6 +21,7 @@ import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import Countdown from '../ui/components/Countdown';
+import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
 import {
   DEFAULT_PALETTE,
@@ -44,10 +45,6 @@ const COLORS = {
   SURFACE: DEFAULT_PALETTE.surface,
 } as const;
 
-type Phase = 'OPEN' | 'LOCKED' | 'REVEAL' | 'RESULT';
-
-const PHASES: Phase[] = ['OPEN', 'LOCKED', 'REVEAL', 'RESULT'];
-
 const footballGifs: Array<{ label: string; source: ImageSourcePropType }> = [
   { label: 'ball.gif', source: require('../../assets/gifs/ball.gif') },
   { label: 'catch_nobg.gif', source: require('../../assets/gifs/catch_nobg.gif') },
@@ -57,12 +54,9 @@ const noiseTexture = require('../../assets/noise.png');
 
 const PlaygroundScreen = () => {
   const router = useRouter();
-  const [phase, setPhase] = useState<Phase>('OPEN');
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [selectedRealOption, setSelectedRealOption] = useState<string | null>('A');
-  const [pressure, setPressure] = useState(0.25);
   const [playersRemaining, setPlayersRemaining] = useState(1482);
-  const [streak, setStreak] = useState(3);
   const [gifIndex, setGifIndex] = useState(0);
   const [paletteKey, setPaletteKey] = useState<string>(PLAYGROUND_PALETTES[0]?.key ?? 'current');
 
@@ -79,10 +73,10 @@ const PlaygroundScreen = () => {
 
   const optionData = useMemo(
     () => [
-      { key: 'A', label: 'Go for it on 4th & 2', iconText: '4TH' },
-      { key: 'B', label: 'Punt and pin them deep', iconText: 'PNT' },
-      { key: 'C', label: 'Kick the FG', iconText: 'FG' },
-      { key: 'D', label: 'Fake punt', iconText: 'FAKE' },
+      { key: 'A', label: 'Go for it on 4th & 2' },
+      { key: 'B', label: 'Punt and pin them deep' },
+      { key: 'C', label: 'Kick the FG' },
+      { key: 'D', label: 'Fake punt' },
     ],
     [],
   );
@@ -114,15 +108,6 @@ const PlaygroundScreen = () => {
           </View>
 
           <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <ScorebugHeader
-              phase={phase}
-              pressure={pressure}
-              playersRemaining={playersRemaining}
-              streak={streak}
-              gif={footballGifs[gifIndex]?.source}
-              palette={palette}
-            />
-
             <Section title="Knobs" titleColor={palette.ink}>
               <View style={styles.palettePicker}>
                 <Text weight="medium" style={[styles.palettePickerLabel, { color: palette.ink }]}>
@@ -147,25 +132,8 @@ const PlaygroundScreen = () => {
               </View>
               <Row>
                 <Chip
-                  label={`Phase: ${phase}`}
-                  onPress={() => setPhase(nextPhase(phase))}
-                  palette={palette}
-                />
-                <Chip
                   label={`Players: ${playersRemaining.toLocaleString()}`}
                   onPress={() => setPlayersRemaining(nextPlayers(playersRemaining))}
-                  palette={palette}
-                />
-              </Row>
-              <Row>
-                <Chip
-                  label={`Pressure: ${Math.round(pressure * 100)}%`}
-                  onPress={() => setPressure(nextPressure(pressure))}
-                  palette={palette}
-                />
-                <Chip
-                  label={`Streak: ${streak}`}
-                  onPress={() => setStreak((s) => (s >= 5 ? 0 : s + 1))}
                   palette={palette}
                 />
               </Row>
@@ -177,9 +145,7 @@ const PlaygroundScreen = () => {
                 />
                 <Chip
                   label="Reset"
-                  onPress={() =>
-                    reset(setPhase, setSelectedOption, setPressure, setPlayersRemaining, setStreak)
-                  }
+                  onPress={() => reset(setSelectedOption, setPlayersRemaining)}
                   palette={palette}
                 />
               </Row>
@@ -193,12 +159,12 @@ const PlaygroundScreen = () => {
                 <View style={{ height: SPACING.SM }} />
                 <Countdown targetTime={countdownTargetRef.current} />
                 <View style={{ height: SPACING.MD }} />
-                <Button label="Primary CTA" onPress={() => setPhase(nextPhase(phase))} />
+                <Button label="Primary CTA" onPress={() => {}} />
                 <View style={{ height: SPACING.SM }} />
                 <Button
                   label="Secondary"
                   variant="secondary"
-                  onPress={() => setStreak((s) => s + 1)}
+                  onPress={() => {}}
                 />
               </Card>
 
@@ -206,18 +172,17 @@ const PlaygroundScreen = () => {
                 title="Sunday Showdown"
                 startLabel="12/29 @ 7PM EST"
                 priceLabel="$5.00"
-                roundLabel={phase === 'RESULT' ? 'Final' : '1'}
+                roundLabel="1"
                 live
-                buttonLabel={phase === 'OPEN' ? 'Register' : 'Join Contest'}
-                buttonVariant={phase === 'OPEN' ? 'primary' : 'success'}
-                buttonDisabled={phase === 'LOCKED'}
+                buttonLabel="Register"
+                buttonVariant="primary"
                 cutoutBackgroundColor={palette.bg}
-                onPress={() => setPhase(nextPhase(phase))}
+                onPress={() => {}}
               />
 
               <ContestStatsCard
                 numberOfRemainingPlayers={playersRemaining}
-                roundNumber={Math.max(1, Math.min(99, streak))}
+                roundNumber={5}
               />
 
               <AnswerSummaryCard
@@ -225,58 +190,29 @@ const PlaygroundScreen = () => {
                 roundLabel="Live"
                 question="Which team scores first?"
                 selectedAnswer={selectedRealOption ?? '—'}
-                correctAnswer={phase === 'RESULT' ? 'A' : null}
+                correctAnswer={null}
               />
+            </Section>
 
-              <Card>
-                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                  AnswerOption (real)
-                </Text>
-                <View style={{ height: SPACING.SM }} />
+            <Section title="Scorebug" titleColor={palette.ink}>
+              <View style={styles.scorebugWrap}>
+                <Scorebug playerCount={playersRemaining} />
+              </View>
+            </Section>
+
+            <Section title="AnswerOption (real)" titleColor={palette.ink}>
+              <View style={styles.optionsWrap}>
                 {[
-                  { key: 'A', label: 'A) Home team' },
-                  { key: 'B', label: 'B) Away team' },
-                  { key: 'C', label: 'C) No score' },
+                  { key: 'A', label: 'Home team' },
+                  { key: 'B', label: 'Away team' },
+                  { key: 'C', label: 'No score' },
                 ].map((o) => (
                   <AnswerOption
                     key={o.key}
                     label={o.label}
+                    iconText={o.key}
                     selected={selectedRealOption === o.key}
                     onPress={() => setSelectedRealOption(o.key)}
-                  />
-                ))}
-              </Card>
-            </Section>
-
-            <Section title="Ticket Card" titleColor={palette.ink}>
-              <TicketCard palette={palette}>
-                <Text weight="bold" style={[styles.cardTitle, { color: palette.ink }]}>
-                  Sunday Showdown
-                </Text>
-                <Text style={[styles.cardSubtitle, { color: withAlpha(palette.ink, 0.65) }]}>
-                  “Ticket” container with perforation + tint + texture.
-                </Text>
-                <View style={{ height: SPACING.MD }} />
-                <EnergyBar value={pressure} palette={palette} />
-                <View style={{ height: SPACING.MD }} />
-                <SheenButton
-                  label={phase === 'OPEN' ? 'Lock In' : 'Continue'}
-                  onPress={() => setPhase(nextPhase(phase))}
-                  palette={palette}
-                />
-              </TicketCard>
-            </Section>
-
-            <Section title="Option Rows" titleColor={palette.ink}>
-              <View style={styles.optionsWrap}>
-                {optionData.map((option) => (
-                  <MoveOptionRow
-                    key={option.key}
-                    label={option.label}
-                    iconText={option.iconText}
-                    selected={selectedOption === option.key}
-                    onPress={() => setSelectedOption(option.key)}
-                    palette={palette}
                   />
                 ))}
               </View>
@@ -345,28 +281,11 @@ const PlaygroundScreen = () => {
 };
 
 function reset(
-  setPhase: React.Dispatch<React.SetStateAction<Phase>>,
   setSelectedOption: React.Dispatch<React.SetStateAction<string | null>>,
-  setPressure: React.Dispatch<React.SetStateAction<number>>,
   setPlayersRemaining: React.Dispatch<React.SetStateAction<number>>,
-  setStreak: React.Dispatch<React.SetStateAction<number>>,
 ) {
-  setPhase('OPEN');
   setSelectedOption(null);
-  setPressure(0.25);
   setPlayersRemaining(1482);
-  setStreak(3);
-}
-
-function nextPhase(phase: Phase): Phase {
-  const index = PHASES.indexOf(phase);
-  return PHASES[(index + 1) % PHASES.length] ?? 'OPEN';
-}
-
-function nextPressure(value: number): number {
-  const stops = [0.15, 0.35, 0.55, 0.8, 0.95];
-  const next = stops.find((s) => s > value);
-  return next ?? stops[0] ?? 0.25;
 }
 
 function nextPlayers(current: number): number {
@@ -374,187 +293,6 @@ function nextPlayers(current: number): number {
   const index = stops.indexOf(current);
   return stops[(index + 1) % stops.length] ?? 1482;
 }
-
-const ScorebugHeader = ({
-  phase,
-  pressure,
-  playersRemaining,
-  streak,
-  gif,
-  palette,
-}: {
-  phase: Phase;
-  pressure: number;
-  playersRemaining: number;
-  streak: number;
-  gif?: ImageSourcePropType;
-  palette: PlaygroundPalette;
-}) => {
-  const pulse = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1, duration: 900, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 0, duration: 900, useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [pulse]);
-
-  const dotScale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] });
-  const dotOpacity = pulse.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] });
-
-  const darkTheme = isDarkHex(palette.bg);
-  const hudBg = darkTheme ? palette.surface : palette.ink;
-  const hudText = darkTheme ? palette.ink : '#FFFFFF';
-
-  const danger = pressure >= 0.8;
-  const timerBg = danger ? palette.danger : palette.energy;
-  const timerTextColor = textOnHex(timerBg);
-
-  return (
-    <View style={styles.scorebugWrap}>
-      <View style={[styles.scorebugBar, { backgroundColor: hudBg }]}>
-        <View style={styles.scorebugLeft}>
-          <View style={styles.livePill}>
-            <Animated.View
-              style={[styles.liveDot, { transform: [{ scale: dotScale }], opacity: dotOpacity }]}
-            />
-            <Text weight="bold" style={[styles.liveText, { color: hudText }]}>
-              LIVE
-            </Text>
-          </View>
-          <View style={[styles.timerPill, { backgroundColor: timerBg }]}>
-            <Text weight="bold" style={[styles.timerText, { color: timerTextColor }]}>
-              00:24
-            </Text>
-          </View>
-        </View>
-
-        <View style={styles.scorebugRight}>
-          <View style={styles.miniPill}>
-            <Text weight="medium" style={[styles.miniPillText, { color: hudText }]}>
-              {playersRemaining.toLocaleString()} left
-            </Text>
-          </View>
-          <View
-            style={[
-              styles.phasePill,
-              { borderColor: withAlpha(darkTheme ? palette.ink : '#FFFFFF', 0.18) },
-              phasePillStyle(phase, palette),
-            ]}
-          >
-            <Text weight="bold" style={[styles.phaseText, { color: hudText }]}>
-              {phase}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.scorebugSubRow}>
-        <View style={styles.subLeft}>
-          <View
-            style={[
-              styles.streakPill,
-              {
-                backgroundColor: withAlpha(palette.surface, 0.72),
-                borderColor: withAlpha(palette.ink, 0.1),
-              },
-            ]}
-          >
-            <Text weight="bold" style={[styles.streakText, { color: palette.ink }]}>
-              Streak {streak}
-            </Text>
-          </View>
-        </View>
-        <View style={styles.subRight}>
-          <View
-            style={[
-              styles.gifChip,
-              {
-                backgroundColor: withAlpha(palette.surface, 0.72),
-                borderColor: withAlpha(palette.ink, 0.1),
-              },
-            ]}
-          >
-            {gif ? <Image source={gif} style={styles.gifChipImg} /> : null}
-            <Text weight="medium" style={[styles.gifChipText, { color: palette.ink }]}>
-              Status
-            </Text>
-          </View>
-        </View>
-      </View>
-    </View>
-  );
-};
-
-function phasePillStyle(phase: Phase, palette: PlaygroundPalette) {
-  switch (phase) {
-    case 'OPEN':
-      return { backgroundColor: 'rgba(255,255,255,0.12)' } as const;
-    case 'LOCKED':
-      return { backgroundColor: withAlpha(palette.primary, 0.35) } as const;
-    case 'REVEAL':
-      return { backgroundColor: withAlpha(palette.energy, 0.35) } as const;
-    case 'RESULT':
-      return { backgroundColor: withAlpha(palette.warm, 0.35) } as const;
-  }
-}
-
-const TicketCard = ({
-  children,
-  palette,
-}: {
-  children: React.ReactNode;
-  palette: PlaygroundPalette;
-}) => {
-  return (
-    <View
-      style={[
-        styles.ticketWrap,
-        {
-          backgroundColor: withAlpha(palette.surface, 0.72),
-          borderColor: withAlpha(palette.ink, 0.1),
-        },
-      ]}
-    >
-      <LinearGradient
-        colors={
-          [
-            withAlpha(palette.energy, 0.22),
-            withAlpha(palette.ink, 0.06),
-            'rgba(255,255,255,0)',
-          ] as const
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.ticketTint}
-      />
-
-      <View style={styles.ticketTexture}>
-        {Array.from({ length: 10 }, (_, idx) => ({ key: `line-${idx}`, top: idx * 18 })).map(
-          (line) => (
-            <View
-              key={line.key}
-              style={[
-                styles.ticketTextureLine,
-                { top: line.top, backgroundColor: withAlpha(palette.ink, 0.05) },
-              ]}
-            />
-          ),
-        )}
-      </View>
-
-      <View style={[styles.ticketCutoutLeft, { backgroundColor: palette.bg }]} />
-      <View style={[styles.ticketCutoutRight, { backgroundColor: palette.bg }]} />
-      <View style={[styles.ticketPerforation, { borderTopColor: withAlpha(palette.ink, 0.16) }]} />
-
-      <View style={styles.ticketContent}>{children}</View>
-    </View>
-  );
-};
 
 const EnergyBar = ({ value, palette }: { value: number; palette: PlaygroundPalette }) => {
   const clamped = Math.max(0, Math.min(1, value));
@@ -572,95 +310,6 @@ const EnergyBar = ({ value, palette }: { value: number; palette: PlaygroundPalet
         style={[styles.energyFill, { width: `${Math.round(clamped * 100)}%` }]}
       />
     </View>
-  );
-};
-
-const MoveOptionRow = ({
-  label,
-  iconText,
-  selected,
-  onPress,
-  palette,
-}: {
-  label: string;
-  iconText: string;
-  selected?: boolean;
-  onPress: () => void;
-  palette: PlaygroundPalette;
-}) => {
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.moveRow,
-        {
-          backgroundColor: withAlpha(palette.surface, 0.72),
-          borderColor: withAlpha(palette.ink, 0.1),
-        },
-        selected && [styles.moveRowSelected, { borderColor: withAlpha(palette.energy, 0.42) }],
-        pressed && styles.pressed,
-      ]}
-    >
-      <LinearGradient
-        colors={
-          selected
-            ? ([palette.energy, palette.ink] as const)
-            : ([withAlpha(palette.ink, 0.18), withAlpha(palette.ink, 0.06)] as const)
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.moveStripe}
-      />
-
-      <View
-        style={[
-          styles.moveIconCapsule,
-          {
-            backgroundColor: withAlpha(palette.ink, 0.06),
-            borderColor: withAlpha(palette.ink, 0.1),
-          },
-          selected && [
-            styles.moveIconCapsuleSelected,
-            {
-              backgroundColor: withAlpha(palette.energy, 0.16),
-              borderColor: withAlpha(palette.energy, 0.25),
-            },
-          ],
-        ]}
-      >
-        <Text
-          weight="bold"
-          style={[
-            styles.moveIconText,
-            { color: palette.ink },
-            selected && styles.moveIconTextSelected,
-          ]}
-        >
-          {iconText}
-        </Text>
-      </View>
-
-      <View style={styles.moveCopy}>
-        <Text weight="medium" style={[styles.moveLabel, { color: palette.ink }]}>
-          {label}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.radioOuter,
-          { borderColor: withAlpha(palette.ink, 0.2) },
-          selected && [styles.radioOuterSelected, { borderColor: withAlpha(palette.ink, 0.45) }],
-        ]}
-      >
-        <View
-          style={[
-            styles.radioInner,
-            selected && [styles.radioInnerSelected, { backgroundColor: palette.ink }],
-          ]}
-        />
-      </View>
-    </Pressable>
   );
 };
 
@@ -790,124 +439,6 @@ const styles = StyleSheet.create({
 
   scorebugWrap: {
     marginBottom: SPACING.LG,
-  },
-  scorebugBar: {
-    borderRadius: RADIUS.LG,
-    paddingHorizontal: SPACING.MD,
-    paddingVertical: SPACING.SM,
-    backgroundColor: COLORS.PRIMARY_DARK,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    overflow: 'hidden',
-  },
-  scorebugLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  scorebugRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  livePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-  },
-  liveDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#FF4D4D',
-  },
-  liveText: {
-    fontSize: 12,
-    letterSpacing: 0.7,
-    color: '#fff',
-  },
-  timerPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-  },
-  timerText: {
-    fontSize: 12,
-    letterSpacing: 0.7,
-    color: '#fff',
-  },
-  miniPill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.10)',
-  },
-  miniPillText: {
-    fontSize: 12,
-    color: '#fff',
-  },
-  phasePill: {
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.14)',
-  },
-  phaseText: {
-    fontSize: 12,
-    letterSpacing: 0.6,
-    color: '#fff',
-  },
-  scorebugSubRow: {
-    marginTop: SPACING.SM,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  subLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  subRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  streakPill: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(53,74,87,0.10)',
-  },
-  streakText: {
-    fontSize: 12,
-    color: COLORS.PRIMARY_DARK,
-  },
-  gifChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: 'rgba(255,255,255,0.55)',
-    borderWidth: 1,
-    borderColor: 'rgba(53,74,87,0.10)',
-  },
-  gifChipImg: {
-    width: 18,
-    height: 18,
-    resizeMode: 'contain',
-  },
-  gifChipText: {
-    fontSize: 12,
-    color: COLORS.PRIMARY_DARK,
   },
 
   section: {

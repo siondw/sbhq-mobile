@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
-import { SHINE_PRESET } from './constants';
-import type { ShineAnimationResult, UseShineAnimationOptions } from './types';
+import { SELECTION_PRESET, SHINE_PRESET } from './constants';
+import type {
+    SelectionAnimationResult,
+    ShineAnimationResult,
+    UseSelectionAnimationOptions,
+    UseShineAnimationOptions,
+} from './types';
 
-// Example: useShineAnimation({ preset: 'subtle' })
 export const useShineAnimation = (options: UseShineAnimationOptions = {}): ShineAnimationResult => {
   const {
     preset = 'SUBTLE',
@@ -13,6 +17,7 @@ export const useShineAnimation = (options: UseShineAnimationOptions = {}): Shine
     containerOpacity: customContainerOpacity,
     startX = -200,
     endX = 600,
+    loop = false,
   } = options;
 
   const presetConfig = SHINE_PRESET[preset];
@@ -76,4 +81,66 @@ export const usePulseAnimation = (duration: number = 900) => {
   const scale = pulse.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] });
 
   return { opacity, scale };
+};
+
+export const useSelectionAnimation = (
+  selected: boolean,
+  options: UseSelectionAnimationOptions = {},
+): SelectionAnimationResult => {
+  const {
+    preset = 'NORMAL',
+    tension: customTension,
+    friction: customFriction,
+    deselectionDuration: customDeselectionDuration,
+  } = options;
+
+  const presetConfig = SELECTION_PRESET[preset];
+
+  const tension = customTension ?? presetConfig.tension;
+  const friction = customFriction ?? presetConfig.friction;
+  const deselectionDuration = customDeselectionDuration ?? presetConfig.deselectionDuration;
+
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const buttonScaleAnim = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (selected) {
+      // Reset to 0 first to ensure fresh animation every time
+      scaleAnim.setValue(0);
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension,
+        friction,
+      }).start();
+
+      // Button scale animation (fixed 1.05)
+      Animated.spring(buttonScaleAnim, {
+        toValue: 1.05,
+        useNativeDriver: true,
+        tension: 60,
+        friction: 7,
+      }).start();
+    } else {
+      Animated.timing(scaleAnim, {
+        toValue: 0,
+        duration: deselectionDuration,
+        useNativeDriver: true,
+      }).start();
+
+      // Button scale deselection
+      Animated.spring(buttonScaleAnim, {
+        toValue: 1,
+        useNativeDriver: true,
+        tension: 60,
+        friction: 7,
+      }).start();
+    }
+  }, [selected, scaleAnim, buttonScaleAnim, tension, friction, deselectionDuration]);
+
+  return {
+    scale: scaleAnim,
+    opacity: scaleAnim,
+    buttonScale: buttonScaleAnim,
+  };
 };

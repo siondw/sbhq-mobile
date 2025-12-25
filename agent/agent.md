@@ -33,17 +33,30 @@ Router files (app/) must only import screens, nothing else.
 
 When generating code, you MUST:
 
-Run TypeScript type checking (npx tsc --noEmit).
+Run TypeScript type checking (npm run tsc).
 
-Run ESLint (npx eslint src --ext .ts,.tsx).
+Run ESLint (npm run lint or npm run lint:fix for auto-fixes).
 
-Validate that Expo can compile (npx expo prebuild).
+Run Prettier formatting (npm run format).
 
 Ensure no code violates the architecture.
 
 Show diffs of what changed.
 
 Explain your reasoning referencing the guidelines and reference file.
+
+## Available npm scripts:
+
+- `npm start` – Start Expo dev server
+- `npm run start:tunnel` – Start Expo with tunnel and go flag
+- `npm run android` – Run on Android device/emulator
+- `npm run ios` – Run on iOS device/simulator
+- `npm run web` – Run web version
+- `npm run tsc` – TypeScript type checking (no emit)
+- `npm run lint` – Run ESLint
+- `npm run lint:fix` – Run ESLint with auto-fix
+- `npm run format` – Format all files with Prettier
+- `npm run format:check` – Check formatting without making changes
 
 When implementing functionality:
 

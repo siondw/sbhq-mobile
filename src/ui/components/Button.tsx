@@ -27,8 +27,14 @@ const Button = ({
   const isSuccess = variant === 'success';
   const isSecondary = variant === 'secondary';
 
-  const bgColor = isPrimary ? colors.primary : isSuccess ? colors.success : colors.surface;
-  const labelColor = isSecondary ? colors.primary : textOnHex(bgColor);
+  const bgColor = useMemo(
+    () => (isPrimary ? colors.primary : isSuccess ? colors.success : colors.surface),
+    [isPrimary, isSuccess, colors.primary, colors.success, colors.surface]
+  );
+  const labelColor = useMemo(
+    () => (isSecondary ? colors.primary : textOnHex(bgColor)),
+    [isSecondary, colors.primary, bgColor]
+  );
 
   return (
     <Pressable
@@ -75,6 +81,7 @@ function createStyles(colors: {
       justifyContent: 'center',
       borderWidth: 1,
       borderColor: 'transparent',
+      overflow: 'hidden',
     },
     primary: {
       backgroundColor: colors.primary,

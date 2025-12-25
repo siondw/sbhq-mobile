@@ -14,10 +14,8 @@ const GlassyTexture = ({ colors, shinePreset = 'SUBTLE', style, children }: Glas
       {children}
       <LinearGradient
         colors={[
-          withAlpha(colors.energy, 0.25),
-          withAlpha(colors.warm, 0.15),
-          withAlpha(colors.ink, 0.1),
-          'rgba(0,0,0,0.08)',
+          withAlpha(colors.ink, 0.08),
+          'rgba(0,0,0,0.04)',
         ]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}

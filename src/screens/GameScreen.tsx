@@ -8,12 +8,13 @@ import { PLAYER_STATE } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import AnswerOption from '../ui/components/AnswerOption';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
-import Card from '../ui/components/Card';
+import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
-import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
+import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
 import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
 
 interface GameScreenProps {
@@ -28,6 +29,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   const headerHeight = useHeaderHeight();
   const { loading, error, contest, participant, question, answer, playerState, submit, refresh } =
     useContestState(contestId, derivedUser?.id);
+  const { count: participantCount } = useParticipantCount(contestId);
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
   const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
@@ -98,6 +100,10 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     <View style={styles.container}>
       <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+        <View style={styles.scorebugSection}>
+          <Scorebug playerCount={participantCount} />
+        </View>
+
         <View style={styles.roundHeader}>
           <Text weight="medium" style={styles.roundLabel}>
             Round
@@ -110,10 +116,13 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
           </Text>
         </View>
 
-        <Card style={styles.questionCard}>
+        <View style={styles.questionSection}>
           <Text weight="bold" style={styles.question}>
             {question?.question ?? 'Waiting for question...'}
           </Text>
+        </View>
+
+        <View style={styles.optionsSection}>
           {options.map((option) => (
             <AnswerOption
               key={option.key}
@@ -123,14 +132,15 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
               onPress={() => setSelectedOption(option.key)}
             />
           ))}
-          <View style={styles.submitRow}>
-            <Button
-              label="Submit"
-              onPress={handleSubmit}
-              disabled={isAnswerLocked || !selectedOption}
-            />
-          </View>
-        </Card>
+        </View>
+
+        <View style={styles.submitRow}>
+          <Button
+            label="Submit"
+            onPress={handleSubmit}
+            disabled={isAnswerLocked || !selectedOption}
+          />
+        </View>
       </View>
     </View>
   );
@@ -152,29 +162,43 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
       justifyContent: 'center',
       padding: SPACING.LG,
     },
+    scorebugSection: {
+      marginBottom: SPACING.MD,
+    },
     roundHeader: {
       alignItems: 'center',
-      marginBottom: SPACING.LG,
+      marginBottom: SPACING.XL,
+      paddingBottom: SPACING.LG,
+      borderBottomWidth: 1,
+      borderBottomColor: withAlpha(colors.ink, 0.1),
     },
     roundLabel: {
-      fontSize: TYPOGRAPHY.SMALL,
+      fontSize: TYPOGRAPHY.BODY,
       color: colors.muted,
-      letterSpacing: 0.5,
+      letterSpacing: 1,
       textTransform: 'uppercase',
+      marginBottom: SPACING.XS,
     },
     roundNumber: {
-      fontSize: 32,
+      fontSize: 80,
       color: colors.ink,
+      lineHeight: 88,
+      marginBottom: SPACING.XS,
     },
     roundSubtitle: {
       fontSize: TYPOGRAPHY.BODY,
       color: colors.muted,
     },
-    questionCard: {
-      gap: SPACING.SM,
+    questionSection: {
+      marginBottom: SPACING.MD,
     },
     question: {
       fontSize: TYPOGRAPHY.SUBTITLE,
+      textAlign: 'center',
+    },
+    optionsSection: {
+      marginBottom: SPACING.MD,
+      paddingHorizontal: SPACING.SM,
     },
     submitRow: {
       marginTop: SPACING.SM,

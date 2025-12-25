@@ -41,3 +41,24 @@ export const SHINE_PRESET = {
     containerOpacity: 1,
   },
 } as const;
+
+/**
+ * Selection animation presets
+ */
+export const SELECTION_PRESET = {
+  FAST: {
+    tension: 70,
+    friction: 8,
+    deselectionDuration: 150,
+  },
+  NORMAL: {
+    tension: 50,
+    friction: 7,
+    deselectionDuration: 200,
+  },
+  SLOW: {
+    tension: 30,
+    friction: 6,
+    deselectionDuration: 300,
+  },
+} as const;

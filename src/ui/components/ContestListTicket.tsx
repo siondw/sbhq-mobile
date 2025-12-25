@@ -1,12 +1,12 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { usePulseAnimation } from '../animations';
-import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import { GlassyTexture } from '../textures';
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import Button from './Button';
+import LiveIndicator from './LiveIndicator';
 import Text from './Text';
-import TicketCard from './TicketCard';
 
 type ContestListTicketProps = {
   title: string;
@@ -40,64 +40,144 @@ const ContestListTicket = ({
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  // Pulse animation for live indicator dot
-  const { opacity: dotOpacity, scale: dotScale } = usePulseAnimation(900);
-
   return (
-    <TicketCard
-      style={[styles.card, dimmed && styles.dimmed]}
-      backgroundColor={cutoutBackgroundColor ?? colors.background}
-    >
-      <View style={styles.cardHeader}>
-        <Text weight="bold" style={styles.cardTitle}>
-          {title}
-        </Text>
-        {live ? (
-          <View style={styles.liveIndicator}>
-            <Animated.View
-              style={[
-                styles.liveDot,
-                {
-                  opacity: dotOpacity,
-                  transform: [{ scale: dotScale }],
-                },
-              ]}
-            />
-            <Text weight="medium" style={styles.liveText}>
-              LIVE
-            </Text>
-          </View>
-        ) : null}
-      </View>
+    <View style={[styles.ticketWrap, styles.card, dimmed && styles.dimmed]}>
+      <LinearGradient
+        colors={['rgba(255,255,255,0.08)', 'rgba(255,255,255,0)', 'rgba(255,255,255,0)']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+        pointerEvents="none"
+      />
 
-      <Text style={styles.meta}>Start: {startLabel}</Text>
-      <Text style={styles.meta}>Entry: {priceLabel}</Text>
-      {roundLabel ? <Text style={styles.meta}>Round: {roundLabel}</Text> : null}
+      <LinearGradient
+        colors={
+          [
+            withAlpha(colors.energy, 0.1),
+            withAlpha(colors.ink, 0.03),
+            'rgba(255,255,255,0)',
+          ] as const
+        }
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.tint}
+        pointerEvents="none"
+      />
 
-      <View style={styles.cardFooter}>
-        <GlassyTexture
-          colors={{ energy: colors.energy, warm: colors.warm, ink: colors.ink }}
-          shinePreset="SUBTLE"
-          style={styles.buttonWrapper}
-        >
-          <Button
-            label={buttonLabel}
-            variant={buttonVariant === 'secondary' ? 'secondary' : buttonVariant}
-            iconRight={buttonIconRight}
-            onPress={onPress}
-            disabled={buttonDisabled}
+      <View style={styles.texture} pointerEvents="none">
+        {Array.from({ length: 10 }, (_, idx) => (
+          <View
+            key={idx}
+            style={[
+              styles.textureLine,
+              { top: idx * 18, backgroundColor: withAlpha(colors.ink, 0.05) },
+            ]}
           />
-        </GlassyTexture>
+        ))}
       </View>
-    </TicketCard>
+
+      <View
+        style={[
+          styles.cutoutLeft,
+          { backgroundColor: cutoutBackgroundColor ?? colors.background },
+        ]}
+        pointerEvents="none"
+      />
+      <View
+        style={[
+          styles.cutoutRight,
+          { backgroundColor: cutoutBackgroundColor ?? colors.background },
+        ]}
+        pointerEvents="none"
+      />
+      <View style={styles.perforation} pointerEvents="none" />
+
+      <View style={styles.content}>
+        <View style={styles.cardHeader}>
+          <Text weight="bold" style={styles.cardTitle}>
+            {title}
+          </Text>
+          {live ? <LiveIndicator size="large" /> : null}
+        </View>
+
+        <Text style={styles.meta}>Start: {startLabel}</Text>
+        <Text style={styles.meta}>Entry: {priceLabel}</Text>
+        {roundLabel ? <Text style={styles.meta}>Round: {roundLabel}</Text> : null}
+
+        <View style={styles.cardFooter}>
+          <GlassyTexture
+            colors={{ energy: colors.energy, warm: colors.warm, ink: colors.ink }}
+            shinePreset="SUBTLE"
+            style={styles.buttonWrapper}
+          >
+            <Button
+              label={buttonLabel}
+              variant={buttonVariant === 'secondary' ? 'secondary' : buttonVariant}
+              iconRight={buttonIconRight}
+              onPress={onPress}
+              disabled={buttonDisabled}
+            />
+          </GlassyTexture>
+        </View>
+      </View>
+    </View>
   );
 };
 
-function createStyles(colors: { muted: string; danger: string }) {
+function createStyles(colors: { muted: string; danger: string; surface: string; border: string; ink: string; background: string }) {
   return StyleSheet.create({
-    card: {
+    ticketWrap: {
+      width: '100%',
+      borderRadius: RADIUS.LG,
+      backgroundColor: colors.surface,
+      overflow: 'hidden',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    tint: {
+      ...StyleSheet.absoluteFillObject,
+    },
+    texture: {
+      ...StyleSheet.absoluteFillObject,
+      opacity: 0.12,
+    },
+    textureLine: {
+      position: 'absolute',
+      left: -40,
+      right: -40,
+      height: 10,
+      transform: [{ rotate: '-16deg' }],
+    },
+    cutoutLeft: {
+      position: 'absolute',
+      left: -10,
+      top: 74,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+    },
+    cutoutRight: {
+      position: 'absolute',
+      right: -10,
+      top: 74,
+      width: 20,
+      height: 20,
+      borderRadius: 10,
+    },
+    perforation: {
+      position: 'absolute',
+      left: 14,
+      right: 14,
+      top: 84,
+      borderTopWidth: 1,
+      borderTopColor: withAlpha(colors.ink, 0.16),
+      borderStyle: 'dashed',
+    },
+    content: {
+      padding: SPACING.LG,
       gap: SPACING.XS,
     },
+    card: {},
     dimmed: {
       opacity: 0.6,
     },
@@ -119,29 +199,6 @@ function createStyles(colors: { muted: string; danger: string }) {
     },
     buttonWrapper: {
       borderRadius: RADIUS.MD,
-    },
-    liveIndicator: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 6,
-      paddingVertical: 4,
-      paddingHorizontal: SPACING.SM,
-      borderRadius: RADIUS.SM,
-      backgroundColor: withAlpha(colors.danger, 0.14),
-      borderWidth: 1,
-      borderColor: withAlpha(colors.danger, 0.35),
-    },
-    liveDot: {
-      width: 6,
-      height: 6,
-      borderRadius: 3,
-      backgroundColor: colors.danger,
-    },
-    liveText: {
-      fontSize: TYPOGRAPHY.SMALL,
-      color: colors.danger,
-      letterSpacing: 0.5,
-      fontWeight: '600',
     },
   });
 }
