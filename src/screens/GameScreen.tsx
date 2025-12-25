@@ -28,10 +28,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     useContestState(contestId, derivedUser?.id);
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
-  const options = useMemo(
-    () => normalizeQuestionOptions(question?.options),
-    [question?.options],
-  );
+  const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
 
   useEffect(() => {
     if (answer?.answer && isAnswerOptionValue(answer.answer)) {

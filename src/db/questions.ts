@@ -8,14 +8,18 @@ import type { DbError } from './errors';
 import { subscribeToTable } from './realtime';
 import type { QuestionRow } from './types';
 
-export const getQuestionsForContest = async (contestId: string): AsyncResult<QuestionRow[], DbError> => {
+export const getQuestionsForContest = async (
+  contestId: string,
+): AsyncResult<QuestionRow[], DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.QUESTIONS)
     .select('*')
     .eq('contest_id', contestId)
     .order('round', { ascending: true });
 
   if (error) {
-    return Err(networkError(`Failed to fetch questions for contest ${contestId}: ${error.message}`));
+    return Err(
+      networkError(`Failed to fetch questions for contest ${contestId}: ${error.message}`),
+    );
   }
 
   return Ok((data as QuestionRow[]) ?? []);
@@ -32,9 +36,11 @@ export const getQuestionForRound = async (
     .maybeSingle();
 
   if (error) {
-    return Err(networkError(
-      `Failed to fetch question for contest ${contestId} round ${round}: ${error.message}`,
-    ));
+    return Err(
+      networkError(
+        `Failed to fetch question for contest ${contestId} round ${round}: ${error.message}`,
+      ),
+    );
   }
 
   return Ok((data as QuestionRow | null) ?? null);

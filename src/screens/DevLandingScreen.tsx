@@ -6,7 +6,7 @@ import { useAuth } from '../logic/hooks/useAuth';
 import LoginScreen from './LoginScreen';
 
 const DevLandingScreen = () => {
-  const { session } = useAuth();
+  const { session, logout } = useAuth();
   const router = useRouter();
   const [previewScreen, setPreviewScreen] = useState<'picker' | 'login'>('picker');
 
@@ -37,7 +37,13 @@ const DevLandingScreen = () => {
             </Pressable>
           </Link>
 
-          <Link href={{ pathname: '/contest/[contestId]', params: { contestId: '00000000-0000-0000-0000-0000000000aa' } }} asChild>
+          <Link
+            href={{
+              pathname: '/contest/[contestId]',
+              params: { contestId: '00000000-0000-0000-0000-0000000000aa' },
+            }}
+            asChild
+          >
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Game Screen (Sunday Showdown)</Text>
             </Pressable>
@@ -72,6 +78,12 @@ const DevLandingScreen = () => {
           <View style={styles.infoBox}>
             <Text style={styles.infoText}>{session ? 'Logged in' : 'Not logged in'}</Text>
           </View>
+
+          {__DEV__ && session ? (
+            <Pressable style={[styles.button, styles.logoutButton]} onPress={() => void logout()}>
+              <Text style={styles.buttonText}>Log Out</Text>
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </ScrollView>
@@ -114,6 +126,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  logoutButton: {
+    backgroundColor: '#9F2430',
   },
   divider: {
     height: 20,

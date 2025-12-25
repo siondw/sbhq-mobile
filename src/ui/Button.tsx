@@ -11,7 +11,14 @@ interface ButtonProps {
   iconLeft?: ReactNode;
 }
 
-const Button = ({ label, onPress, disabled, variant = 'primary', iconRight, iconLeft }: ButtonProps) => {
+const Button = ({
+  label,
+  onPress,
+  disabled,
+  variant = 'primary',
+  iconRight,
+  iconLeft,
+}: ButtonProps) => {
   const isPrimary = variant === 'primary';
   const isSuccess = variant === 'success';
 

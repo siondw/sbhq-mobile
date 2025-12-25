@@ -30,10 +30,10 @@ const LoginScreen = () => {
   const [message, setMessage] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loading && session) {
+    if (session && !loading) {
       router.replace(ROUTES.CONTESTS);
     }
-  }, [loading, session, router]);
+  }, [session, loading, router]);
 
   const handleGoogle = () => {
     setMessage('Opening Google login…');

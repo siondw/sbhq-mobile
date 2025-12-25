@@ -22,7 +22,9 @@ export const getContests = async (): AsyncResult<ContestRow[], DbError> => {
   return Ok((data ?? []) as ContestRow[]);
 };
 
-export const getContestById = async (contestId: string): AsyncResult<ContestRow | null, DbError> => {
+export const getContestById = async (
+  contestId: string,
+): AsyncResult<ContestRow | null, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.CONTESTS)
     .select('*')
     .eq('id', contestId)
@@ -53,9 +55,11 @@ export const subscribeToContest = (
 
 // State check helpers
 export const isContestActive = (contest: ContestRow): boolean => {
-  return contest.state === 'LOBBY_OPEN' ||
-         contest.state === 'ROUND_IN_PROGRESS' ||
-         contest.state === 'ROUND_CLOSED';
+  return (
+    contest.state === 'LOBBY_OPEN' ||
+    contest.state === 'ROUND_IN_PROGRESS' ||
+    contest.state === 'ROUND_CLOSED'
+  );
 };
 
 export const canAcceptParticipants = (contest: ContestRow): boolean => {

@@ -87,7 +87,7 @@ export const getAnswerForRound = async (
   contestId: string,
   round: number,
 ): AsyncResult<AnswerRow | null, DbError> => {
-  const { data, error} = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.ANSWERS)
     .select('*')
     .eq('participant_id', participantId)
     .eq('contest_id', contestId)
@@ -95,9 +95,11 @@ export const getAnswerForRound = async (
     .maybeSingle();
 
   if (error) {
-    return Err(networkError(
-      `Failed to fetch answer for participant ${participantId} round ${round}: ${error.message}`,
-    ));
+    return Err(
+      networkError(
+        `Failed to fetch answer for participant ${participantId} round ${round}: ${error.message}`,
+      ),
+    );
   }
 
   return Ok((data as AnswerRow | null) ?? null);

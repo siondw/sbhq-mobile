@@ -93,6 +93,7 @@ export const getUser = async (id: string): Promise<User> => {
 ```
 
 **Hooks handle Results explicitly:**
+
 ```typescript
 const fetchData = async () => {
   const result = await getUser(userId);
@@ -111,6 +112,7 @@ const fetchData = async () => {
 - **DB operations** in `src/db/` - Isolated side effects
 
 Example:
+
 ```typescript
 // src/logic/contest/derivePlayerState.ts - Pure
 export const derivePlayerState = (
@@ -125,7 +127,7 @@ export const derivePlayerState = (
 // src/logic/hooks/useContestState.ts - Uses pure function
 const playerState = useMemo(
   () => derivePlayerState(contest, participant, question, answer),
-  [contest, participant, question, answer]
+  [contest, participant, question, answer],
 );
 ```
 
@@ -135,8 +137,8 @@ Use `groupBy`, `keyBy`, `sum` from `src/utils/array.ts`:
 
 ```typescript
 // Good
-const byContest = groupBy(participants, p => p.contest_id);
-const byId = keyBy(users, u => u.id);
+const byContest = groupBy(participants, (p) => p.contest_id);
+const byId = keyBy(users, (u) => u.id);
 
 // Avoid
 const byContest = {};
@@ -152,16 +154,13 @@ Supabase's complex type inference system generates verbose generic types that Ty
 
 ```typescript
 // ✅ Good - Direct type assertion (recommended pattern)
-const { data, error } = await SUPABASE_CLIENT
-  .from('contests')
-  .select('*')
-  .single();
+const { data, error } = await SUPABASE_CLIENT.from('contests').select('*').single();
 
 if (error) return Err(networkError(error.message));
-return Ok(data as ContestRow);  // Standard Supabase pattern
+return Ok(data as ContestRow); // Standard Supabase pattern
 
 // ❌ Bad - Using 'as unknown as' is a code smell
-return Ok(data as unknown as ContestRow);  // Avoid this
+return Ok(data as unknown as ContestRow); // Avoid this
 ```
 
 **Expected TypeScript Warnings:**
@@ -174,6 +173,7 @@ src/db/contests.ts(23,12): error TS2352: Conversion of type '...' to type 'Conte
 ```
 
 **Why this happens:**
+
 - Supabase generates complex `GetResult<QueryResult<...>>` types
 - These types encode the full query structure but don't match our simpler `RowType` interfaces
 - The `as RowType` cast is safe because our types match the database schema

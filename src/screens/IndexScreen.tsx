@@ -14,10 +14,10 @@ const IndexScreen = () => {
   const isDev = __DEV__;
 
   useEffect(() => {
-    if (!isDev && !loading && session) {
+    if (!isDev && session) {
       router.replace(ROUTES.CONTESTS);
     }
-  }, [isDev, loading, session, router]);
+  }, [isDev, session, router]);
 
   if (isDev) {
     return <DevLandingScreen />;

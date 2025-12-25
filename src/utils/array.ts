@@ -1,7 +1,4 @@
-export const groupBy = <T, K extends PropertyKey>(
-  xs: T[],
-  key: (t: T) => K,
-): Record<K, T[]> =>
+export const groupBy = <T, K extends PropertyKey>(xs: T[], key: (t: T) => K): Record<K, T[]> =>
   xs.reduce(
     (m, x) => {
       const k = key(x);

@@ -118,11 +118,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     void init();
 
-    const unsubscribe = onAuthStateChange(async (_event, nextSession) => {
+    const unsubscribe = onAuthStateChange((_event, nextSession) => {
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
       if (nextSession?.user) {
-        await fetchProfile(nextSession.user.id);
+        void fetchProfile(nextSession.user.id);
       } else {
         setProfile(null);
       }

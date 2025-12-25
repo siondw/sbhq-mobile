@@ -5,6 +5,9 @@ import type {
   SignInWithOAuthCredentials,
   User,
 } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform } from 'react-native';
+import { ENV } from '../configs/env';
 import type { AsyncResult } from '../utils/result';
 import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
@@ -114,10 +117,27 @@ export const verifyOtp = async (email: string, token: string): AsyncResult<void,
 };
 
 export const signOut = async (): AsyncResult<void, DbError> => {
-  const { error } = await SUPABASE_CLIENT.auth.signOut();
+  const { error } = await SUPABASE_CLIENT.auth.signOut({ scope: 'global' });
+
+  const host = ENV.SUPABASE_URL.replace(/^https?:\/\//, '').split('/')[0];
+  const projectRef = host.split('.')[0];
+  const storageKey = `sb-${projectRef}-auth-token`;
+  const keysToClear = [storageKey, `${storageKey}-code-verifier`, `${storageKey}-user`];
+
+  try {
+    if (Platform.OS === 'web') {
+      if (typeof localStorage !== 'undefined') {
+        keysToClear.forEach((key) => localStorage.removeItem(key));
+      }
+    } else {
+      await Promise.all(keysToClear.map((key) => AsyncStorage.removeItem(key)));
+    }
+  } catch (storageError) {
+    return Err(authError((storageError as Error).message));
+  }
 
   if (error) {
-    return Err(authError(error.message));
+    return Ok(undefined);
   }
 
   return Ok(undefined);

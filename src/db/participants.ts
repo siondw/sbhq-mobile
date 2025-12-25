@@ -19,26 +19,34 @@ export const getParticipantForUser = async (
     .maybeSingle();
 
   if (error) {
-    return Err(networkError(`Failed to fetch participant for contest ${contestId}: ${error.message}`));
+    return Err(
+      networkError(`Failed to fetch participant for contest ${contestId}: ${error.message}`),
+    );
   }
 
   return Ok((data as ParticipantRow | null) ?? null);
 };
 
-export const getActiveParticipantCount = async (contestId: string): AsyncResult<number, DbError> => {
+export const getActiveParticipantCount = async (
+  contestId: string,
+): AsyncResult<number, DbError> => {
   const { count, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('id', { count: 'exact', head: true })
     .eq('contest_id', contestId)
     .is('elimination_round', null);
 
   if (error) {
-    return Err(networkError(`Failed to fetch participant count for contest ${contestId}: ${error.message}`));
+    return Err(
+      networkError(`Failed to fetch participant count for contest ${contestId}: ${error.message}`),
+    );
   }
 
   return Ok(count ?? 0);
 };
 
-export const createParticipant = async (payload: ParticipantInsert): AsyncResult<ParticipantRow, DbError> => {
+export const createParticipant = async (
+  payload: ParticipantInsert,
+): AsyncResult<ParticipantRow, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.from('participants')
     .insert(payload)
     .select()

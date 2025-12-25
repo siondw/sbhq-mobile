@@ -18,7 +18,7 @@ import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
 
 const ContestListScreen = () => {
   const router = useRouter();
-  const { derivedUser } = useAuth();
+  const { derivedUser, loading: authLoading } = useAuth();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
 
@@ -30,7 +30,7 @@ const ContestListScreen = () => {
     registerForContest,
   } = useContestRegistration(contests, derivedUser?.id);
 
-  const loading = contestsLoading || participantsLoading;
+  const loading = authLoading || contestsLoading || participantsLoading;
   const error = contestsError || participantsError;
 
   const numColumns = width >= 1100 ? 3 : width >= 760 ? 2 : 1;
@@ -119,7 +119,8 @@ const ContestListScreen = () => {
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
           const isRegistered = !!participant;
-          const isLive = item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
+          const isLive =
+            item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
           const isInProgress =
             item.state === CONTEST_STATE.ROUND_IN_PROGRESS ||
             item.state === CONTEST_STATE.ROUND_CLOSED;
@@ -139,7 +140,11 @@ const ContestListScreen = () => {
           } else if (isLocked) {
             buttonLabel = 'Locked';
             buttonVariant = 'primary';
-          } else if (isRegistered && (item.state === CONTEST_STATE.LOBBY_OPEN || item.state === CONTEST_STATE.ROUND_IN_PROGRESS)) {
+          } else if (
+            isRegistered &&
+            (item.state === CONTEST_STATE.LOBBY_OPEN ||
+              item.state === CONTEST_STATE.ROUND_IN_PROGRESS)
+          ) {
             buttonLabel = 'Join Contest';
             buttonVariant = 'success';
             buttonIcon = <Feather name="arrow-right" size={20} color={COLORS.SURFACE} />;
