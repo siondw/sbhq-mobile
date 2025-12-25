@@ -168,7 +168,12 @@ const LoginScreen = () => {
   );
 };
 
-const createStyles = (colors: { background: string; ink: string; muted: string; primary: string }) =>
+const createStyles = (colors: {
+  background: string;
+  ink: string;
+  muted: string;
+  primary: string;
+}) =>
   StyleSheet.create({
     screen: {
       flex: 1,

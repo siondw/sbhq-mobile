@@ -12,7 +12,7 @@ import { useContests } from '../logic/hooks/useContests';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
-import Card from '../ui/components/Card';
+import ContestListTicket from '../ui/components/ContestListTicket';
 import Text from '../ui/components/Text';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
@@ -160,49 +160,25 @@ const ContestListScreen = () => {
           }
 
           return (
-            <Card
-              style={[
-                styles.card,
-                numColumns > 1 && styles.cardGridItem,
-                (isLocked || (isEliminated && isInProgress)) && styles.cardLocked,
-              ]}
-            >
-              <View style={styles.cardHeader}>
-                <Text weight="bold" style={styles.cardTitle}>
-                  {item.name}
-                </Text>
-                {isLive && (
-                  <View style={styles.liveIndicator}>
-                    <View style={styles.liveDot} />
-                    <Text weight="medium" style={styles.liveText}>
-                      LIVE
-                    </Text>
-                  </View>
-                )}
-              </View>
-
-              <Text style={styles.meta}>Start: {startLabel}</Text>
-              <Text style={styles.meta}>Entry: {priceLabel}</Text>
-              {item.current_round ? (
-                <Text style={styles.meta}>Round: {item.current_round}</Text>
-              ) : null}
-
-              <View style={styles.cardFooter}>
-                <Button
-                  label={buttonLabel}
-                  variant={buttonVariant}
-                  iconRight={buttonIcon}
-                  onPress={() => void handleEnterContest(item)}
-                  disabled={
-                    !!isLocked ||
-                    (isEliminated && isInProgress) ||
-                    (isRegistered &&
-                      item.state !== CONTEST_STATE.LOBBY_OPEN &&
-                      item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
-                  }
-                />
-              </View>
-            </Card>
+            <ContestListTicket
+              title={item.name}
+              startLabel={startLabel}
+              priceLabel={priceLabel}
+              roundLabel={item.current_round ? String(item.current_round) : null}
+              live={isLive}
+              dimmed={isLocked || (isEliminated && isInProgress)}
+              buttonLabel={buttonLabel}
+              buttonVariant={buttonVariant}
+              buttonIconRight={buttonIcon}
+              buttonDisabled={
+                !!isLocked ||
+                (isEliminated && isInProgress) ||
+                (isRegistered &&
+                  item.state !== CONTEST_STATE.LOBBY_OPEN &&
+                  item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
+              }
+              onPress={() => void handleEnterContest(item)}
+            />
           );
         }}
         ListEmptyComponent={
@@ -220,98 +196,50 @@ const ContestListScreen = () => {
   );
 };
 
-const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  listContent: {
-    paddingHorizontal: SPACING.MD,
-    paddingBottom: SPACING.XXL,
-    gap: SPACING.MD,
-    maxWidth: 1200,
-    width: '100%',
-    alignSelf: 'center',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-  spacer: {
-    height: SPACING.SM,
-  },
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    listContent: {
+      paddingHorizontal: SPACING.MD,
+      paddingBottom: SPACING.XXL,
+      gap: SPACING.MD,
+      maxWidth: 1200,
+      width: '100%',
+      alignSelf: 'center',
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: SPACING.LG,
+    },
+    spacer: {
+      height: SPACING.SM,
+    },
 
-  columnWrapper: {
-    justifyContent: 'space-between',
-  },
-  card: {
-    gap: SPACING.XS,
-  },
-  cardTitle: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: SPACING.SM,
-  },
-  meta: {
-    fontSize: TYPOGRAPHY.BODY,
-    color: colors.muted,
-  },
-  cardFooter: {
-    marginTop: SPACING.SM,
-  },
-  cardGridItem: {
-    flex: 1,
-    marginHorizontal: SPACING.XS,
-  },
-  cardLocked: {
-    opacity: 0.6,
-  },
-  liveIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 4,
-    paddingHorizontal: SPACING.SM,
-    borderRadius: RADIUS.SM,
-    backgroundColor: 'rgba(255, 68, 68, 0.12)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 68, 68, 0.3)',
-  },
-  liveDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#FF4444',
-  },
-  liveText: {
-    fontSize: TYPOGRAPHY.SMALL,
-    color: '#FF4444',
-    letterSpacing: 0.5,
-    fontWeight: '600',
-  },
-  emptyState: {
-    backgroundColor: colors.surface,
-    borderRadius: RADIUS.MD,
-    padding: SPACING.LG,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  emptyTitle: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-    marginBottom: SPACING.XS,
-  },
-  emptySubtitle: {
-    fontSize: TYPOGRAPHY.BODY,
-    color: colors.muted,
-    textAlign: 'center',
-  },
-});
+    columnWrapper: {
+      justifyContent: 'space-between',
+    },
+    emptyState: {
+      backgroundColor: colors.surface,
+      borderRadius: RADIUS.MD,
+      padding: SPACING.LG,
+      alignItems: 'center',
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    emptyTitle: {
+      fontSize: TYPOGRAPHY.SUBTITLE,
+      marginBottom: SPACING.XS,
+    },
+    emptySubtitle: {
+      fontSize: TYPOGRAPHY.BODY,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+  });
 
 export default ContestListScreen;

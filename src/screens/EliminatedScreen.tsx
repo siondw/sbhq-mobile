@@ -104,39 +104,40 @@ const EliminatedScreen = () => {
   );
 };
 
-const createStyles = (colors: { background: string; danger: string }) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.MD,
-    justifyContent: 'center',
-    gap: SPACING.MD,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-  headerBlock: {
-    gap: SPACING.XS,
-  },
-  title: {
-    fontSize: TYPOGRAPHY.TITLE,
-    color: colors.danger,
-  },
-  body: {
-    fontSize: TYPOGRAPHY.BODY,
-  },
-  footer: {
-    marginTop: SPACING.SM,
-  },
-  spacer: {
-    height: SPACING.SM,
-  },
-});
+const createStyles = (colors: { background: string; danger: string }) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: SPACING.MD,
+      justifyContent: 'center',
+      gap: SPACING.MD,
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: SPACING.LG,
+    },
+    headerBlock: {
+      gap: SPACING.XS,
+    },
+    title: {
+      fontSize: TYPOGRAPHY.TITLE,
+      color: colors.danger,
+    },
+    body: {
+      fontSize: TYPOGRAPHY.BODY,
+    },
+    footer: {
+      marginTop: SPACING.SM,
+    },
+    spacer: {
+      height: SPACING.SM,
+    },
+  });
 
 export default EliminatedScreen;

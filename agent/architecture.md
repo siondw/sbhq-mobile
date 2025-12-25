@@ -161,7 +161,6 @@ Reusable UI components that make up the interface:
   - `Button` – Configurable button with variants (primary, secondary, success)
   - `Text` – Text component with weight prop system (regular, medium, bold)
   - `Card` – Base card container with consistent styling
-  
 - SBHQ-specific UI components:
   - `AnswerOption` – Radio-style answer selection component
   - `AnswerSummaryCard` – Displays question and answer details
@@ -176,6 +175,7 @@ Reusable UI components that make up the interface:
 Centralized theme infrastructure with a single palette-based system:
 
 **Files:**
+
 - `index.ts` – Barrel export for convenient imports
 - `spacing.ts` – Spacing and radius tokens (SPACING, RADIUS)
 - `typography.ts` – Typography tokens (TYPOGRAPHY, HEADER_CONTENT_HEIGHT)
@@ -193,11 +193,13 @@ Centralized theme infrastructure with a single palette-based system:
 **Usage:**
 
 Components import from the barrel export:
+
 ```tsx
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 ```
 
 Screens import components and theme:
+
 ```tsx
 import Button from '../ui/components/Button';
 import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
@@ -206,6 +208,7 @@ import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 **Theme Configuration:**
 
 The active palette is configured in `src/configs/constants.ts`:
+
 ```tsx
 export const THEME_CONFIG = {
   SELECTED_PALETTE: 'default', // or 'carbon-teal-classic', etc.

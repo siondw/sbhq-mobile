@@ -83,35 +83,36 @@ const CorrectScreen = () => {
   );
 };
 
-const createStyles = (colors: { background: string }) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.MD,
-    justifyContent: 'center',
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-  title: {
-    fontSize: TYPOGRAPHY.TITLE,
-    marginBottom: SPACING.XS,
-  },
-  body: {
-    fontSize: TYPOGRAPHY.BODY,
-  },
-  summary: {
-    marginTop: SPACING.MD,
-  },
-  spacer: {
-    height: SPACING.SM,
-  },
-});
+const createStyles = (colors: { background: string }) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: SPACING.MD,
+      justifyContent: 'center',
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: SPACING.LG,
+    },
+    title: {
+      fontSize: TYPOGRAPHY.TITLE,
+      marginBottom: SPACING.XS,
+    },
+    body: {
+      fontSize: TYPOGRAPHY.BODY,
+    },
+    summary: {
+      marginTop: SPACING.MD,
+    },
+    spacer: {
+      height: SPACING.SM,
+    },
+  });
 
 export default CorrectScreen;

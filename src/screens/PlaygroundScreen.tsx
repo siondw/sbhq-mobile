@@ -22,7 +22,19 @@ import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import Countdown from '../ui/components/Countdown';
 import Text from '../ui/components/Text';
-import { DEFAULT_PALETTE, PLAYGROUND_PALETTES, RADIUS, SPACING, TYPOGRAPHY, ThemeProvider, isDarkHex, textOnHex, themeFromPlaygroundPalette, withAlpha, type PlaygroundPalette } from '../ui/theme';
+import {
+  DEFAULT_PALETTE,
+  PLAYGROUND_PALETTES,
+  RADIUS,
+  SPACING,
+  TYPOGRAPHY,
+  ThemeProvider,
+  isDarkHex,
+  textOnHex,
+  themeFromPlaygroundPalette,
+  withAlpha,
+  type PlaygroundPalette,
+} from '../ui/theme';
 
 // Use DEFAULT_PALETTE for static styles in playground (not a production screen)
 const COLORS = {
@@ -85,236 +97,248 @@ const PlaygroundScreen = () => {
   const theme = useMemo(() => themeFromPlaygroundPalette(palette), [palette]);
 
   return (
-    <SafeAreaView style={[styles.safeArea, { backgroundColor: palette.bg }]} edges={['top', 'bottom']}>
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: palette.bg }]}
+      edges={['top', 'bottom']}
+    >
       <ThemeProvider theme={theme}>
-      <View style={styles.screen}>
-        <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-          <ImageBackground
-            source={noiseTexture}
-            style={StyleSheet.absoluteFill}
-            resizeMode={noiseResizeMode}
-            imageStyle={[styles.noiseImage, { opacity: noiseOpacity }]}
-            blurRadius={noiseBlur}
-          />
+        <View style={styles.screen}>
+          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+            <ImageBackground
+              source={noiseTexture}
+              style={StyleSheet.absoluteFill}
+              resizeMode={noiseResizeMode}
+              imageStyle={[styles.noiseImage, { opacity: noiseOpacity }]}
+              blurRadius={noiseBlur}
+            />
+          </View>
+
+          <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <ScorebugHeader
+              phase={phase}
+              pressure={pressure}
+              playersRemaining={playersRemaining}
+              streak={streak}
+              gif={footballGifs[gifIndex]?.source}
+              palette={palette}
+            />
+
+            <Section title="Knobs" titleColor={palette.ink}>
+              <View style={styles.palettePicker}>
+                <Text weight="medium" style={[styles.palettePickerLabel, { color: palette.ink }]}>
+                  Palettes
+                </Text>
+                <ScrollView
+                  horizontal
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.palettePickerScroll}
+                  contentContainerStyle={styles.palettePickerRow}
+                >
+                  {PLAYGROUND_PALETTES.map((p) => (
+                    <Chip
+                      key={p.key}
+                      label={p.name}
+                      selected={p.key === paletteKey}
+                      onPress={() => setPaletteKey(p.key)}
+                      palette={palette}
+                    />
+                  ))}
+                </ScrollView>
+              </View>
+              <Row>
+                <Chip
+                  label={`Phase: ${phase}`}
+                  onPress={() => setPhase(nextPhase(phase))}
+                  palette={palette}
+                />
+                <Chip
+                  label={`Players: ${playersRemaining.toLocaleString()}`}
+                  onPress={() => setPlayersRemaining(nextPlayers(playersRemaining))}
+                  palette={palette}
+                />
+              </Row>
+              <Row>
+                <Chip
+                  label={`Pressure: ${Math.round(pressure * 100)}%`}
+                  onPress={() => setPressure(nextPressure(pressure))}
+                  palette={palette}
+                />
+                <Chip
+                  label={`Streak: ${streak}`}
+                  onPress={() => setStreak((s) => (s >= 5 ? 0 : s + 1))}
+                  palette={palette}
+                />
+              </Row>
+              <Row>
+                <Chip
+                  label={`GIF: ${footballGifs[gifIndex]?.label ?? 'none'}`}
+                  onPress={() => setGifIndex((i) => (i + 1) % footballGifs.length)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Reset"
+                  onPress={() =>
+                    reset(setPhase, setSelectedOption, setPressure, setPlayersRemaining, setStreak)
+                  }
+                  palette={palette}
+                />
+              </Row>
+            </Section>
+
+            <Section title="Actual Components" titleColor={palette.ink}>
+              <Card>
+                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+                  Card + Button + Countdown
+                </Text>
+                <View style={{ height: SPACING.SM }} />
+                <Countdown targetTime={countdownTargetRef.current} />
+                <View style={{ height: SPACING.MD }} />
+                <Button label="Primary CTA" onPress={() => setPhase(nextPhase(phase))} />
+                <View style={{ height: SPACING.SM }} />
+                <Button
+                  label="Secondary"
+                  variant="secondary"
+                  onPress={() => setStreak((s) => s + 1)}
+                />
+              </Card>
+
+              <ContestListTicket
+                title="Sunday Showdown"
+                startLabel="12/29 @ 7PM EST"
+                priceLabel="$5.00"
+                roundLabel={phase === 'RESULT' ? 'Final' : '1'}
+                live
+                buttonLabel={phase === 'OPEN' ? 'Register' : 'Join Contest'}
+                buttonVariant={phase === 'OPEN' ? 'primary' : 'success'}
+                buttonDisabled={phase === 'LOCKED'}
+                cutoutBackgroundColor={palette.bg}
+                onPress={() => setPhase(nextPhase(phase))}
+              />
+
+              <ContestStatsCard
+                numberOfRemainingPlayers={playersRemaining}
+                roundNumber={Math.max(1, Math.min(99, streak))}
+              />
+
+              <AnswerSummaryCard
+                header="Round Recap"
+                roundLabel="Live"
+                question="Which team scores first?"
+                selectedAnswer={selectedRealOption ?? '—'}
+                correctAnswer={phase === 'RESULT' ? 'A' : null}
+              />
+
+              <Card>
+                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+                  AnswerOption (real)
+                </Text>
+                <View style={{ height: SPACING.SM }} />
+                {[
+                  { key: 'A', label: 'A) Home team' },
+                  { key: 'B', label: 'B) Away team' },
+                  { key: 'C', label: 'C) No score' },
+                ].map((o) => (
+                  <AnswerOption
+                    key={o.key}
+                    label={o.label}
+                    selected={selectedRealOption === o.key}
+                    onPress={() => setSelectedRealOption(o.key)}
+                  />
+                ))}
+              </Card>
+            </Section>
+
+            <Section title="Ticket Card" titleColor={palette.ink}>
+              <TicketCard palette={palette}>
+                <Text weight="bold" style={[styles.cardTitle, { color: palette.ink }]}>
+                  Sunday Showdown
+                </Text>
+                <Text style={[styles.cardSubtitle, { color: withAlpha(palette.ink, 0.65) }]}>
+                  “Ticket” container with perforation + tint + texture.
+                </Text>
+                <View style={{ height: SPACING.MD }} />
+                <EnergyBar value={pressure} palette={palette} />
+                <View style={{ height: SPACING.MD }} />
+                <SheenButton
+                  label={phase === 'OPEN' ? 'Lock In' : 'Continue'}
+                  onPress={() => setPhase(nextPhase(phase))}
+                  palette={palette}
+                />
+              </TicketCard>
+            </Section>
+
+            <Section title="Option Rows" titleColor={palette.ink}>
+              <View style={styles.optionsWrap}>
+                {optionData.map((option) => (
+                  <MoveOptionRow
+                    key={option.key}
+                    label={option.label}
+                    iconText={option.iconText}
+                    selected={selectedOption === option.key}
+                    onPress={() => setSelectedOption(option.key)}
+                    palette={palette}
+                  />
+                ))}
+              </View>
+            </Section>
+
+            <Section title="GIF Punctuation" titleColor={palette.ink}>
+              <View style={styles.gifRow}>
+                <View
+                  style={[
+                    styles.gifBadge,
+                    {
+                      backgroundColor: withAlpha(palette.ink, 0.1),
+                      borderColor: withAlpha(palette.ink, 0.12),
+                    },
+                  ]}
+                >
+                  <Image source={footballGifs[gifIndex]?.source} style={styles.gif} />
+                </View>
+                <View style={styles.gifCopy}>
+                  <Text weight="bold" style={[styles.gifTitle, { color: palette.ink }]}>
+                    Use as status, not decoration
+                  </Text>
+                  <Text style={[styles.gifText, { color: withAlpha(palette.ink, 0.65) }]}>
+                    Loop on suspense states; do one-shot on results; dock into a chip after “Lock
+                    In”.
+                  </Text>
+                </View>
+              </View>
+            </Section>
+
+            <Section title="Spacing" titleColor={palette.ink}>
+              <Card>
+                <Text weight="bold">SPACING scale</Text>
+                <View style={{ height: SPACING.XS }} />
+                <View style={[styles.spacingBar, { height: SPACING.XS }]} />
+                <View style={{ height: SPACING.SM }} />
+                <View style={[styles.spacingBar, { height: SPACING.SM }]} />
+                <View style={{ height: SPACING.MD }} />
+                <View style={[styles.spacingBar, { height: SPACING.MD }]} />
+                <View style={{ height: SPACING.LG }} />
+                <View style={[styles.spacingBar, { height: SPACING.LG }]} />
+              </Card>
+            </Section>
+
+            <Section title="Typography" titleColor={palette.ink}>
+              <Card>
+                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.TITLE }}>
+                  Title / {TYPOGRAPHY.TITLE}
+                </Text>
+                <Text weight="medium" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+                  Subtitle / {TYPOGRAPHY.SUBTITLE}
+                </Text>
+                <Text style={{ fontSize: TYPOGRAPHY.BODY }}>
+                  Body / {TYPOGRAPHY.BODY} — The quick brown fox jumps over the lazy dog.
+                </Text>
+                <Text style={{ fontSize: TYPOGRAPHY.SMALL }}>
+                  Small / {TYPOGRAPHY.SMALL} — Secondary caption text.
+                </Text>
+              </Card>
+            </Section>
+          </ScrollView>
         </View>
-
-        <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-          <ScorebugHeader
-            phase={phase}
-            pressure={pressure}
-            playersRemaining={playersRemaining}
-            streak={streak}
-            gif={footballGifs[gifIndex]?.source}
-            palette={palette}
-          />
-
-          <Section title="Knobs" titleColor={palette.ink}>
-                  <View style={styles.palettePicker}>
-                    <Text weight="medium" style={[styles.palettePickerLabel, { color: palette.ink }]}>
-                      Palettes
-                    </Text>
-                    <ScrollView
-                      horizontal
-                      showsHorizontalScrollIndicator={false}
-                      style={styles.palettePickerScroll}
-                      contentContainerStyle={styles.palettePickerRow}
-                    >
-                      {PLAYGROUND_PALETTES.map((p) => (
-                        <Chip
-                          key={p.key}
-                          label={p.name}
-                          selected={p.key === paletteKey}
-                          onPress={() => setPaletteKey(p.key)}
-                          palette={palette}
-                        />
-                      ))}
-                    </ScrollView>
-                  </View>
-                  <Row>
-                    <Chip label={`Phase: ${phase}`} onPress={() => setPhase(nextPhase(phase))} palette={palette} />
-                    <Chip
-                      label={`Players: ${playersRemaining.toLocaleString()}`}
-                      onPress={() => setPlayersRemaining(nextPlayers(playersRemaining))}
-                      palette={palette}
-                    />
-                  </Row>
-                  <Row>
-                    <Chip
-                      label={`Pressure: ${Math.round(pressure * 100)}%`}
-                      onPress={() => setPressure(nextPressure(pressure))}
-                      palette={palette}
-                    />
-                    <Chip
-                      label={`Streak: ${streak}`}
-                      onPress={() => setStreak((s) => (s >= 5 ? 0 : s + 1))}
-                      palette={palette}
-                    />
-                  </Row>
-                  <Row>
-                    <Chip
-                      label={`GIF: ${footballGifs[gifIndex]?.label ?? 'none'}`}
-                      onPress={() => setGifIndex((i) => (i + 1) % footballGifs.length)}
-                      palette={palette}
-                    />
-                    <Chip
-                      label="Reset"
-                      onPress={() =>
-                        reset(setPhase, setSelectedOption, setPressure, setPlayersRemaining, setStreak)
-                      }
-                      palette={palette}
-                    />
-                  </Row>
-          </Section>
-
-          <Section title="Actual Components" titleColor={palette.ink}>
-            <Card>
-              <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                Card + Button + Countdown
-              </Text>
-              <View style={{ height: SPACING.SM }} />
-              <Countdown targetTime={countdownTargetRef.current} />
-                    <View style={{ height: SPACING.MD }} />
-                    <Button label="Primary CTA" onPress={() => setPhase(nextPhase(phase))} />
-                    <View style={{ height: SPACING.SM }} />
-                    <Button label="Secondary" variant="secondary" onPress={() => setStreak((s) => s + 1)} />
-                  </Card>
-
-                  <ContestListTicket
-                    title="Sunday Showdown"
-                    startLabel="12/29 @ 7PM EST"
-                    priceLabel="$5.00"
-                    roundLabel={phase === 'RESULT' ? 'Final' : '1'}
-                    live
-                    buttonLabel={phase === 'OPEN' ? 'Register' : 'Join Contest'}
-                    buttonVariant={phase === 'OPEN' ? 'primary' : 'success'}
-                    buttonDisabled={phase === 'LOCKED'}
-                    cutoutBackgroundColor={palette.bg}
-                    onPress={() => setPhase(nextPhase(phase))}
-                  />
-
-                  <ContestStatsCard
-                    numberOfRemainingPlayers={playersRemaining}
-                    roundNumber={Math.max(1, Math.min(99, streak))}
-                  />
-
-                  <AnswerSummaryCard
-                    header="Round Recap"
-                    roundLabel="Live"
-                    question="Which team scores first?"
-                    selectedAnswer={selectedRealOption ?? '—'}
-                    correctAnswer={phase === 'RESULT' ? 'A' : null}
-                  />
-
-                  <Card>
-                    <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                      AnswerOption (real)
-                    </Text>
-                    <View style={{ height: SPACING.SM }} />
-                    {[
-                      { key: 'A', label: 'A) Home team' },
-                      { key: 'B', label: 'B) Away team' },
-                      { key: 'C', label: 'C) No score' },
-                    ].map((o) => (
-                      <AnswerOption
-                        key={o.key}
-                        label={o.label}
-                        selected={selectedRealOption === o.key}
-                        onPress={() => setSelectedRealOption(o.key)}
-                      />
-                    ))}
-                  </Card>
-          </Section>
-
-          <Section title="Ticket Card" titleColor={palette.ink}>
-                  <TicketCard palette={palette}>
-                    <Text weight="bold" style={[styles.cardTitle, { color: palette.ink }]}>
-                      Sunday Showdown
-                    </Text>
-                    <Text style={[styles.cardSubtitle, { color: withAlpha(palette.ink, 0.65) }]}>
-                      “Ticket” container with perforation + tint + texture.
-                    </Text>
-                    <View style={{ height: SPACING.MD }} />
-                    <EnergyBar value={pressure} palette={palette} />
-                    <View style={{ height: SPACING.MD }} />
-                    <SheenButton
-                      label={phase === 'OPEN' ? 'Lock In' : 'Continue'}
-                      onPress={() => setPhase(nextPhase(phase))}
-                      palette={palette}
-                    />
-                  </TicketCard>
-          </Section>
-
-          <Section title="Option Rows" titleColor={palette.ink}>
-                  <View style={styles.optionsWrap}>
-                    {optionData.map((option) => (
-                      <MoveOptionRow
-                        key={option.key}
-                        label={option.label}
-                        iconText={option.iconText}
-                        selected={selectedOption === option.key}
-                        onPress={() => setSelectedOption(option.key)}
-                        palette={palette}
-                      />
-                    ))}
-                  </View>
-          </Section>
-
-          <Section title="GIF Punctuation" titleColor={palette.ink}>
-                  <View style={styles.gifRow}>
-                    <View
-                      style={[
-                        styles.gifBadge,
-                        {
-                          backgroundColor: withAlpha(palette.ink, 0.1),
-                          borderColor: withAlpha(palette.ink, 0.12),
-                        },
-                      ]}
-                    >
-                      <Image source={footballGifs[gifIndex]?.source} style={styles.gif} />
-                    </View>
-                    <View style={styles.gifCopy}>
-                      <Text weight="bold" style={[styles.gifTitle, { color: palette.ink }]}>
-                        Use as status, not decoration
-                      </Text>
-                      <Text style={[styles.gifText, { color: withAlpha(palette.ink, 0.65) }]}>
-                        Loop on suspense states; do one-shot on results; dock into a chip after “Lock In”.
-                      </Text>
-                    </View>
-                  </View>
-          </Section>
-
-          <Section title="Spacing" titleColor={palette.ink}>
-                  <Card>
-                    <Text weight="bold">SPACING scale</Text>
-                    <View style={{ height: SPACING.XS }} />
-                    <View style={[styles.spacingBar, { height: SPACING.XS }]} />
-                    <View style={{ height: SPACING.SM }} />
-                    <View style={[styles.spacingBar, { height: SPACING.SM }]} />
-                    <View style={{ height: SPACING.MD }} />
-                    <View style={[styles.spacingBar, { height: SPACING.MD }]} />
-                    <View style={{ height: SPACING.LG }} />
-                    <View style={[styles.spacingBar, { height: SPACING.LG }]} />
-                  </Card>
-          </Section>
-
-          <Section title="Typography" titleColor={palette.ink}>
-                  <Card>
-                    <Text weight="bold" style={{ fontSize: TYPOGRAPHY.TITLE }}>
-                      Title / {TYPOGRAPHY.TITLE}
-                    </Text>
-                    <Text weight="medium" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                      Subtitle / {TYPOGRAPHY.SUBTITLE}
-                    </Text>
-                    <Text style={{ fontSize: TYPOGRAPHY.BODY }}>
-                      Body / {TYPOGRAPHY.BODY} — The quick brown fox jumps over the lazy dog.
-                    </Text>
-                    <Text style={{ fontSize: TYPOGRAPHY.SMALL }}>
-                      Small / {TYPOGRAPHY.SMALL} — Secondary caption text.
-                    </Text>
-                  </Card>
-          </Section>
-        </ScrollView>
-      </View>
       </ThemeProvider>
     </SafeAreaView>
   );
@@ -395,7 +419,9 @@ const ScorebugHeader = ({
       <View style={[styles.scorebugBar, { backgroundColor: hudBg }]}>
         <View style={styles.scorebugLeft}>
           <View style={styles.livePill}>
-            <Animated.View style={[styles.liveDot, { transform: [{ scale: dotScale }], opacity: dotOpacity }]} />
+            <Animated.View
+              style={[styles.liveDot, { transform: [{ scale: dotScale }], opacity: dotOpacity }]}
+            />
             <Text weight="bold" style={[styles.liveText, { color: hudText }]}>
               LIVE
             </Text>
@@ -432,7 +458,10 @@ const ScorebugHeader = ({
           <View
             style={[
               styles.streakPill,
-              { backgroundColor: withAlpha(palette.surface, 0.72), borderColor: withAlpha(palette.ink, 0.1) },
+              {
+                backgroundColor: withAlpha(palette.surface, 0.72),
+                borderColor: withAlpha(palette.ink, 0.1),
+              },
             ]}
           >
             <Text weight="bold" style={[styles.streakText, { color: palette.ink }]}>
@@ -444,7 +473,10 @@ const ScorebugHeader = ({
           <View
             style={[
               styles.gifChip,
-              { backgroundColor: withAlpha(palette.surface, 0.72), borderColor: withAlpha(palette.ink, 0.1) },
+              {
+                backgroundColor: withAlpha(palette.surface, 0.72),
+                borderColor: withAlpha(palette.ink, 0.1),
+              },
             ]}
           >
             {gif ? <Image source={gif} style={styles.gifChipImg} /> : null}
@@ -471,25 +503,48 @@ function phasePillStyle(phase: Phase, palette: PlaygroundPalette) {
   }
 }
 
-const TicketCard = ({ children, palette }: { children: React.ReactNode; palette: PlaygroundPalette }) => {
+const TicketCard = ({
+  children,
+  palette,
+}: {
+  children: React.ReactNode;
+  palette: PlaygroundPalette;
+}) => {
   return (
     <View
       style={[
         styles.ticketWrap,
-        { backgroundColor: withAlpha(palette.surface, 0.72), borderColor: withAlpha(palette.ink, 0.1) },
+        {
+          backgroundColor: withAlpha(palette.surface, 0.72),
+          borderColor: withAlpha(palette.ink, 0.1),
+        },
       ]}
     >
       <LinearGradient
-        colors={[withAlpha(palette.energy, 0.22), withAlpha(palette.ink, 0.06), 'rgba(255,255,255,0)'] as const}
+        colors={
+          [
+            withAlpha(palette.energy, 0.22),
+            withAlpha(palette.ink, 0.06),
+            'rgba(255,255,255,0)',
+          ] as const
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.ticketTint}
       />
 
       <View style={styles.ticketTexture}>
-        {Array.from({ length: 10 }, (_, idx) => ({ key: `line-${idx}`, top: idx * 18 })).map((line) => (
-          <View key={line.key} style={[styles.ticketTextureLine, { top: line.top, backgroundColor: withAlpha(palette.ink, 0.05) }]} />
-        ))}
+        {Array.from({ length: 10 }, (_, idx) => ({ key: `line-${idx}`, top: idx * 18 })).map(
+          (line) => (
+            <View
+              key={line.key}
+              style={[
+                styles.ticketTextureLine,
+                { top: line.top, backgroundColor: withAlpha(palette.ink, 0.05) },
+              ]}
+            />
+          ),
+        )}
       </View>
 
       <View style={[styles.ticketCutoutLeft, { backgroundColor: palette.bg }]} />
@@ -566,11 +621,21 @@ const MoveOptionRow = ({
           },
           selected && [
             styles.moveIconCapsuleSelected,
-            { backgroundColor: withAlpha(palette.energy, 0.16), borderColor: withAlpha(palette.energy, 0.25) },
+            {
+              backgroundColor: withAlpha(palette.energy, 0.16),
+              borderColor: withAlpha(palette.energy, 0.25),
+            },
           ],
         ]}
       >
-        <Text weight="bold" style={[styles.moveIconText, { color: palette.ink }, selected && styles.moveIconTextSelected]}>
+        <Text
+          weight="bold"
+          style={[
+            styles.moveIconText,
+            { color: palette.ink },
+            selected && styles.moveIconTextSelected,
+          ]}
+        >
           {iconText}
         </Text>
       </View>
@@ -588,7 +653,12 @@ const MoveOptionRow = ({
           selected && [styles.radioOuterSelected, { borderColor: withAlpha(palette.ink, 0.45) }],
         ]}
       >
-        <View style={[styles.radioInner, selected && [styles.radioInnerSelected, { backgroundColor: palette.ink }]]} />
+        <View
+          style={[
+            styles.radioInner,
+            selected && [styles.radioInnerSelected, { backgroundColor: palette.ink }],
+          ]}
+        />
       </View>
     </Pressable>
   );
@@ -621,7 +691,10 @@ const SheenButton = ({
   const labelColor = textOnHex(palette.primary);
 
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [styles.sheenBtnWrap, pressed && styles.pressed]}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [styles.sheenBtnWrap, pressed && styles.pressed]}
+    >
       <LinearGradient
         colors={[palette.primary, palette.ink] as const}
         start={{ x: 0, y: 0 }}
@@ -689,11 +762,7 @@ const Chip = ({
     >
       <Text
         weight="medium"
-        style={[
-          styles.chipText,
-          { color: palette.ink },
-          selected && { color: palette.ink },
-        ]}
+        style={[styles.chipText, { color: palette.ink }, selected && { color: palette.ink }]}
       >
         {label}
       </Text>

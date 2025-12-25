@@ -87,37 +87,38 @@ const SubmittedScreen = () => {
   );
 };
 
-const createStyles = (colors: { background: string }) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.MD,
-    justifyContent: 'center',
-    gap: SPACING.MD,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-  title: {
-    fontSize: TYPOGRAPHY.TITLE,
-  },
-  body: {
-    fontSize: TYPOGRAPHY.BODY,
-  },
-  submittedGif: {
-    width: 240,
-    height: 240,
-    alignSelf: 'center',
-  },
-  spacer: {
-    height: SPACING.SM,
-  },
-});
+const createStyles = (colors: { background: string }) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: SPACING.MD,
+      justifyContent: 'center',
+      gap: SPACING.MD,
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: SPACING.LG,
+    },
+    title: {
+      fontSize: TYPOGRAPHY.TITLE,
+    },
+    body: {
+      fontSize: TYPOGRAPHY.BODY,
+    },
+    submittedGif: {
+      width: 240,
+      height: 240,
+      alignSelf: 'center',
+    },
+    spacer: {
+      height: SPACING.SM,
+    },
+  });
 
 export default SubmittedScreen;

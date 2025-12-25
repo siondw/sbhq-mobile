@@ -70,40 +70,41 @@ const LobbyScreen = () => {
   );
 };
 
-const createStyles = (colors: { background: string; ink: string; muted: string }) => StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: SPACING.XXL,
-    paddingHorizontal: SPACING.LG,
-  },
-  content: {
-    alignItems: 'center',
-    gap: SPACING.XL,
-  },
-  contestName: {
-    fontSize: 32,
-    textAlign: 'center',
-    color: colors.ink,
-    letterSpacing: 0.5,
-  },
-  countdownSection: {
-    alignItems: 'center',
-    gap: SPACING.SM,
-  },
-  startingLabel: {
-    fontSize: TYPOGRAPHY.BODY,
-    color: colors.muted,
-    textAlign: 'center',
-  },
-  pregameGif: {
-    width: 250,
-    height: 250,
-    alignSelf: 'center',
-  },
-});
+const createStyles = (colors: { background: string; ink: string; muted: string }) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: SPACING.XXL,
+      paddingHorizontal: SPACING.LG,
+    },
+    content: {
+      alignItems: 'center',
+      gap: SPACING.XL,
+    },
+    contestName: {
+      fontSize: 32,
+      textAlign: 'center',
+      color: colors.ink,
+      letterSpacing: 0.5,
+    },
+    countdownSection: {
+      alignItems: 'center',
+      gap: SPACING.SM,
+    },
+    startingLabel: {
+      fontSize: TYPOGRAPHY.BODY,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+    pregameGif: {
+      width: 250,
+      height: 250,
+      alignSelf: 'center',
+    },
+  });
 
 export default LobbyScreen;

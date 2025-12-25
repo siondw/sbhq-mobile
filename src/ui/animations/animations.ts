@@ -16,7 +16,7 @@ export const useShineAnimation = (options: UseShineAnimationOptions = {}): Shine
   } = options;
 
   const presetConfig = SHINE_PRESET[preset];
-  
+
   const delay = customDelay ?? presetConfig.delay;
   const duration = customDuration ?? presetConfig.duration;
   const maxOpacity = customMaxOpacity ?? presetConfig.maxOpacity;

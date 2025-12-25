@@ -6,4 +6,3 @@ const PlaygroundRoute = () => {
 };
 
 export default PlaygroundRoute;
-

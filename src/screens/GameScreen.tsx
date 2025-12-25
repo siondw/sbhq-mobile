@@ -136,51 +136,52 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   );
 };
 
-const createStyles = (colors: { background: string; muted: string; ink: string }) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  content: {
-    paddingHorizontal: SPACING.MD,
-    flex: 1,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-  roundHeader: {
-    alignItems: 'center',
-    marginBottom: SPACING.LG,
-  },
-  roundLabel: {
-    fontSize: TYPOGRAPHY.SMALL,
-    color: colors.muted,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  roundNumber: {
-    fontSize: 32,
-    color: colors.ink,
-  },
-  roundSubtitle: {
-    fontSize: TYPOGRAPHY.BODY,
-    color: colors.muted,
-  },
-  questionCard: {
-    gap: SPACING.SM,
-  },
-  question: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-  },
-  submitRow: {
-    marginTop: SPACING.SM,
-  },
-  spacer: {
-    height: SPACING.SM,
-  },
-});
+const createStyles = (colors: { background: string; muted: string; ink: string }) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      paddingHorizontal: SPACING.MD,
+      flex: 1,
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: SPACING.LG,
+    },
+    roundHeader: {
+      alignItems: 'center',
+      marginBottom: SPACING.LG,
+    },
+    roundLabel: {
+      fontSize: TYPOGRAPHY.SMALL,
+      color: colors.muted,
+      letterSpacing: 0.5,
+      textTransform: 'uppercase',
+    },
+    roundNumber: {
+      fontSize: 32,
+      color: colors.ink,
+    },
+    roundSubtitle: {
+      fontSize: TYPOGRAPHY.BODY,
+      color: colors.muted,
+    },
+    questionCard: {
+      gap: SPACING.SM,
+    },
+    question: {
+      fontSize: TYPOGRAPHY.SUBTITLE,
+    },
+    submitRow: {
+      marginTop: SPACING.SM,
+    },
+    spacer: {
+      height: SPACING.SM,
+    },
+  });
 
 export default GameScreen;

@@ -1,9 +1,9 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
-import { usePulseAnimation, useShineAnimation } from '../animations';
+import { usePulseAnimation } from '../animations';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
+import { GlassyTexture } from '../textures';
 import Button from './Button';
 import Text from './Text';
 import TicketCard from './TicketCard';
@@ -19,6 +19,7 @@ type ContestListTicketProps = {
   buttonLabel: string;
   buttonVariant?: 'primary' | 'secondary' | 'success';
   buttonDisabled?: boolean;
+  buttonIconRight?: React.ReactNode;
   onPress: () => void;
 };
 
@@ -33,6 +34,7 @@ const ContestListTicket = ({
   buttonLabel,
   buttonVariant = 'primary',
   buttonDisabled,
+  buttonIconRight,
   onPress,
 }: ContestListTicketProps) => {
   const { colors } = useTheme();
@@ -40,8 +42,6 @@ const ContestListTicket = ({
 
   // Pulse animation for live indicator dot
   const { opacity: dotOpacity, scale: dotScale } = usePulseAnimation(900);
-
-  const { translateX: shineTranslateX, config } = useShineAnimation({ preset: 'SUBTLE' });
 
   return (
     <TicketCard
@@ -75,49 +75,19 @@ const ContestListTicket = ({
       {roundLabel ? <Text style={styles.meta}>Round: {roundLabel}</Text> : null}
 
       <View style={styles.cardFooter}>
-        <View style={styles.buttonWrapper}>
+        <GlassyTexture
+          colors={{ energy: colors.energy, warm: colors.warm, ink: colors.ink }}
+          shinePreset="SUBTLE"
+          style={styles.buttonWrapper}
+        >
           <Button
             label={buttonLabel}
             variant={buttonVariant === 'secondary' ? 'secondary' : buttonVariant}
+            iconRight={buttonIconRight}
             onPress={onPress}
             disabled={buttonDisabled}
           />
-          <LinearGradient
-            colors={[
-              withAlpha(colors.energy, 0.25),
-              withAlpha(colors.warm, 0.15),
-              withAlpha(colors.ink, 0.1),
-              'rgba(0,0,0,0.08)',
-            ]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={styles.gradientOverlay}
-            pointerEvents="none"
-          />
-          <Animated.View
-            style={[
-              styles.shineContainer,
-              {
-                opacity: config.containerOpacity,
-                transform: [{ translateX: shineTranslateX }, { rotate: '35deg' }],
-              },
-            ]}
-            pointerEvents="none"
-          >
-            <LinearGradient
-              colors={[
-                'rgba(255, 255, 255, 0)',
-                `rgba(255, 255, 255, ${config.maxOpacity * 0.5})`,
-                `rgba(255, 255, 255, ${config.maxOpacity})`,
-                `rgba(255, 255, 255, ${config.maxOpacity * 0.5})`,
-                'rgba(255, 255, 255, 0)',
-              ]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.shine}
-            />
-          </Animated.View>
-        </View>
+        </GlassyTexture>
       </View>
     </TicketCard>
   );
@@ -148,28 +118,7 @@ function createStyles(colors: { muted: string; danger: string }) {
       marginTop: SPACING.SM,
     },
     buttonWrapper: {
-      position: 'relative',
-      overflow: 'hidden',
       borderRadius: RADIUS.MD,
-    },
-    gradientOverlay: {
-      ...StyleSheet.absoluteFillObject,
-      zIndex: 1,
-    },
-    shineContainer: {
-      position: 'absolute',
-      top: -30,
-      left: -80,
-      width: 280,
-      height: 120,
-      borderRadius: 60,
-      overflow: 'hidden',
-      zIndex: 2,
-    },
-    shine: {
-      flex: 1,
-      width: '100%',
-      height: '100%',
     },
     liveIndicator: {
       flexDirection: 'row',

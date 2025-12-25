@@ -21,7 +21,11 @@ export const DEFAULT_PALETTE: PlaygroundPalette = {
   danger: '#9F2430', // softer red
 };
 
-export const DARK_CARBON_TEAL_PALETTES: { key: string; name: string; palette: PlaygroundPalette }[] = [
+export const DARK_CARBON_TEAL_PALETTES: {
+  key: string;
+  name: string;
+  palette: PlaygroundPalette;
+}[] = [
   {
     key: 'carbon-teal-classic',
     name: 'Carbon + Teal (Classic)',

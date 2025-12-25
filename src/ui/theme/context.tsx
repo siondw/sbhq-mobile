@@ -42,13 +42,7 @@ export const DEFAULT_THEME: Theme = {
 
 const ThemeContext = createContext<Theme>(DEFAULT_THEME);
 
-export const ThemeProvider = ({
-  theme,
-  children,
-}: {
-  theme: Theme;
-  children: React.ReactNode;
-}) => {
+export const ThemeProvider = ({ theme, children }: { theme: Theme; children: React.ReactNode }) => {
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 };
 

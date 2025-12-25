@@ -1,5 +1,5 @@
-import { Animated } from 'react-native';
-import { SHINE_PRESET } from './constants';
+import type { Animated } from 'react-native';
+import type { SHINE_PRESET } from './constants';
 
 export type ShinePreset = keyof typeof SHINE_PRESET;
 

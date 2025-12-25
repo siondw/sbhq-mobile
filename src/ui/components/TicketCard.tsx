@@ -25,7 +25,13 @@ const TicketCard = ({ children, style, backgroundColor }: TicketCardProps) => {
       />
 
       <LinearGradient
-        colors={[withAlpha(colors.energy, 0.1), withAlpha(colors.ink, 0.03), 'rgba(255,255,255,0)'] as const}
+        colors={
+          [
+            withAlpha(colors.energy, 0.1),
+            withAlpha(colors.ink, 0.03),
+            'rgba(255,255,255,0)',
+          ] as const
+        }
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.tint}
@@ -37,13 +43,22 @@ const TicketCard = ({ children, style, backgroundColor }: TicketCardProps) => {
           <View
             // eslint-disable-next-line react/no-array-index-key
             key={idx}
-            style={[styles.textureLine, { top: idx * 18, backgroundColor: withAlpha(colors.ink, 0.05) }]}
+            style={[
+              styles.textureLine,
+              { top: idx * 18, backgroundColor: withAlpha(colors.ink, 0.05) },
+            ]}
           />
         ))}
       </View>
 
-      <View style={[styles.cutoutLeft, { backgroundColor: backgroundColor ?? colors.background }]} pointerEvents="none" />
-      <View style={[styles.cutoutRight, { backgroundColor: backgroundColor ?? colors.background }]} pointerEvents="none" />
+      <View
+        style={[styles.cutoutLeft, { backgroundColor: backgroundColor ?? colors.background }]}
+        pointerEvents="none"
+      />
+      <View
+        style={[styles.cutoutRight, { backgroundColor: backgroundColor ?? colors.background }]}
+        pointerEvents="none"
+      />
       <View style={styles.perforation} pointerEvents="none" />
 
       <View style={styles.content}>{children}</View>

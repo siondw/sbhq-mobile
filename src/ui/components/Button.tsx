@@ -59,7 +59,13 @@ const Button = ({
   );
 };
 
-function createStyles(colors: { primary: string; surface: string; border: string; ink: string; success: string }) {
+function createStyles(colors: {
+  primary: string;
+  surface: string;
+  border: string;
+  ink: string;
+  success: string;
+}) {
   return StyleSheet.create({
     base: {
       width: '100%',
