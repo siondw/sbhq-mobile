@@ -48,7 +48,7 @@ type Phase = 'OPEN' | 'LOCKED' | 'REVEAL' | 'RESULT';
 
 const PHASES: Phase[] = ['OPEN', 'LOCKED', 'REVEAL', 'RESULT'];
 
-const footballGifs: { label: string; source: ImageSourcePropType }[] = [
+const footballGifs: Array<{ label: string; source: ImageSourcePropType }> = [
   { label: 'ball.gif', source: require('../../assets/gifs/ball.gif') },
   { label: 'catch_nobg.gif', source: require('../../assets/gifs/catch_nobg.gif') },
 ];
@@ -68,7 +68,7 @@ const PlaygroundScreen = () => {
 
   const palette: PlaygroundPalette = useMemo(() => {
     const found = PLAYGROUND_PALETTES.find((p) => p.key === paletteKey);
-    return found?.palette ?? PLAYGROUND_PALETTES[0]?.palette ?? PLAYGROUND_PALETTES[0]!.palette;
+    return found?.palette ?? PLAYGROUND_PALETTES[0]?.palette ?? PLAYGROUND_PALETTES[0].palette;
   }, [paletteKey]);
 
   useEffect(() => {

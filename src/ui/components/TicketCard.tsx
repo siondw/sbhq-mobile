@@ -41,7 +41,6 @@ const TicketCard = ({ children, style, backgroundColor }: TicketCardProps) => {
       <View style={styles.texture} pointerEvents="none">
         {Array.from({ length: 10 }, (_, idx) => (
           <View
-            // eslint-disable-next-line react/no-array-index-key
             key={idx}
             style={[
               styles.textureLine,

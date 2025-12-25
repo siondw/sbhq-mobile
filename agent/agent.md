@@ -337,6 +337,15 @@ src/db/answers.ts
 
 ### ✔ All UI components belong in `src/ui/`
 
+The `src/ui/` folder is organized into specialized subfolders:
+
+- **`src/ui/components/`** – React Native components (Button, Card, Text, etc.)
+- **`src/ui/animations/`** – Reusable animation hooks and presets
+- **`src/ui/textures/`** – Visual texture effects (GlassyTexture, etc.)
+- **`src/ui/theme/`** – Theme system (colors, spacing, typography, utilities)
+
+**Rules:**
+
 - No DB logic.
 - No logic hooks (receive data via props instead).
 - No complicated conditional state (push logic to hooks).
@@ -392,10 +401,31 @@ src/db/answers.ts
 - **Live indicators**: Subtle backgrounds with border, small dot, colored text (not solid backgrounds)
 - **Press states**: Use native Pressable with subtle opacity changes
 
-### ✔ Reusability and consistency
+### ✔ Reusability and abstraction
+
+**Core Principle:** If the user mentions they will use something more than once, ALWAYS abstract it into a reusable component, hook, or utility.
 
 - Typography, spacing, colors should come from theme tokens.
 - Common patterns (buttons, cards, banners) all use shared primitives.
+- **Animations:** Use reusable hooks from `src/ui/animations/`:
+  - `usePulseAnimation(duration)` for pulsing effects
+  - `useShineAnimation(options)` for shine/shimmer effects
+  - All animations use centralized constants and presets for consistency
+- **Visual effects:** Use reusable texture components from `src/ui/textures/`:
+  - `GlassyTexture` for glassy 3D effects with gradient overlays and shine
+  - Configurable intensity presets (SUBTLE, NORMAL, DRAMATIC)
+- **When to abstract:**
+  - User explicitly says "I'll use this in multiple places"
+  - User mentions wanting consistent styling/behavior across components
+  - You notice duplicate patterns emerging (e.g., same gradient/animation logic)
+  - The pattern is complex enough to warrant abstraction (e.g., multi-layer effects)
+- **How to abstract:**
+  - Animations → Create hook in `src/ui/animations/`
+  - Visual effects → Create component in `src/ui/textures/`
+  - Logic → Create hook in `src/logic/hooks/` or pure function in `src/logic/<domain>/`
+  - UI patterns → Create component in `src/ui/components/`
+  - Always define types in a separate `types.ts` file within the module
+  - Export through barrel `index.ts` for clean imports
 
 ### ✔ Keep screens thin
 

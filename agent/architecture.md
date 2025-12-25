@@ -45,7 +45,11 @@ app/         # Expo Router entrypoints (very thin)
 src/
   db/        # Supabase client, DB types, and all DB operations
   logic/     # Game logic + feature hooks (auth, lobby, contest)
-  ui/        # Reusable React Native UI components
+  ui/        # Reusable React Native UI components & visual infrastructure
+    components/   # React components (Button, Card, Text, etc.)
+    animations/   # Animation hooks and presets
+    textures/     # Visual texture effects (GlassyTexture, etc.)
+    theme/        # Theme system (colors, spacing, typography)
   screens/   # Screen components (compose logic + UI)
   configs/   # Env, constants, app-wide config
   utils/     # Generic helpers (dates, formatting, etc.)
@@ -170,7 +174,63 @@ Reusable UI components that make up the interface:
   - `Countdown` – Animated countdown timer with gradient text masking
   - `TicketCard` – Decorative ticket-style card with cutouts and texture layers
 
-### 5.2 `src/ui/theme/` – Theme system
+### 5.2 `src/ui/animations/` – Reusable animations
+
+Centralized animation hooks and presets for consistent motion design:
+
+**Files:**
+
+- `index.ts` – Barrel export for convenient imports
+- `animations.ts` – Animation hook implementations:
+  - `usePulseAnimation(duration)` – Returns opacity and scale values for pulsing effects
+  - `useShineAnimation(options)` – Returns translateX and config for shine/shimmer effects
+- `constants.ts` – Animation timing and preset configurations:
+  - `ANIMATION_DURATION` – Timing constants (FAST, NORMAL, SLOW, SHINE)
+  - `ANIMATION_OPACITY` – Opacity presets (SUBTLE, MEDIUM, STRONG)
+  - `SHINE_PRESET` – Shine effect configurations (SUBTLE, NORMAL, DRAMATIC)
+- `types.ts` – TypeScript types for animation hooks
+
+**Usage:**
+
+Components import animations for consistent motion:
+
+```tsx
+import { usePulseAnimation, useShineAnimation } from '../animations';
+
+const { opacity, scale } = usePulseAnimation(900);
+const { translateX, config } = useShineAnimation({ preset: 'SUBTLE' });
+```
+
+### 5.3 `src/ui/textures/` – Visual texture effects
+
+Reusable texture components for consistent glassy/3D visual effects:
+
+**Files:**
+
+- `index.ts` – Barrel export for convenient imports
+- `GlassyTexture.tsx` – Glassy 3D texture component that wraps children with:
+  - Multi-layer gradient overlay (energy, warm, ink colors)
+  - Animated shine effect using `useShineAnimation`
+  - Configurable intensity presets (SUBTLE, NORMAL, DRAMATIC)
+- `types.ts` – TypeScript types for texture components
+
+**Usage:**
+
+Wrap any component to add glassy texture effect:
+
+```tsx
+import { GlassyTexture } from '../textures';
+
+<GlassyTexture
+  colors={{ energy: colors.energy, warm: colors.warm, ink: colors.ink }}
+  shinePreset="SUBTLE"
+  style={styles.wrapper}
+>
+  <Button label="Click Me" />
+</GlassyTexture>;
+```
+
+### 5.4 `src/ui/theme/` – Theme system
 
 Centralized theme infrastructure with a single palette-based system:
 
@@ -327,7 +387,10 @@ You always know where to go:
 - "How do I fetch contests?" → `src/db/contests.ts`
 - "How do I use contests in a screen?" → `src/logic/hooks/useContests.ts`
 - "How do I decide if a player is eliminated?" → `src/logic/contest/derivePlayerState.ts`
-- "Where's the question UI?" → `src/ui/primitives/AnswerOption.tsx` and `src/screens/GameScreen.tsx`
+- "Where's the question UI?" → `src/ui/components/AnswerOption.tsx` and `src/screens/GameScreen.tsx`
 - "What routes exist?" → `src/configs/routes.ts`
+- "How do I add a pulsing animation?" → `src/ui/animations/` - use `usePulseAnimation()`
+- "How do I add a glassy texture effect?" → `src/ui/textures/` - use `<GlassyTexture>`
+- "Where are theme colors/spacing?" → `src/ui/theme/` - use `useTheme()` and `SPACING`
 
 If you want, next step we can write a tiny README stub for each folder (`src/db/README.md`, `src/logic/README.md`, etc.) so the structure is self-documenting when someone opens it in VS Code.
