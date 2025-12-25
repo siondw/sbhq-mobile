@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
 import DollarSignIcon from '../../assets/icons/DollarSignIcon.svg';
 import LeaderboardIcon from '../../assets/icons/leaderboard.svg';
 import PersonIcon from '../../assets/icons/person.svg';
 import Text from './Text';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from './theme';
+import { RADIUS, SPACING, TYPOGRAPHY } from './theme';
+import { useTheme } from './themeContext';
 
 type ContestStatsCardProps = {
   numberOfRemainingPlayers: number;
@@ -20,6 +21,9 @@ const ContestStatsCard = ({
   roundNumber,
   style,
 }: ContestStatsCardProps) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const chanceOfWinning =
     numberOfRemainingPlayers > 0 ? ((1 / numberOfRemainingPlayers) * 100).toFixed(2) : '0.00';
 
@@ -41,25 +45,27 @@ const ContestStatsCard = ({
   );
 };
 
-const styles = StyleSheet.create({
-  statsSummary: {
-    width: '100%',
-    borderRadius: RADIUS.MD,
-    borderWidth: 1,
-    borderColor: COLORS.BORDER,
-    backgroundColor: COLORS.SURFACE,
-    padding: SPACING.MD,
-    gap: SPACING.SM,
-  },
-  statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.SM,
-  },
-  text: {
-    fontSize: TYPOGRAPHY.BODY,
-    color: COLORS.TEXT,
-  },
-});
+function createStyles(colors: { border: string; surface: string; text: string }) {
+  return StyleSheet.create({
+    statsSummary: {
+      width: '100%',
+      borderRadius: RADIUS.MD,
+      borderWidth: 1,
+      borderColor: colors.border,
+      backgroundColor: colors.surface,
+      padding: SPACING.MD,
+      gap: SPACING.SM,
+    },
+    statItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.SM,
+    },
+    text: {
+      fontSize: TYPOGRAPHY.BODY,
+      color: colors.text,
+    },
+  });
+}
 
 export default ContestStatsCard;

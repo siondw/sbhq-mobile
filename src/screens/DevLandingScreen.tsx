@@ -29,6 +29,10 @@ const DevLandingScreen = () => {
             <Text style={styles.buttonText}>Contest List Screen</Text>
           </Pressable>
 
+          <Pressable style={styles.button} onPress={() => router.push('/playground' as any)}>
+            <Text style={styles.buttonText}>UI Playground</Text>
+          </Pressable>
+
           <View style={styles.divider} />
 
           <Link href="/lobby" asChild>

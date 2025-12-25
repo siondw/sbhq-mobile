@@ -63,6 +63,7 @@ function RootLayoutNav() {
         <StatusBar style="dark" />
         <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
           <Stack.Screen name="index" />
+          {__DEV__ ? <Stack.Screen name="playground" /> : null}
           <Stack.Screen name="contests/index" />
           <Stack.Screen name="contest/[contestId]" />
           <Stack.Screen name="lobby/index" />

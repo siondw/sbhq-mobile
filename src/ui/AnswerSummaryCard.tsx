@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Card from './Card';
 import Text from './Text';
-import { COLORS, SPACING, TYPOGRAPHY } from './theme';
+import { SPACING, TYPOGRAPHY } from './theme';
+import { useTheme } from './themeContext';
 
 type AnswerSummaryCardProps = {
   header?: string;
@@ -19,6 +20,9 @@ const AnswerSummaryCard = ({
   selectedAnswer,
   correctAnswer,
 }: AnswerSummaryCardProps) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <Card style={styles.card}>
       {header ? (
@@ -59,36 +63,38 @@ const AnswerSummaryCard = ({
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    gap: SPACING.XS,
-  },
-  header: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-  },
-  roundLabel: {
-    fontSize: TYPOGRAPHY.SMALL,
-    color: COLORS.MUTED,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  row: {
-    gap: SPACING.XS,
-  },
-  label: {
-    fontSize: TYPOGRAPHY.SMALL,
-    color: COLORS.MUTED,
-    textTransform: 'uppercase',
-    letterSpacing: 0.4,
-  },
-  value: {
-    fontSize: TYPOGRAPHY.BODY,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: COLORS.BORDER,
-    marginVertical: SPACING.XS,
-  },
-});
+function createStyles(colors: { muted: string; border: string }) {
+  return StyleSheet.create({
+    card: {
+      gap: SPACING.XS,
+    },
+    header: {
+      fontSize: TYPOGRAPHY.SUBTITLE,
+    },
+    roundLabel: {
+      fontSize: TYPOGRAPHY.SMALL,
+      color: colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    row: {
+      gap: SPACING.XS,
+    },
+    label: {
+      fontSize: TYPOGRAPHY.SMALL,
+      color: colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.4,
+    },
+    value: {
+      fontSize: TYPOGRAPHY.BODY,
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: SPACING.XS,
+    },
+  });
+}
 
 export default AnswerSummaryCard;

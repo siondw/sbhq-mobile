@@ -2,8 +2,8 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { COLORS } from './theme';
 import Text from './Text';
+import { useTheme } from './themeContext';
 
 interface CountdownProps {
   /** Target time in milliseconds since epoch */
@@ -12,6 +12,7 @@ interface CountdownProps {
 }
 
 const Countdown = ({ targetTime, onComplete }: CountdownProps) => {
+  const { colors } = useTheme();
   const [remainingMs, setRemainingMs] = useState(targetTime - Date.now());
 
   useEffect(() => {
@@ -48,7 +49,7 @@ const Countdown = ({ targetTime, onComplete }: CountdownProps) => {
       }
     >
       <LinearGradient
-        colors={[COLORS.GRADIENT_START, COLORS.GRADIENT_END]}
+        colors={[colors.energy, colors.ink] as const}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}

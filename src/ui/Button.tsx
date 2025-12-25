@@ -1,6 +1,7 @@
-import React, { type ReactNode } from 'react';
+import React, { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from './theme';
+import { RADIUS, SPACING, TYPOGRAPHY } from './theme';
+import { textOnHex, useTheme } from './themeContext';
 
 interface ButtonProps {
   label: string;
@@ -19,8 +20,15 @@ const Button = ({
   iconRight,
   iconLeft,
 }: ButtonProps) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const isPrimary = variant === 'primary';
   const isSuccess = variant === 'success';
+  const isSecondary = variant === 'secondary';
+
+  const bgColor = isPrimary ? colors.primary : isSuccess ? colors.success : colors.surface;
+  const labelColor = isSecondary ? colors.primary : textOnHex(bgColor);
 
   return (
     <Pressable
@@ -38,6 +46,7 @@ const Button = ({
         <Text
           style={[
             styles.label,
+            { color: labelColor },
             !isPrimary && !isSuccess && styles.secondaryLabel,
             disabled && isSuccess && styles.successLabelDisabled,
           ]}
@@ -50,62 +59,65 @@ const Button = ({
   );
 };
 
-const styles = StyleSheet.create({
-  base: {
-    width: '100%',
-    paddingVertical: SPACING.SM + 2,
-    borderRadius: RADIUS.MD,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'transparent',
-  },
-  primary: {
-    backgroundColor: COLORS.PRIMARY,
-    shadowColor: COLORS.PRIMARY_DARK,
-    shadowOpacity: 0.25,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 14,
-  },
-  secondary: {
-    backgroundColor: COLORS.SURFACE,
-    borderColor: COLORS.PRIMARY,
-  },
-  success: {
-    backgroundColor: COLORS.PRIMARY,
-    shadowColor: COLORS.PRIMARY,
-    shadowOpacity: 0.2,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 8,
-  },
-  pressed: {
-    opacity: 0.9,
-  },
-  disabled: {
-    backgroundColor: '#D1D5DB',
-    borderColor: '#D1D5DB',
-  },
-  label: {
-    color: '#fff',
-    fontSize: TYPOGRAPHY.BODY,
-    fontFamily: TYPOGRAPHY.FONT_FAMILY_SEMIBOLD,
-  },
-  labelRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconLeft: {
-    marginRight: SPACING.XS,
-  },
-  iconRight: {
-    marginLeft: SPACING.XS,
-  },
-  secondaryLabel: {
-    color: COLORS.PRIMARY,
-  },
-  successLabelDisabled: {
-    opacity: 0.8,
-  },
-});
+function createStyles(colors: { primary: string; surface: string; border: string; ink: string; success: string }) {
+  return StyleSheet.create({
+    base: {
+      width: '100%',
+      paddingVertical: SPACING.SM + 2,
+      borderRadius: RADIUS.MD,
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderWidth: 1,
+      borderColor: 'transparent',
+    },
+    primary: {
+      backgroundColor: colors.primary,
+      shadowColor: colors.ink,
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 1,
+    },
+    secondary: {
+      backgroundColor: colors.surface,
+      borderColor: colors.primary,
+    },
+    success: {
+      backgroundColor: colors.success,
+      shadowColor: colors.success,
+      shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 1,
+    },
+    pressed: {
+      opacity: 0.9,
+    },
+    disabled: {
+      backgroundColor: '#D1D5DB',
+      borderColor: '#D1D5DB',
+    },
+    label: {
+      fontSize: TYPOGRAPHY.BODY,
+      fontFamily: TYPOGRAPHY.FONT_FAMILY_SEMIBOLD,
+    },
+    labelRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    iconLeft: {
+      marginRight: SPACING.XS,
+    },
+    iconRight: {
+      marginLeft: SPACING.XS,
+    },
+    secondaryLabel: {
+      color: colors.primary,
+    },
+    successLabelDisabled: {
+      opacity: 0.8,
+    },
+  });
+}
 
 export default Button;
