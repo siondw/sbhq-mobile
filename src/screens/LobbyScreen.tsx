@@ -7,6 +7,7 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { debugRoute } from '../utils/debug';
 import Countdown from '../ui/Countdown';
 import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
@@ -26,15 +27,26 @@ const LobbyScreen = () => {
       : Date.now();
 
   useEffect(() => {
+    debugRoute('LobbyScreen', {
+      contestId: params.contestId,
+      loading,
+      playerState,
+      contestState: contest?.state,
+    });
+  }, [params.contestId, loading, playerState, contest?.state]);
+
+  useEffect(() => {
     if (!params.contestId || loading) return;
-    if (playerState === PLAYER_STATE.ANSWERING || playerState === PLAYER_STATE.SUBMITTED_WAITING) {
+    if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${params.contestId}`);
+    } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
+      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId: params.contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace(ROUTES.CORRECT);
+      router.replace({ pathname: ROUTES.CORRECT, params: { contestId: params.contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace(ROUTES.ELIMINATED);
+      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId: params.contestId } });
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace(ROUTES.WINNER);
+      router.replace({ pathname: ROUTES.WINNER, params: { contestId: params.contestId } });
     } else if (playerState === PLAYER_STATE.LOBBY) {
       // stay here
     }

@@ -5,6 +5,7 @@ import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
 import { networkError } from './errors';
 import type { DbError } from './errors';
+import type { AnswerOptionValue } from '../configs/constants';
 import { subscribeToTable } from './realtime';
 import type { AnswerInsert, AnswerRow } from './types';
 
@@ -13,7 +14,7 @@ export interface SubmitAnswerParams {
   contestId: string;
   questionId: string;
   round: number;
-  answer: string;
+  answer: AnswerOptionValue;
 }
 
 export const submitAnswer = async ({

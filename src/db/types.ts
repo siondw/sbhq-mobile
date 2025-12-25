@@ -138,7 +138,7 @@ export type Database = {
       questions: {
         Row: {
           contest_id: string | null
-          correct_option: string | null
+          correct_option: string[] | null
           id: string
           options: Json
           question: string
@@ -146,7 +146,7 @@ export type Database = {
         }
         Insert: {
           contest_id?: string | null
-          correct_option?: string | null
+          correct_option?: string[] | null
           id?: string
           options: Json
           question: string
@@ -154,7 +154,7 @@ export type Database = {
         }
         Update: {
           contest_id?: string | null
-          correct_option?: string | null
+          correct_option?: string[] | null
           id?: string
           options?: Json
           question?: string

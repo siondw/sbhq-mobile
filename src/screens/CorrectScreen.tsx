@@ -8,6 +8,7 @@ import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { PLAYER_STATE } from '../logic/constants';
+import { debugRoute } from '../utils/debug';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Text from '../ui/Text';
@@ -27,19 +28,28 @@ const CorrectScreen = () => {
   const { count: remainingPlayers } = useParticipantCount(contestId);
 
   useEffect(() => {
-    if (!contestId) return;
+    debugRoute('CorrectScreen', {
+      contestId,
+      loading,
+      playerState,
+      contestState: contest?.state,
+    });
+  }, [contestId, loading, playerState, contest?.state]);
+
+  useEffect(() => {
+    if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
     if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${contestId}`);
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace(ROUTES.SUBMITTED);
+      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace(ROUTES.ELIMINATED);
+      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace(ROUTES.WINNER);
+      router.replace({ pathname: ROUTES.WINNER, params: { contestId } });
     } else if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
     }
-  }, [playerState, router, contestId]);
+  }, [playerState, router, contestId, loading]);
 
   if (loading) {
     return (

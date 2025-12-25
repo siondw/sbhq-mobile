@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
@@ -7,6 +7,9 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { type AnswerOptionValue } from '../configs/constants';
+import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
+import { debugRoute } from '../utils/debug';
 import AnswerOption from '../ui/AnswerOption';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -24,22 +27,52 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   const headerHeight = useHeaderHeight();
   const { loading, error, contest, participant, question, answer, playerState, submit, refresh } =
     useContestState(contestId, derivedUser?.id);
+  const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
-  const options = useMemo(() => {
-    if (!question?.options) return [];
-    const opts = question.options as Record<string, string>;
-    return Object.entries(opts).map(([key, value]) => ({ key, label: value }));
-  }, [question]);
+  const options = useMemo(
+    () => normalizeQuestionOptions(question?.options),
+    [question?.options],
+  );
 
-  const handleSubmit = (optionKey: string) => {
+  useEffect(() => {
+    debugRoute('GameScreen', {
+      contestId,
+      loading,
+      playerState,
+      contestState: contest?.state,
+      eliminationRound: participant?.elimination_round,
+      answer: answer?.answer,
+      correctOption: question?.correct_option,
+      questionId: question?.id,
+    });
+  }, [
+    contestId,
+    loading,
+    playerState,
+    contest?.state,
+    participant?.elimination_round,
+    answer?.answer,
+    question?.correct_option,
+    question?.id,
+  ]);
+
+  useEffect(() => {
+    if (answer?.answer && isAnswerOptionValue(answer.answer)) {
+      setSelectedOption(answer.answer);
+      return;
+    }
+    setSelectedOption(null);
+  }, [answer?.answer, question?.id]);
+
+  const handleSubmit = () => {
     if (!participant || !contest || !question) return;
-    if (answer) return;
+    if (answer || !selectedOption) return;
     void submit({
       participantId: participant.id,
       contestId: contest.id,
       questionId: question.id,
       round: question.round,
-      answer: optionKey,
+      answer: selectedOption,
     });
   };
 
@@ -57,9 +90,9 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
       router.push({ pathname: '/correct', params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.push('/eliminated');
+      router.push({ pathname: ROUTES.ELIMINATED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.push('/winner');
+      router.push({ pathname: ROUTES.WINNER, params: { contestId } });
     }
     // Note: ANSWERING should stay on this screen, so we don't navigate
   }, [playerState, router, contestId, contest?.start_time, loading]);
@@ -83,31 +116,44 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     );
   }
 
+  const isAnswerLocked = playerState !== PLAYER_STATE.ANSWERING || !!answer;
+
   return (
     <View style={styles.container}>
       <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <Text weight="bold" style={styles.title}>
-          {contest?.name ?? 'Contest'}
-        </Text>
-        <Text style={styles.subtitle}>{`Round ${contest?.current_round ?? '?'}`}</Text>
-        <Text weight="medium" style={styles.state}>
-          State: {playerState}
-        </Text>
+        <View style={styles.roundHeader}>
+          <Text weight="medium" style={styles.roundLabel}>
+            Round
+          </Text>
+          <Text weight="bold" style={styles.roundNumber}>
+            {contest?.current_round ?? '?'}
+          </Text>
+          <Text weight="medium" style={styles.roundSubtitle}>
+            Choose Wisely!
+          </Text>
+        </View>
 
-        <Card>
+        <Card style={styles.questionCard}>
           <Text weight="bold" style={styles.question}>
-            {question?.question ?? 'Waiting for question…'}
+            {question?.question ?? 'Waiting for question...'}
           </Text>
           {options.map((option) => (
             <AnswerOption
               key={option.key}
               label={option.label}
-              selected={answer?.answer === option.key}
-              disabled={playerState !== PLAYER_STATE.ANSWERING}
-              onPress={() => handleSubmit(option.key)}
+              selected={selectedOption === option.key}
+              disabled={isAnswerLocked}
+              onPress={() => setSelectedOption(option.key)}
             />
           ))}
+          <View style={styles.submitRow}>
+            <Button
+              label="Submit"
+              onPress={handleSubmit}
+              disabled={isAnswerLocked || !selectedOption}
+            />
+          </View>
         </Card>
       </View>
     </View>
@@ -129,19 +175,32 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: SPACING.LG,
   },
-  title: {
-    fontSize: TYPOGRAPHY.TITLE,
+  roundHeader: {
+    alignItems: 'center',
+    marginBottom: SPACING.LG,
   },
-  subtitle: {
+  roundLabel: {
+    fontSize: TYPOGRAPHY.SMALL,
+    color: COLORS.MUTED,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  roundNumber: {
+    fontSize: 32,
+    color: COLORS.PRIMARY_DARK,
+  },
+  roundSubtitle: {
     fontSize: TYPOGRAPHY.BODY,
-    marginBottom: SPACING.XS,
+    color: COLORS.MUTED,
   },
-  state: {
-    marginBottom: SPACING.SM,
+  questionCard: {
+    gap: SPACING.SM,
   },
   question: {
     fontSize: TYPOGRAPHY.SUBTITLE,
-    marginBottom: SPACING.SM,
+  },
+  submitRow: {
+    marginTop: SPACING.SM,
   },
   spacer: {
     height: SPACING.SM,

@@ -22,7 +22,7 @@ const AnswerOption = ({ label, selected, disabled, onPress }: AnswerOptionProps)
       onPress={onPress}
       disabled={disabled}
     >
-      <View style={styles.dotWrapper}>
+      <View style={[styles.dotWrapper, selected && styles.dotWrapperSelected]}>
         <View style={[styles.dot, selected && styles.dotSelected]} />
       </View>
       <Text weight="medium" style={styles.label}>
@@ -54,7 +54,6 @@ const styles = StyleSheet.create({
   },
   selected: {
     borderColor: COLORS.PRIMARY_DARK,
-    backgroundColor: COLORS.ACCENT,
   },
   disabled: {
     opacity: 0.6,
@@ -68,6 +67,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: SPACING.SM,
+  },
+  dotWrapperSelected: {
+    borderColor: COLORS.PRIMARY_DARK,
   },
   dot: {
     width: 12,

@@ -10,6 +10,7 @@ import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Header from '../ui/AppHeader';
+import { Feather } from '@expo/vector-icons';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
 import Text from '../ui/Text';
@@ -41,15 +42,23 @@ const ContestListScreen = () => {
 
   const formatStart = (startTime: string) => {
     const date = new Date(startTime);
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const hours = date.getHours();
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHours = hours % 12 || 12;
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/New_York',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    }).formatToParts(date);
 
-    const shortTz = new Date().toLocaleTimeString('en-US', { timeZoneName: 'short' }).split(' ')[2];
+    const month = parts.find((part) => part.type === 'month')?.value ?? '';
+    const day = parts.find((part) => part.type === 'day')?.value ?? '';
+    const hour = parts.find((part) => part.type === 'hour')?.value ?? '';
+    const minute = parts.find((part) => part.type === 'minute')?.value ?? '00';
+    const period = parts.find((part) => part.type === 'dayPeriod')?.value ?? '';
+    const minuteSuffix = minute === '00' ? '' : `:${minute}`;
 
-    return `${month}/${day} @ ${displayHours}${ampm} ${shortTz}`;
+    return `${month}/${day} @ ${hour}${minuteSuffix}${period} EST`;
   };
 
   const handleEnterContest = async (contest: ContestRow) => {
@@ -110,7 +119,11 @@ const ContestListScreen = () => {
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
           const isRegistered = !!participant;
-          const isLive = item.state === CONTEST_STATE.LOBBY_OPEN || item.state === CONTEST_STATE.ROUND_IN_PROGRESS;
+          const isLive = item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
+          const isInProgress =
+            item.state === CONTEST_STATE.ROUND_IN_PROGRESS ||
+            item.state === CONTEST_STATE.ROUND_CLOSED;
+          const isEliminated = participant?.elimination_round !== null;
           const isLocked = item.state === CONTEST_STATE.ROUND_IN_PROGRESS && !isRegistered;
 
           const startLabel = formatStart(item.start_time);
@@ -118,16 +131,22 @@ const ContestListScreen = () => {
 
           let buttonLabel = 'Register';
           let buttonVariant: 'primary' | 'success' = 'primary';
+          let buttonIcon: React.ReactNode = null;
 
-          if (isLocked) {
-            buttonLabel = '🔒 Locked';
+          if (isEliminated && isInProgress) {
+            buttonLabel = 'Eliminated';
+            buttonVariant = 'primary';
+          } else if (isLocked) {
+            buttonLabel = 'Locked';
             buttonVariant = 'primary';
           } else if (isRegistered && (item.state === CONTEST_STATE.LOBBY_OPEN || item.state === CONTEST_STATE.ROUND_IN_PROGRESS)) {
-            buttonLabel = 'Join';
+            buttonLabel = 'Join Contest';
             buttonVariant = 'success';
+            buttonIcon = <Feather name="arrow-right" size={20} color={COLORS.SURFACE} />;
           } else if (isRegistered) {
             buttonLabel = 'Registered';
             buttonVariant = 'success';
+            buttonIcon = null;
           } else if (item.state === CONTEST_STATE.LOBBY_OPEN) {
             buttonLabel = 'Register';
             buttonVariant = 'primary';
@@ -138,7 +157,7 @@ const ContestListScreen = () => {
               style={[
                 styles.card,
                 numColumns > 1 && styles.cardGridItem,
-                isLocked && styles.cardLocked,
+                (isLocked || (isEliminated && isInProgress)) && styles.cardLocked,
               ]}
             >
               <View style={styles.cardHeader}>
@@ -165,9 +184,14 @@ const ContestListScreen = () => {
                 <Button
                   label={buttonLabel}
                   variant={buttonVariant}
+                  iconRight={buttonIcon}
                   onPress={() => void handleEnterContest(item)}
                   disabled={
-                    !!isLocked || (isRegistered && item.state !== CONTEST_STATE.LOBBY_OPEN && item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
+                    !!isLocked ||
+                    (isEliminated && isInProgress) ||
+                    (isRegistered &&
+                      item.state !== CONTEST_STATE.LOBBY_OPEN &&
+                      item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
                   }
                 />
               </View>

@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
@@ -7,8 +7,10 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { resolveOptionLabel } from '../utils/questionOptions';
+import { debugRoute } from '../utils/debug';
 import Button from '../ui/Button';
-import Card from '../ui/Card';
+import AnswerSummaryCard from '../ui/AnswerSummaryCard';
 import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
 import Header from '../ui/AppHeader';
@@ -19,23 +21,42 @@ const SubmittedScreen = () => {
   const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
-  const { loading, error, playerState, refresh } = useContestState(contestId, derivedUser?.id);
+  const { loading, error, playerState, refresh, question, answer } = useContestState(
+    contestId,
+    derivedUser?.id,
+  );
 
   useEffect(() => {
-    if (!contestId || loading) return;
+    debugRoute('SubmittedScreen', {
+      contestId,
+      loading,
+      playerState,
+      answer: answer?.answer,
+      correctOption: question?.correct_option,
+      questionId: question?.id,
+    });
+  }, [contestId, loading, playerState, answer?.answer, question?.correct_option, question?.id]);
+
+  useEffect(() => {
+    if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
 
     if (playerState === PLAYER_STATE.ANSWERING) {
       router.replace(`/contest/${contestId}`);
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace(ROUTES.CORRECT);
+      router.replace({ pathname: ROUTES.CORRECT, params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace(ROUTES.ELIMINATED);
+      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace(ROUTES.WINNER);
+      router.replace({ pathname: ROUTES.WINNER, params: { contestId } });
     } else if (playerState === PLAYER_STATE.LOBBY) {
       router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
     }
   }, [playerState, router, contestId, loading]);
+
+  const selectedAnswerLabel = useMemo(() => {
+    const resolved = resolveOptionLabel(question?.options, answer?.answer);
+    return resolved ?? 'Awaiting selection';
+  }, [question?.options, answer?.answer]);
 
   if (loading) {
     return (
@@ -60,13 +81,17 @@ const SubmittedScreen = () => {
     <View style={styles.container}>
       <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <Card>
-          <Text weight="bold" style={styles.title}>
-            Submitted
-          </Text>
-          <Text style={styles.body}>You are locked in. Waiting for the result...</Text>
-          <Image source={ballGif} style={styles.submittedGif} />
-        </Card>
+        <Text weight="bold" style={styles.title}>
+          Submitted
+        </Text>
+        <Text style={styles.body}>You are locked in. Waiting for the result...</Text>
+
+        <AnswerSummaryCard
+          question={question?.question ?? 'Waiting for the next update'}
+          selectedAnswer={selectedAnswerLabel}
+        />
+
+        <Image source={ballGif} style={styles.submittedGif} />
       </View>
     </View>
   );
@@ -81,6 +106,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: SPACING.MD,
     justifyContent: 'center',
+    gap: SPACING.MD,
   },
   center: {
     flex: 1,
@@ -90,16 +116,14 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPOGRAPHY.TITLE,
-    marginBottom: SPACING.XS,
   },
   body: {
     fontSize: TYPOGRAPHY.BODY,
   },
   submittedGif: {
-    width: 250,
-    height: 250,
+    width: 240,
+    height: 240,
     alignSelf: 'center',
-    marginTop: SPACING.MD,
   },
   spacer: {
     height: SPACING.SM,

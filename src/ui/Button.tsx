@@ -1,5 +1,5 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text } from 'react-native';
+import React, { type ReactNode } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from './theme';
 
 interface ButtonProps {
@@ -7,9 +7,11 @@ interface ButtonProps {
   onPress: () => void;
   disabled?: boolean;
   variant?: 'primary' | 'secondary' | 'success';
+  iconRight?: ReactNode;
+  iconLeft?: ReactNode;
 }
 
-const Button = ({ label, onPress, disabled, variant = 'primary' }: ButtonProps) => {
+const Button = ({ label, onPress, disabled, variant = 'primary', iconRight, iconLeft }: ButtonProps) => {
   const isPrimary = variant === 'primary';
   const isSuccess = variant === 'success';
 
@@ -24,16 +26,19 @@ const Button = ({ label, onPress, disabled, variant = 'primary' }: ButtonProps) 
       onPress={onPress}
       disabled={disabled}
     >
-      <Text
-        style={[
-          styles.label,
-          !isPrimary && !isSuccess && styles.secondaryLabel,
-          disabled && isSuccess && styles.successLabelDisabled,
-        ]}
-      >
-        {isSuccess ? '✓ ' : ''}
-        {label}
-      </Text>
+      <View style={styles.labelRow}>
+        {iconLeft ? <View style={styles.iconLeft}>{iconLeft}</View> : null}
+        <Text
+          style={[
+            styles.label,
+            !isPrimary && !isSuccess && styles.secondaryLabel,
+            disabled && isSuccess && styles.successLabelDisabled,
+          ]}
+        >
+          {label}
+        </Text>
+        {iconRight ? <View style={styles.iconRight}>{iconRight}</View> : null}
+      </View>
     </Pressable>
   );
 };
@@ -77,6 +82,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: TYPOGRAPHY.BODY,
     fontFamily: TYPOGRAPHY.FONT_FAMILY_SEMIBOLD,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconLeft: {
+    marginRight: SPACING.XS,
+  },
+  iconRight: {
+    marginLeft: SPACING.XS,
   },
   secondaryLabel: {
     color: COLORS.PRIMARY,

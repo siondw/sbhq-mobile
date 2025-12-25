@@ -31,10 +31,13 @@ export const derivePlayerState = (
       if (!question || !answer) {
         return PLAYER_STATE.ELIMINATED; // Missed deadline
       }
-      if (question.correct_option === null) {
+      if (
+        question.correct_option === null ||
+        (Array.isArray(question.correct_option) && question.correct_option.length === 0)
+      ) {
         return PLAYER_STATE.SUBMITTED_WAITING; // Waiting for admin
       }
-      return answer.answer === question.correct_option
+      return question.correct_option.includes(answer.answer)
         ? PLAYER_STATE.CORRECT_WAITING_NEXT
         : PLAYER_STATE.ELIMINATED;
 
