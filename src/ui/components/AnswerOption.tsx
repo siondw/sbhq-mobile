@@ -1,8 +1,8 @@
 import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
+
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../theme';
 import Text from './Text';
-import { RADIUS, SPACING, TYPOGRAPHY } from './theme';
-import { useTheme } from './themeContext';
 
 interface AnswerOptionProps {
   label: string;

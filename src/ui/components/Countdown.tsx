@@ -2,8 +2,9 @@ import MaskedView from '@react-native-masked-view/masked-view';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { useTheme } from '../theme';
 import Text from './Text';
-import { useTheme } from './themeContext';
 
 interface CountdownProps {
   /** Target time in milliseconds since epoch */

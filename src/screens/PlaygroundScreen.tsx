@@ -5,8 +5,8 @@ import {
   Animated,
   Image,
   ImageBackground,
-  Pressable,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   View,
@@ -14,23 +14,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import Text from '../ui/Text';
-import AnswerOption from '../ui/AnswerOption';
-import AnswerSummaryCard from '../ui/AnswerSummaryCard';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import ContestListTicket from '../ui/ContestListTicket';
-import ContestStatsCard from '../ui/ContestStatsCard';
-import Countdown from '../ui/Countdown';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import {
-  PLAYGROUND_PALETTES,
-  isDarkHex,
-  type PlaygroundPalette,
-  textOnHex,
-  withAlpha,
-} from '../ui/playgroundPalettes';
-import { ThemeProvider, themeFromPlaygroundPalette } from '../ui/themeContext';
+import AnswerOption from '../ui/components/AnswerOption';
+import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
+import Button from '../ui/components/Button';
+import Card from '../ui/components/Card';
+import ContestListTicket from '../ui/components/ContestListTicket';
+import ContestStatsCard from '../ui/components/ContestStatsCard';
+import Countdown from '../ui/components/Countdown';
+import Text from '../ui/components/Text';
+import { DEFAULT_PALETTE, PLAYGROUND_PALETTES, RADIUS, SPACING, TYPOGRAPHY, ThemeProvider, isDarkHex, textOnHex, themeFromPlaygroundPalette, withAlpha, type PlaygroundPalette } from '../ui/theme';
+
+// Use DEFAULT_PALETTE for static styles in playground (not a production screen)
+const COLORS = {
+  PRIMARY_DARK: DEFAULT_PALETTE.ink,
+  BACKGROUND: DEFAULT_PALETTE.bg,
+  MUTED: DEFAULT_PALETTE.ink, // Will use with alpha in styles
+  SURFACE: DEFAULT_PALETTE.surface,
+} as const;
 
 type Phase = 'OPEN' | 'LOCKED' | 'REVEAL' | 'RESULT';
 

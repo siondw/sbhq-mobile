@@ -1,22 +1,24 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { ROUTES } from '../configs/routes';
+import { PLAYER_STATE } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
-import { PLAYER_STATE } from '../logic/constants';
+import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import ContestStatsCard from '../ui/components/ContestStatsCard';
+import Text from '../ui/components/Text';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 import { resolveOptionLabel, resolveOptionLabels } from '../utils/questionOptions';
-import Button from '../ui/Button';
-import AnswerSummaryCard from '../ui/AnswerSummaryCard';
-import Text from '../ui/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import ContestStatsCard from '../ui/ContestStatsCard';
-import Header from '../ui/AppHeader';
 
 const EliminatedScreen = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const { derivedUser } = useAuth();
@@ -102,10 +104,10 @@ const EliminatedScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: { background: string; danger: string }) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,
@@ -124,7 +126,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: TYPOGRAPHY.TITLE,
-    color: COLORS.ELIMINATED_START,
+    color: colors.danger,
   },
   body: {
     fontSize: TYPOGRAPHY.BODY,

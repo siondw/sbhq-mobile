@@ -2,8 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { RADIUS, SPACING } from './theme';
-import { useTheme } from './themeContext';
+import { RADIUS, SPACING, useTheme, withAlpha } from '../theme';
 
 type TicketCardProps = {
   children: React.ReactNode;
@@ -51,15 +50,6 @@ const TicketCard = ({ children, style, backgroundColor }: TicketCardProps) => {
     </View>
   );
 };
-
-function withAlpha(hex: string, alpha: number): string {
-  const normalized = hex.replace('#', '');
-  if (normalized.length !== 6) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
 
 function createStyles(colors: { surface: string; border: string; ink: string }) {
   return StyleSheet.create({

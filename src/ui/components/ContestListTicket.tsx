@@ -1,11 +1,10 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import Button from './Button';
 import Text from './Text';
 import TicketCard from './TicketCard';
-import { RADIUS, SPACING, TYPOGRAPHY } from './theme';
-import { useTheme } from './themeContext';
 
 type ContestListTicketProps = {
   title: string;
@@ -144,15 +143,6 @@ function createStyles(colors: { muted: string; danger: string }) {
       fontWeight: '600',
     },
   });
-}
-
-function withAlpha(hex: string, alpha: number): string {
-  const normalized = hex.replace('#', '');
-  if (normalized.length !== 6) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
 }
 
 export default ContestListTicket;

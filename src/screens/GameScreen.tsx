@@ -2,25 +2,27 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
+import { type AnswerOptionValue } from '../configs/constants';
 import { ROUTES } from '../configs/routes';
-import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
+import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import { type AnswerOptionValue } from '../configs/constants';
+import AnswerOption from '../ui/components/AnswerOption';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import Card from '../ui/components/Card';
+import Text from '../ui/components/Text';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
-import AnswerOption from '../ui/AnswerOption';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import Text from '../ui/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/AppHeader';
 
 interface GameScreenProps {
   contestId?: string;
 }
 
 const GameScreen = ({ contestId }: GameScreenProps) => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { derivedUser } = useAuth();
   const router = useRouter();
   const headerHeight = useHeaderHeight();
@@ -134,10 +136,10 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: { background: string; muted: string; ink: string }) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.background,
   },
   content: {
     paddingHorizontal: SPACING.MD,
@@ -155,17 +157,17 @@ const styles = StyleSheet.create({
   },
   roundLabel: {
     fontSize: TYPOGRAPHY.SMALL,
-    color: COLORS.MUTED,
+    color: colors.muted,
     letterSpacing: 0.5,
     textTransform: 'uppercase',
   },
   roundNumber: {
     fontSize: 32,
-    color: COLORS.PRIMARY_DARK,
+    color: colors.ink,
   },
   roundSubtitle: {
     fontSize: TYPOGRAPHY.BODY,
-    color: COLORS.MUTED,
+    color: colors.muted,
   },
   questionCard: {
     gap: SPACING.SM,

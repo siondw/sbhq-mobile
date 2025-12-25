@@ -1,12 +1,24 @@
 export type PlaygroundPalette = {
   bg: string;
   surface: string;
-  ink: string; // primary text / “ink”
+  ink: string; // primary text / "ink"
   primary: string; // CTA
   energy: string; // timer/selection
   warm: string; // reward
   success: string;
   danger: string;
+};
+
+// Default palette using the original app colors
+export const DEFAULT_PALETTE: PlaygroundPalette = {
+  bg: '#ECD5BB', // champagne
+  surface: '#F5EFE7', // warm off-white
+  ink: '#1F2933', // near-black text
+  primary: '#567C6A', // softer pine green
+  energy: '#5F8C78', // sage/teal for timers/selection
+  warm: '#E08A5C', // warm terracotta
+  success: '#567C6A', // same as primary
+  danger: '#9F2430', // softer red
 };
 
 export const DARK_CARBON_TEAL_PALETTES: { key: string; name: string; palette: PlaygroundPalette }[] = [
@@ -152,27 +164,10 @@ export const DARK_CARBON_TEAL_PALETTES: { key: string; name: string; palette: Pl
   },
 ];
 
+// All available palettes for theme switching
+export const ALL_PALETTES = [
+  { key: 'default', name: 'Default (Champagne)', palette: DEFAULT_PALETTE },
+  ...DARK_CARBON_TEAL_PALETTES,
+];
+
 export const PLAYGROUND_PALETTES = DARK_CARBON_TEAL_PALETTES;
-
-export function withAlpha(hex: string, alpha: number): string {
-  const normalized = hex.replace('#', '');
-  if (normalized.length !== 6) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-export function isDarkHex(hex: string): boolean {
-  const normalized = hex.replace('#', '');
-  if (normalized.length !== 6) return false;
-  const r = parseInt(normalized.slice(0, 2), 16) / 255;
-  const g = parseInt(normalized.slice(2, 4), 16) / 255;
-  const b = parseInt(normalized.slice(4, 6), 16) / 255;
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance < 0.45;
-}
-
-export function textOnHex(hex: string): '#FFFFFF' | '#0B0F14' {
-  return isDarkHex(hex) ? '#FFFFFF' : '#0B0F14';
-}

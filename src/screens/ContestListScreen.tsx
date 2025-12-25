@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 
+import { Feather } from '@expo/vector-icons';
 import { ROUTES } from '../configs/routes';
 import type { ContestRow } from '../db/types';
 import { CONTEST_STATE } from '../logic/constants';
@@ -9,18 +10,19 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import Header from '../ui/AppHeader';
-import { Feather } from '@expo/vector-icons';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import Text from '../ui/Text';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import Card from '../ui/components/Card';
+import Text from '../ui/components/Text';
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const ContestListScreen = () => {
   const router = useRouter();
+  const { colors } = useTheme();
   const { derivedUser, loading: authLoading } = useAuth();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { contests, loading: contestsLoading, error: contestsError, refresh } = useContests();
   const {
@@ -91,7 +93,7 @@ const ContestListScreen = () => {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator color={COLORS.PRIMARY} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -147,7 +149,7 @@ const ContestListScreen = () => {
           ) {
             buttonLabel = 'Join Contest';
             buttonVariant = 'success';
-            buttonIcon = <Feather name="arrow-right" size={20} color={COLORS.SURFACE} />;
+            buttonIcon = <Feather name="arrow-right" size={20} color={colors.surface} />;
           } else if (isRegistered) {
             buttonLabel = 'Registered';
             buttonVariant = 'success';
@@ -218,10 +220,10 @@ const ContestListScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: ReturnType<typeof useTheme>['colors']) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.background,
   },
   listContent: {
     paddingHorizontal: SPACING.MD,
@@ -258,7 +260,7 @@ const styles = StyleSheet.create({
   },
   meta: {
     fontSize: TYPOGRAPHY.BODY,
-    color: COLORS.MUTED,
+    color: colors.muted,
   },
   cardFooter: {
     marginTop: SPACING.SM,
@@ -294,12 +296,12 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   emptyState: {
-    backgroundColor: COLORS.SURFACE,
+    backgroundColor: colors.surface,
     borderRadius: RADIUS.MD,
     padding: SPACING.LG,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: COLORS.BORDER,
+    borderColor: colors.border,
   },
   emptyTitle: {
     fontSize: TYPOGRAPHY.SUBTITLE,
@@ -307,7 +309,7 @@ const styles = StyleSheet.create({
   },
   emptySubtitle: {
     fontSize: TYPOGRAPHY.BODY,
-    color: COLORS.MUTED,
+    color: colors.muted,
     textAlign: 'center',
   },
 });

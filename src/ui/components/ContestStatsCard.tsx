@@ -1,12 +1,12 @@
 import React, { useMemo } from 'react';
 import type { StyleProp, ViewStyle } from 'react-native';
 import { StyleSheet, View } from 'react-native';
-import DollarSignIcon from '../../assets/icons/DollarSignIcon.svg';
-import LeaderboardIcon from '../../assets/icons/leaderboard.svg';
-import PersonIcon from '../../assets/icons/person.svg';
+
+import DollarSignIcon from '../../../assets/icons/DollarSignIcon.svg';
+import LeaderboardIcon from '../../../assets/icons/leaderboard.svg';
+import PersonIcon from '../../../assets/icons/person.svg';
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../theme';
 import Text from './Text';
-import { RADIUS, SPACING, TYPOGRAPHY } from './theme';
-import { useTheme } from './themeContext';
 
 type ContestStatsCardProps = {
   numberOfRemainingPlayers: number;

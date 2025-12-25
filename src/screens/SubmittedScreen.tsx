@@ -2,20 +2,22 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
 
+import ballGif from '../../assets/gifs/ball.gif';
 import { ROUTES } from '../configs/routes';
-import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
+import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import Text from '../ui/components/Text';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 import { resolveOptionLabel } from '../utils/questionOptions';
-import Button from '../ui/Button';
-import AnswerSummaryCard from '../ui/AnswerSummaryCard';
-import Text from '../ui/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/AppHeader';
-import ballGif from '../../assets/gifs/ball.gif';
 
 const SubmittedScreen = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
@@ -85,10 +87,10 @@ const SubmittedScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: { background: string }) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,

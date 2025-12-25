@@ -1,6 +1,5 @@
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const HEADER_CONTENT_HEIGHT = 56;
+import { HEADER_CONTENT_HEIGHT } from '../../ui/theme';
 
 /**
  * Returns the total height of the header including safe area insets.

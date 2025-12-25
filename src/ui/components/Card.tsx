@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View, type ViewProps } from 'react-native';
-import { RADIUS, SPACING } from './theme';
-import { useTheme } from './themeContext';
+
+import { RADIUS, SPACING, useTheme } from '../theme';
 
 const Card = ({ style, children, ...rest }: ViewProps) => {
   const { colors } = useTheme();

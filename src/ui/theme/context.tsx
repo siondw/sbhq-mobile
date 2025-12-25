@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useMemo } from 'react';
 
-import type { PlaygroundPalette } from './playgroundPalettes';
-import { COLORS } from './theme';
+import type { PlaygroundPalette } from './palettes';
+import { DEFAULT_PALETTE } from './palettes';
+import { textOnHex, withAlpha } from './utils';
 
 export type ThemeColors = {
   background: string;
@@ -22,43 +23,20 @@ export type Theme = {
   colors: ThemeColors;
 };
 
-function isDarkHex(hex: string): boolean {
-  const normalized = hex.replace('#', '');
-  if (normalized.length !== 6) return false;
-  const r = parseInt(normalized.slice(0, 2), 16) / 255;
-  const g = parseInt(normalized.slice(2, 4), 16) / 255;
-  const b = parseInt(normalized.slice(4, 6), 16) / 255;
-  const luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
-  return luminance < 0.45;
-}
-
-function withAlpha(hex: string, alpha: number): string {
-  const normalized = hex.replace('#', '');
-  if (normalized.length !== 6) return `rgba(0,0,0,${alpha})`;
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
-  return `rgba(${r},${g},${b},${alpha})`;
-}
-
-export function textOnHex(hex: string): '#FFFFFF' | '#0B0F14' {
-  return isDarkHex(hex) ? '#FFFFFF' : '#0B0F14';
-}
-
 export const DEFAULT_THEME: Theme = {
   colors: {
-    background: COLORS.BACKGROUND,
-    surface: COLORS.SURFACE,
-    text: COLORS.TEXT,
-    muted: COLORS.MUTED,
-    border: COLORS.BORDER,
-    primary: COLORS.PRIMARY,
-    ink: COLORS.PRIMARY_DARK,
-    energy: COLORS.GRADIENT_START,
-    warm: COLORS.ACCENT,
-    success: COLORS.PRIMARY,
-    danger: COLORS.ELIMINATED_START,
-    overlay: COLORS.OVERLAY,
+    background: DEFAULT_PALETTE.bg,
+    surface: DEFAULT_PALETTE.surface,
+    text: DEFAULT_PALETTE.ink,
+    muted: withAlpha(DEFAULT_PALETTE.ink, 0.68),
+    border: withAlpha(DEFAULT_PALETTE.ink, 0.14),
+    primary: DEFAULT_PALETTE.primary,
+    ink: DEFAULT_PALETTE.ink,
+    energy: DEFAULT_PALETTE.energy,
+    warm: DEFAULT_PALETTE.warm,
+    success: DEFAULT_PALETTE.success,
+    danger: DEFAULT_PALETTE.danger,
+    overlay: withAlpha('#000000', 0.05),
   },
 };
 
@@ -103,4 +81,3 @@ export function themeFromPlaygroundPalette(palette: PlaygroundPalette): Theme {
 export function useTextOn(hex: string): '#FFFFFF' | '#0B0F14' {
   return useMemo(() => textOnHex(hex), [hex]);
 }
-

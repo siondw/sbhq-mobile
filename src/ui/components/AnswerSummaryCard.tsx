@@ -1,9 +1,9 @@
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
+
+import { SPACING, TYPOGRAPHY, useTheme } from '../theme';
 import Card from './Card';
 import Text from './Text';
-import { SPACING, TYPOGRAPHY } from './theme';
-import { useTheme } from './themeContext';
 
 type AnswerSummaryCardProps = {
   header?: string;

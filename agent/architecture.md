@@ -149,42 +149,79 @@ These functions:
 
 ---
 
-## 5. `src/ui/` – Reusable visual components
+## 5. `src/ui/` – Visual components & theme system
 
-**Goal:** All the React Native building blocks for your interface.
+**Goal:** All the React Native building blocks and visual infrastructure.
 
-Examples:
+### 5.1 `src/ui/components/` – React components
+
+Reusable UI components that make up the interface:
 
 - Primitives:
-  - `Button`
-  - `Text`
-  - `Card`
-  - `LoadingSpinner`
-  - Layout wrappers (e.g. `ScreenContainer`)
-
+  - `Button` – Configurable button with variants (primary, secondary, success)
+  - `Text` – Text component with weight prop system (regular, medium, bold)
+  - `Card` – Base card container with consistent styling
+  
 - SBHQ-specific UI components:
-  - `QuestionCard`
-  - `AnswerOption`
-  - `LobbyHeader`
-  - `CountdownDisplay`
-  - `StatusBanner` (for correct/eliminated/winner states)
+  - `AnswerOption` – Radio-style answer selection component
+  - `AnswerSummaryCard` – Displays question and answer details
+  - `AppHeader` – Application header with branding and user info
+  - `ContestListTicket` – Ticket-style contest list item with live indicator
+  - `ContestStatsCard` – Displays contest statistics (players, rounds, odds)
+  - `Countdown` – Animated countdown timer with gradient text masking
+  - `TicketCard` – Decorative ticket-style card with cutouts and texture layers
 
-These components:
+### 5.2 `src/ui/theme/` – Theme system
 
-- Receive data + callbacks via props.
-- Do not make DB calls.
-- Do not use logic hooks directly (e.g. Header receives user prop instead of calling useAuth).
-- Do not own navigation.
+Centralized theme infrastructure with a single palette-based system:
 
-You can organize them however you like, e.g.:
+**Files:**
+- `index.ts` – Barrel export for convenient imports
+- `spacing.ts` – Spacing and radius tokens (SPACING, RADIUS)
+- `typography.ts` – Typography tokens (TYPOGRAPHY, HEADER_CONTENT_HEIGHT)
+- `utils.ts` – Color utilities (withAlpha, isDarkHex, textOnHex)
+- `palettes.ts` – Color palette definitions:
+  - `DEFAULT_PALETTE` – The app's default color scheme
+  - `DARK_CARBON_TEAL_PALETTES` – Alternative dark theme palettes
+  - `ALL_PALETTES` – Combined list for theme switching
+- `context.tsx` – Theme React context:
+  - `ThemeProvider` – Context provider component
+  - `useTheme()` – Hook to access theme colors
+  - `themeFromPlaygroundPalette()` – Convert palette to theme
+  - `DEFAULT_THEME` – Default theme instance
 
-```text
-src/ui/
-  primitives/
-  lobby/
-  contest/
-  common/
+**Usage:**
+
+Components import from the barrel export:
+```tsx
+import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 ```
+
+Screens import components and theme:
+```tsx
+import Button from '../ui/components/Button';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
+```
+
+**Theme Configuration:**
+
+The active palette is configured in `src/configs/constants.ts`:
+```tsx
+export const THEME_CONFIG = {
+  SELECTED_PALETTE: 'default', // or 'carbon-teal-classic', etc.
+} as const;
+```
+
+**Rules:**
+
+- All colors come from the theme palette (never hardcoded)
+- Components use `useTheme()` to access dynamic colors
+- Spacing, typography, and utilities are imported from theme tokens
+- Theme constants can be imported by `logic/hooks/` when needed (e.g., HEADER_CONTENT_HEIGHT)
+- Components receive data + callbacks via props
+- Do not make DB calls directly
+- Do not use business logic hooks directly (e.g., Header receives user prop instead of calling useAuth)
+- Do not own navigation
 
 ---
 

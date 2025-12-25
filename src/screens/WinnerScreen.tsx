@@ -1,20 +1,22 @@
-import React, { useEffect, useRef } from 'react';
-import { ActivityIndicator, Animated, Easing, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useRef } from 'react';
+import { ActivityIndicator, Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
+import { PLAYER_STATE } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
-import { PLAYER_STATE } from '../logic/constants';
-import Button from '../ui/Button';
-import Text from '../ui/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import ContestStatsCard from '../ui/ContestStatsCard';
-import Header from '../ui/AppHeader';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import ContestStatsCard from '../ui/components/ContestStatsCard';
+import Text from '../ui/components/Text';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const WinnerScreen = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const { derivedUser } = useAuth();
@@ -109,53 +111,54 @@ const WinnerScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.MD,
-    justifyContent: 'center',
-    alignItems: 'center',
-    gap: SPACING.SM,
-  },
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-  badge: {
-    paddingHorizontal: SPACING.LG,
-    paddingVertical: SPACING.SM,
-    borderRadius: 999,
-    backgroundColor: COLORS.PRIMARY_DARK,
-    shadowColor: COLORS.PRIMARY_DARK,
-    shadowOpacity: 0.25,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 6 },
-  },
-  badgeText: {
-    color: COLORS.SURFACE,
-    letterSpacing: 1,
-  },
-  title: {
-    fontSize: 28,
-    color: COLORS.PRIMARY_DARK,
-  },
-  body: {
-    fontSize: TYPOGRAPHY.BODY,
-    textAlign: 'center',
-  },
-  footer: {
-    marginTop: SPACING.SM,
-    width: '100%',
-  },
-  spacer: {
-    height: SPACING.SM,
-  },
-});
+const createStyles = (colors: { background: string; ink: string; surface: string }) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    content: {
+      flex: 1,
+      paddingHorizontal: SPACING.MD,
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: SPACING.SM,
+    },
+    center: {
+      flex: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: SPACING.LG,
+    },
+    badge: {
+      paddingHorizontal: SPACING.LG,
+      paddingVertical: SPACING.SM,
+      borderRadius: 999,
+      backgroundColor: colors.ink,
+      shadowColor: colors.ink,
+      shadowOpacity: 0.25,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 6 },
+    },
+    badgeText: {
+      color: colors.surface,
+      letterSpacing: 1,
+    },
+    title: {
+      fontSize: 28,
+      color: colors.ink,
+    },
+    body: {
+      fontSize: TYPOGRAPHY.BODY,
+      textAlign: 'center',
+    },
+    footer: {
+      marginTop: SPACING.SM,
+      width: '100%',
+    },
+    spacer: {
+      height: SPACING.SM,
+    },
+  });
 
 export default WinnerScreen;

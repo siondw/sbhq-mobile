@@ -1,7 +1,7 @@
 import React, { useMemo, type ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { RADIUS, SPACING, TYPOGRAPHY } from './theme';
-import { textOnHex, useTheme } from './themeContext';
+
+import { RADIUS, SPACING, textOnHex, TYPOGRAPHY, useTheme } from '../theme';
 
 interface ButtonProps {
   label: string;

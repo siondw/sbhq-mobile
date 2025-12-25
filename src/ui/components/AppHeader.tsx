@@ -2,12 +2,11 @@ import React, { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import TrophyIcon from '../../assets/icons/trophy.svg';
-import { APP_NAME } from '../configs/constants';
-import type { DerivedUser } from '../logic/hooks/AuthProvider';
+import TrophyIcon from '../../../assets/icons/trophy.svg';
+import { APP_NAME } from '../../configs/constants';
+import type { DerivedUser } from '../../logic/hooks/AuthProvider';
+import { HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY, useTheme } from '../theme';
 import Text from './Text';
-import { HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY } from './theme';
-import { useTheme } from './themeContext';
 
 interface HeaderProps {
   user?: DerivedUser | null;

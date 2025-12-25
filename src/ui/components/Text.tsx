@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Text as RNText, StyleSheet, type TextProps as RNTextProps } from 'react-native';
-import { TYPOGRAPHY } from './theme';
-import { useTheme } from './themeContext';
+
+import { TYPOGRAPHY, useTheme } from '../theme';
 
 export interface TextProps extends RNTextProps {
   weight?: 'regular' | 'medium' | 'bold';

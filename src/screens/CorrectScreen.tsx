@@ -1,21 +1,23 @@
-import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import React, { useEffect, useMemo } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
+import { PLAYER_STATE } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
-import { PLAYER_STATE } from '../logic/constants';
-import Button from '../ui/Button';
-import Card from '../ui/Card';
-import Text from '../ui/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import ContestStatsCard from '../ui/ContestStatsCard';
-import Header from '../ui/AppHeader';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import Card from '../ui/components/Card';
+import ContestStatsCard from '../ui/components/ContestStatsCard';
+import Text from '../ui/components/Text';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const CorrectScreen = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
@@ -81,10 +83,10 @@ const CorrectScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: { background: string }) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.background,
   },
   content: {
     flex: 1,

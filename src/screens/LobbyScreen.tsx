@@ -1,19 +1,21 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 
+import pregameGif from '../../assets/gifs/catch_nobg.gif';
 import { ROUTES } from '../configs/routes';
-import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
+import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import Countdown from '../ui/Countdown';
-import Text from '../ui/Text';
-import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/AppHeader';
-import pregameGif from '../../assets/gifs/catch_nobg.gif';
+import Header from '../ui/components/AppHeader';
+import Countdown from '../ui/components/Countdown';
+import Text from '../ui/components/Text';
+import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const LobbyScreen = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const params = useLocalSearchParams<{ contestId?: string; startTime?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
@@ -68,10 +70,10 @@ const LobbyScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors: { background: string; ink: string; muted: string }) => StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
+    backgroundColor: colors.background,
   },
   scrollContent: {
     flexGrow: 1,
@@ -85,7 +87,7 @@ const styles = StyleSheet.create({
   contestName: {
     fontSize: 32,
     textAlign: 'center',
-    color: COLORS.PRIMARY_DARK,
+    color: colors.ink,
     letterSpacing: 0.5,
   },
   countdownSection: {
@@ -94,7 +96,7 @@ const styles = StyleSheet.create({
   },
   startingLabel: {
     fontSize: TYPOGRAPHY.BODY,
-    color: COLORS.MUTED,
+    color: colors.muted,
     textAlign: 'center',
   },
   pregameGif: {

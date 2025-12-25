@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -13,12 +13,14 @@ import {
 import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import Button from '../ui/Button';
-import Text from '../ui/Text';
-import { COLORS, RADIUS, SPACING, TYPOGRAPHY } from '../ui/theme';
-import Header from '../ui/AppHeader';
+import Header from '../ui/components/AppHeader';
+import Button from '../ui/components/Button';
+import Text from '../ui/components/Text';
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const LoginScreen = () => {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { session, loginWithGoogle, sendEmailOtp, verifyEmailOtp, loading, error } = useAuth();
   const router = useRouter();
   const headerHeight = useHeaderHeight();
@@ -166,114 +168,115 @@ const LoginScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: COLORS.BACKGROUND,
-  },
-  flex: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingBottom: SPACING.XXL,
-    paddingHorizontal: SPACING.LG,
-    alignItems: 'center',
-  },
-  hero: {
-    alignItems: 'center',
-    marginBottom: SPACING.XL,
-  },
-  title: {
-    fontSize: 32,
-    textAlign: 'center',
-    color: COLORS.PRIMARY_DARK,
-    marginBottom: 4,
-  },
-  subtitle: {
-    fontSize: TYPOGRAPHY.SUBTITLE,
-    color: COLORS.MUTED,
-    textAlign: 'center',
-  },
-  form: {
-    width: '100%',
-    maxWidth: 360,
-    alignItems: 'center',
-  },
-  googleButton: {
-    width: 320,
-    height: 56,
-    backgroundColor: '#608ce5',
-    borderRadius: 5,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#507ac5',
-    shadowOpacity: 0.35,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 10,
-    marginBottom: SPACING.SM,
-  },
-  googlePressed: {
-    backgroundColor: '#507ac5',
-  },
-  googleLabel: {
-    color: '#F3F4F6',
-    fontSize: 18,
-  },
-  divider: {
-    width: '100%',
-    maxWidth: 360,
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: SPACING.SM,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#C7CED4',
-  },
-  dividerText: {
-    color: '#4B5563',
-    marginHorizontal: SPACING.XS,
-  },
-  field: {
-    width: '100%',
-    maxWidth: 360,
-    marginBottom: SPACING.SM,
-  },
-  input: {
-    width: '100%',
-    height: 64,
-    borderRadius: RADIUS.SM,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.4)',
-    paddingHorizontal: SPACING.MD,
-    backgroundColor: '#54627B',
-    color: '#F8FAFC',
-    fontSize: TYPOGRAPHY.BODY,
-  },
-  errorText: {
-    color: '#DC2626',
-    width: '100%',
-    maxWidth: 360,
-    textAlign: 'center',
-    marginBottom: SPACING.SM,
-  },
-  message: {
-    color: COLORS.PRIMARY,
-    width: '100%',
-    maxWidth: 360,
-    textAlign: 'center',
-    marginBottom: SPACING.MD,
-  },
-  buttons: {
-    width: '100%',
-    maxWidth: 360,
-  },
-  buttonWrapper: {
-    width: '100%',
-    marginBottom: SPACING.SM,
-  },
-});
+const createStyles = (colors: { background: string; ink: string; muted: string; primary: string }) =>
+  StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background,
+    },
+    flex: {
+      flex: 1,
+    },
+    scrollContent: {
+      flexGrow: 1,
+      paddingBottom: SPACING.XXL,
+      paddingHorizontal: SPACING.LG,
+      alignItems: 'center',
+    },
+    hero: {
+      alignItems: 'center',
+      marginBottom: SPACING.XL,
+    },
+    title: {
+      fontSize: 32,
+      textAlign: 'center',
+      color: colors.ink,
+      marginBottom: 4,
+    },
+    subtitle: {
+      fontSize: TYPOGRAPHY.SUBTITLE,
+      color: colors.muted,
+      textAlign: 'center',
+    },
+    form: {
+      width: '100%',
+      maxWidth: 360,
+      alignItems: 'center',
+    },
+    googleButton: {
+      width: 320,
+      height: 56,
+      backgroundColor: '#608ce5',
+      borderRadius: 5,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#507ac5',
+      shadowOpacity: 0.35,
+      shadowOffset: { width: 0, height: 8 },
+      shadowRadius: 10,
+      marginBottom: SPACING.SM,
+    },
+    googlePressed: {
+      backgroundColor: '#507ac5',
+    },
+    googleLabel: {
+      color: '#F3F4F6',
+      fontSize: 18,
+    },
+    divider: {
+      width: '100%',
+      maxWidth: 360,
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginVertical: SPACING.SM,
+    },
+    dividerLine: {
+      flex: 1,
+      height: 1,
+      backgroundColor: '#C7CED4',
+    },
+    dividerText: {
+      color: '#4B5563',
+      marginHorizontal: SPACING.XS,
+    },
+    field: {
+      width: '100%',
+      maxWidth: 360,
+      marginBottom: SPACING.SM,
+    },
+    input: {
+      width: '100%',
+      height: 64,
+      borderRadius: RADIUS.SM,
+      borderWidth: 1,
+      borderColor: 'rgba(255,255,255,0.4)',
+      paddingHorizontal: SPACING.MD,
+      backgroundColor: '#54627B',
+      color: '#F8FAFC',
+      fontSize: TYPOGRAPHY.BODY,
+    },
+    errorText: {
+      color: '#DC2626',
+      width: '100%',
+      maxWidth: 360,
+      textAlign: 'center',
+      marginBottom: SPACING.SM,
+    },
+    message: {
+      color: colors.primary,
+      width: '100%',
+      maxWidth: 360,
+      textAlign: 'center',
+      marginBottom: SPACING.MD,
+    },
+    buttons: {
+      width: '100%',
+      maxWidth: 360,
+    },
+    buttonWrapper: {
+      width: '100%',
+      marginBottom: SPACING.SM,
+    },
+  });
 
 export default LoginScreen;

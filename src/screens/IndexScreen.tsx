@@ -4,12 +4,13 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
-import { COLORS, SPACING } from '../ui/theme';
+import { SPACING, useTheme } from '../ui/theme';
 import DevLandingScreen from './DevLandingScreen';
 import LoginScreen from './LoginScreen';
 
 const IndexScreen = () => {
   const { session, loading } = useAuth();
+  const { colors } = useTheme();
   const router = useRouter();
   const isDev = __DEV__;
 
@@ -25,16 +26,16 @@ const IndexScreen = () => {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={COLORS.PRIMARY} />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   if (session) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator color={COLORS.PRIMARY} />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
@@ -48,7 +49,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: SPACING.LG,
-    backgroundColor: COLORS.BACKGROUND,
   },
 });
 
