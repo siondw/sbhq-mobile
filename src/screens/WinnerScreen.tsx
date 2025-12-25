@@ -8,7 +8,6 @@ import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { PLAYER_STATE } from '../logic/constants';
-import { debugRoute } from '../utils/debug';
 import Button from '../ui/Button';
 import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
@@ -26,15 +25,6 @@ const WinnerScreen = () => {
     derivedUser?.id,
   );
   const pulse = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    debugRoute('WinnerScreen', {
-      contestId,
-      loading,
-      playerState,
-      contestState: contest?.state,
-    });
-  }, [contestId, loading, playerState, contest?.state]);
 
   useEffect(() => {
     const animation = Animated.loop(

@@ -8,7 +8,6 @@ import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { resolveOptionLabel } from '../utils/questionOptions';
-import { debugRoute } from '../utils/debug';
 import Button from '../ui/Button';
 import AnswerSummaryCard from '../ui/AnswerSummaryCard';
 import Text from '../ui/Text';
@@ -25,17 +24,6 @@ const SubmittedScreen = () => {
     contestId,
     derivedUser?.id,
   );
-
-  useEffect(() => {
-    debugRoute('SubmittedScreen', {
-      contestId,
-      loading,
-      playerState,
-      answer: answer?.answer,
-      correctOption: question?.correct_option,
-      questionId: question?.id,
-    });
-  }, [contestId, loading, playerState, answer?.answer, question?.correct_option, question?.id]);
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;

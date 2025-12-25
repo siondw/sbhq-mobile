@@ -9,7 +9,6 @@ import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { PLAYER_STATE } from '../logic/constants';
 import { resolveOptionLabel, resolveOptionLabels } from '../utils/questionOptions';
-import { debugRoute } from '../utils/debug';
 import Button from '../ui/Button';
 import AnswerSummaryCard from '../ui/AnswerSummaryCard';
 import Text from '../ui/Text';
@@ -25,28 +24,6 @@ const EliminatedScreen = () => {
   const { count: remainingPlayers } = useParticipantCount(contestId);
   const { loading, error, playerState, refresh, contest, participant, question, answer } =
     useContestState(contestId, derivedUser?.id);
-
-  useEffect(() => {
-    debugRoute('EliminatedScreen', {
-      contestId,
-      loading,
-      playerState,
-      contestState: contest?.state,
-      eliminationRound: participant?.elimination_round,
-      answer: answer?.answer,
-      correctOption: question?.correct_option,
-      questionId: question?.id,
-    });
-  }, [
-    contestId,
-    loading,
-    playerState,
-    contest?.state,
-    participant?.elimination_round,
-    answer?.answer,
-    question?.correct_option,
-    question?.id,
-  ]);
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;

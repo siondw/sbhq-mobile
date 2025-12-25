@@ -9,7 +9,6 @@ import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { type AnswerOptionValue } from '../configs/constants';
 import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
-import { debugRoute } from '../utils/debug';
 import AnswerOption from '../ui/AnswerOption';
 import Button from '../ui/Button';
 import Card from '../ui/Card';
@@ -33,28 +32,6 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
     () => normalizeQuestionOptions(question?.options),
     [question?.options],
   );
-
-  useEffect(() => {
-    debugRoute('GameScreen', {
-      contestId,
-      loading,
-      playerState,
-      contestState: contest?.state,
-      eliminationRound: participant?.elimination_round,
-      answer: answer?.answer,
-      correctOption: question?.correct_option,
-      questionId: question?.id,
-    });
-  }, [
-    contestId,
-    loading,
-    playerState,
-    contest?.state,
-    participant?.elimination_round,
-    answer?.answer,
-    question?.correct_option,
-    question?.id,
-  ]);
 
   useEffect(() => {
     if (answer?.answer && isAnswerOptionValue(answer.answer)) {

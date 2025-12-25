@@ -7,7 +7,6 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import { debugRoute } from '../utils/debug';
 import Countdown from '../ui/Countdown';
 import Text from '../ui/Text';
 import { COLORS, SPACING, TYPOGRAPHY } from '../ui/theme';
@@ -25,15 +24,6 @@ const LobbyScreen = () => {
     : contest?.start_time
       ? new Date(contest.start_time).getTime()
       : Date.now();
-
-  useEffect(() => {
-    debugRoute('LobbyScreen', {
-      contestId: params.contestId,
-      loading,
-      playerState,
-      contestState: contest?.state,
-    });
-  }, [params.contestId, loading, playerState, contest?.state]);
 
   useEffect(() => {
     if (!params.contestId || loading) return;
