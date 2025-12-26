@@ -12,9 +12,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import AnswerOption from '../ui/components/AnswerOption';
 import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
-import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Button from '../ui/components/Button';
 import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';

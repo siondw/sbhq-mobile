@@ -1,11 +1,11 @@
 import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import type { AnswerOptionValue } from '../configs/constants';
 import type { AsyncResult } from '../utils/result';
 import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
-import { networkError } from './errors';
 import type { DbError } from './errors';
-import type { AnswerOptionValue } from '../configs/constants';
+import { networkError } from './errors';
 import { subscribeToTable } from './realtime';
 import type { AnswerInsert, AnswerRow } from './types';
 
