@@ -29,11 +29,11 @@ const Button = ({
 
   const bgColor = useMemo(
     () => (isPrimary ? colors.primary : isSuccess ? colors.success : colors.surface),
-    [isPrimary, isSuccess, colors.primary, colors.success, colors.surface]
+    [isPrimary, isSuccess, colors.primary, colors.success, colors.surface],
   );
   const labelColor = useMemo(
     () => (isSecondary ? colors.primary : textOnHex(bgColor)),
-    [isSecondary, colors.primary, bgColor]
+    [isSecondary, colors.primary, bgColor],
   );
 
   return (

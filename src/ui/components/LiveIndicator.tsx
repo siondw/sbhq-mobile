@@ -22,7 +22,12 @@ const LiveIndicator = ({
   const { opacity } = usePulseAnimation(900);
 
   const dotSize = size === 'small' ? 5 : size === 'medium' ? 6 : 8;
-  const fontSize = size === 'small' ? TYPOGRAPHY.SMALL - 2 : size === 'medium' ? TYPOGRAPHY.SMALL - 1 : TYPOGRAPHY.SMALL;
+  const fontSize =
+    size === 'small'
+      ? TYPOGRAPHY.SMALL - 2
+      : size === 'medium'
+        ? TYPOGRAPHY.SMALL - 1
+        : TYPOGRAPHY.SMALL;
   const gap = size === 'small' ? SPACING.XS - 3 : size === 'medium' ? SPACING.XS - 2 : SPACING.XS;
 
   const color = variant === 'danger' ? colors.danger : colors.energy;

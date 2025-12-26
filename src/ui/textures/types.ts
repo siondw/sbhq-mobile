@@ -7,6 +7,7 @@ export type GlassyTextureProps = {
     ink: string;
   };
   shinePreset?: 'SUBTLE' | 'NORMAL' | 'DRAMATIC';
+  showShine?: boolean;
   style?: ViewStyle;
   children?: React.ReactNode;
 };

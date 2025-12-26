@@ -2,7 +2,7 @@ import React, { memo, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import TrophyIcon from '../../../assets/icons/trophy.svg';
+import { Ionicons } from '@expo/vector-icons';
 import { APP_NAME } from '../../configs/constants';
 import type { DerivedUser } from '../../logic/hooks/AuthProvider';
 import { HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY, useTheme } from '../theme';
@@ -20,7 +20,7 @@ const Header = memo(({ user }: HeaderProps) => {
     <SafeAreaView style={styles.safeArea} edges={['top']} pointerEvents="box-none">
       <View style={styles.container} pointerEvents="box-none">
         <View style={styles.brandRow}>
-          <TrophyIcon width={14} height={14} />
+          <Ionicons name="trophy" size={14} color={colors.energy} />
           <Text weight="medium" style={styles.brand}>
             {APP_NAME}
           </Text>
@@ -35,7 +35,7 @@ const Header = memo(({ user }: HeaderProps) => {
 
 Header.displayName = 'Header';
 
-function createStyles(colors: { surface: string; ink: string }) {
+function createStyles(colors: { surface: string; ink: string; energy: string }) {
   return StyleSheet.create({
     safeArea: {
       position: 'absolute',

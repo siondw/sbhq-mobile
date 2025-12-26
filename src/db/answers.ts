@@ -116,3 +116,24 @@ export const subscribeToAnswersForParticipant = (
     filter: `participant_id=eq.${participantId}`,
     callback: onChange,
   });
+
+export interface AnswerDistribution {
+  answer: string;
+  count: number;
+}
+
+export const getAnswerDistribution = async (
+  contestId: string,
+  round: number,
+): AsyncResult<AnswerDistribution[], DbError> => {
+  const { data, error } = await SUPABASE_CLIENT.rpc('get_answer_distribution', {
+    p_contest_id: contestId,
+    p_round: round,
+  });
+
+  if (error) {
+    return Err(networkError(`Failed to get answer distribution: ${error.message}`));
+  }
+
+  return Ok(data as AnswerDistribution[]);
+};

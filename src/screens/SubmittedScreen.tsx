@@ -1,19 +1,21 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, Image, StyleSheet, View } from 'react-native';
-
-import ballGif from '../../assets/gifs/ball.gif';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
-import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
+import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
+import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
-import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
-import { resolveOptionLabel } from '../utils/questionOptions';
+import { GlassyTexture } from '../ui/textures';
+import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
+import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const SubmittedScreen = () => {
   const { colors } = useTheme();
@@ -22,10 +24,12 @@ const SubmittedScreen = () => {
   const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
-  const { loading, error, playerState, refresh, question, answer } = useContestState(
+  const { loading, error, playerState, refresh, question, answer, contest } = useContestState(
     contestId,
     derivedUser?.id,
   );
+  const { count: participantCount } = useParticipantCount(contestId);
+  const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
@@ -43,10 +47,7 @@ const SubmittedScreen = () => {
     }
   }, [playerState, router, contestId, loading]);
 
-  const selectedAnswerLabel = useMemo(() => {
-    const resolved = resolveOptionLabel(question?.options, answer?.answer);
-    return resolved ?? 'Awaiting selection';
-  }, [question?.options, answer?.answer]);
+  const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
 
   if (loading) {
     return (
@@ -71,23 +72,93 @@ const SubmittedScreen = () => {
     <View style={styles.container}>
       <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <Text weight="bold" style={styles.title}>
-          Submitted
-        </Text>
-        <Text style={styles.body}>You are locked in. Waiting for the result...</Text>
+        <View style={styles.scorebugSection}>
+          <Scorebug playerCount={participantCount} />
+        </View>
+        <View style={styles.statusSection}>
+          <Text weight="bold" style={styles.title}>
+            Answer Locked In
+          </Text>
+          <Text style={styles.subtitle}>Waiting for the round to end...</Text>
+        </View>
 
-        <AnswerSummaryCard
-          question={question?.question ?? 'Waiting for the next update'}
-          selectedAnswer={selectedAnswerLabel}
-        />
+        <GlassyTexture colors={colors} showShine={false} style={styles.questionCard}>
+          <View style={styles.questionSection}>
+            <Text weight="medium" style={[styles.questionLabel, { color: colors.muted }]}>
+              Question
+            </Text>
+            <Text weight="bold" style={[styles.questionText, { color: colors.ink }]}>
+              {question?.question ?? 'Waiting for the next update'}
+            </Text>
+          </View>
 
-        <Image source={ballGif} style={styles.submittedGif} />
+          <View style={[styles.divider, { backgroundColor: withAlpha(colors.ink, 0.1) }]} />
+
+          <View style={styles.optionsGrid}>
+            {options.map((option, index) => {
+              const isSelected = option.key === answer?.answer;
+              return (
+                <React.Fragment key={option.key}>
+                  {index > 0 && (
+                    <View
+                      style={[
+                        styles.verticalDivider,
+                        { backgroundColor: withAlpha(colors.ink, 0.1) },
+                      ]}
+                    />
+                  )}
+                  <View
+                    style={[
+                      styles.optionItem,
+                      isSelected && {
+                        backgroundColor: withAlpha(colors.primary, 0.1),
+                      },
+                    ]}
+                  >
+                    <Text
+                      weight="bold"
+                      style={[
+                        styles.optionKey,
+                        { color: isSelected ? colors.primary : colors.muted },
+                      ]}
+                    >
+                      {option.key}
+                    </Text>
+                    <Text
+                      weight="medium"
+                      style={[
+                        styles.optionLabel,
+                        { color: isSelected ? colors.ink : colors.muted },
+                      ]}
+                    >
+                      {option.label}
+                    </Text>
+                  </View>
+                </React.Fragment>
+              );
+            })}
+          </View>
+        </GlassyTexture>
+
+        {contest?.state === 'ROUND_CLOSED' && distribution.length > 0 && (
+          <View style={styles.chartSection}>
+            <AnswerDistributionChart
+              distribution={distribution.map((d) => ({
+                option: d.answer,
+                label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
+                count: d.count,
+              }))}
+              correctAnswer={null}
+              userAnswer={answer?.answer ?? null}
+            />
+          </View>
+        )}
       </View>
     </View>
   );
 };
 
-const createStyles = (colors: { background: string }) =>
+const createStyles = (colors: { background: string; muted: string; ink: string }) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -96,8 +167,6 @@ const createStyles = (colors: { background: string }) =>
     content: {
       flex: 1,
       paddingHorizontal: SPACING.MD,
-      justifyContent: 'center',
-      gap: SPACING.MD,
     },
     center: {
       flex: 1,
@@ -105,16 +174,64 @@ const createStyles = (colors: { background: string }) =>
       justifyContent: 'center',
       padding: SPACING.LG,
     },
+    scorebugSection: {
+      marginBottom: SPACING.XL * 3,
+    },
+    statusSection: {
+      alignItems: 'center',
+      marginBottom: SPACING.MD,
+    },
     title: {
       fontSize: TYPOGRAPHY.TITLE,
+      color: colors.ink,
+      marginBottom: SPACING.XS,
     },
-    body: {
+    subtitle: {
       fontSize: TYPOGRAPHY.BODY,
+      color: colors.muted,
+      textAlign: 'center',
     },
-    submittedGif: {
-      width: 240,
-      height: 240,
-      alignSelf: 'center',
+    questionCard: {
+      borderRadius: RADIUS.LG,
+      overflow: 'hidden',
+    },
+    questionSection: {
+      padding: SPACING.MD,
+      gap: SPACING.XS,
+    },
+    questionLabel: {
+      fontSize: TYPOGRAPHY.SMALL,
+      textTransform: 'uppercase',
+      letterSpacing: 1,
+    },
+    questionText: {
+      fontSize: TYPOGRAPHY.BODY,
+      lineHeight: 20,
+    },
+    divider: {
+      height: 1,
+    },
+    optionsGrid: {
+      flexDirection: 'row',
+    },
+    verticalDivider: {
+      width: 1,
+    },
+    optionItem: {
+      flex: 1,
+      padding: SPACING.SM,
+      alignItems: 'center',
+      gap: SPACING.XS,
+    },
+    optionKey: {
+      fontSize: TYPOGRAPHY.SUBTITLE,
+    },
+    optionLabel: {
+      fontSize: TYPOGRAPHY.SMALL - 1,
+      textAlign: 'center',
+    },
+    chartSection: {
+      marginTop: SPACING.MD,
     },
     spacer: {
       height: SPACING.SM,

@@ -24,60 +24,60 @@ const AnswerOption = ({ label, selected, disabled, onPress }: AnswerOptionProps)
         onPress={disabled ? undefined : onPress}
         style={({ pressed }) => [
           styles.moveRow,
-        {
-          backgroundColor: withAlpha(colors.surface, 0.4),
-          borderColor: withAlpha(colors.ink, 0.1),
-        },
-        selected && [styles.moveRowSelected, { borderColor: withAlpha(colors.energy, 0.42) }],
-        disabled && styles.disabled,
-        pressed && !disabled && styles.pressed,
-      ]}
-    >
-      {selected && (
-        <Animated.View
-          style={[
-            styles.selectionPulse,
-            {
-              backgroundColor: withAlpha(colors.energy, 0.2),
-              transform: [{ scale }],
-              opacity,
-            },
-          ]}
-        />
-      )}
-
-      <LinearGradient
-        colors={
-          selected
-            ? ([colors.energy, colors.ink] as const)
-            : ([withAlpha(colors.ink, 0.18), withAlpha(colors.ink, 0.06)] as const)
-        }
-        start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
-        style={styles.moveStripe}
-      />
-
-      <View style={styles.moveCopy}>
-        <Text weight="medium" style={[styles.moveLabel, { color: colors.ink }]}>
-          {label}
-        </Text>
-      </View>
-
-      <View
-        style={[
-          styles.radioOuter,
-          { borderColor: withAlpha(colors.ink, 0.2) },
-          selected && [styles.radioOuterSelected, { borderColor: withAlpha(colors.ink, 0.45) }],
+          {
+            backgroundColor: withAlpha(colors.surface, 0.4),
+            borderColor: withAlpha(colors.ink, 0.1),
+          },
+          selected && [styles.moveRowSelected, { borderColor: withAlpha(colors.energy, 0.42) }],
+          disabled && styles.disabled,
+          pressed && !disabled && styles.pressed,
         ]}
       >
+        {selected && (
+          <Animated.View
+            style={[
+              styles.selectionPulse,
+              {
+                backgroundColor: withAlpha(colors.energy, 0.2),
+                transform: [{ scale }],
+                opacity,
+              },
+            ]}
+          />
+        )}
+
+        <LinearGradient
+          colors={
+            selected
+              ? ([colors.energy, colors.ink] as const)
+              : ([withAlpha(colors.ink, 0.18), withAlpha(colors.ink, 0.06)] as const)
+          }
+          start={{ x: 0, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={styles.moveStripe}
+        />
+
+        <View style={styles.moveCopy}>
+          <Text weight="medium" style={[styles.moveLabel, { color: colors.ink }]}>
+            {label}
+          </Text>
+        </View>
+
         <View
           style={[
-            styles.radioInner,
-            selected && [styles.radioInnerSelected, { backgroundColor: colors.ink }],
+            styles.radioOuter,
+            { borderColor: withAlpha(colors.ink, 0.2) },
+            selected && [styles.radioOuterSelected, { borderColor: withAlpha(colors.ink, 0.45) }],
           ]}
-        />
-      </View>
-    </Pressable>
+        >
+          <View
+            style={[
+              styles.radioInner,
+              selected && [styles.radioInnerSelected, { backgroundColor: colors.ink }],
+            ]}
+          />
+        </View>
+      </Pressable>
     </Animated.View>
   );
 };

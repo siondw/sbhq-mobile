@@ -1,8 +1,6 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Animated,
   Image,
   ImageBackground,
   Platform,
@@ -16,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import AnswerOption from '../ui/components/AnswerOption';
 import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
+import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Button from '../ui/components/Button';
 import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';
@@ -31,7 +30,6 @@ import {
   TYPOGRAPHY,
   ThemeProvider,
   isDarkHex,
-  textOnHex,
   themeFromPlaygroundPalette,
   withAlpha,
   type PlaygroundPalette,
@@ -54,11 +52,13 @@ const noiseTexture = require('../../assets/noise.png');
 
 const PlaygroundScreen = () => {
   const router = useRouter();
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [selectedRealOption, setSelectedRealOption] = useState<string | null>('A');
   const [playersRemaining, setPlayersRemaining] = useState(1482);
   const [gifIndex, setGifIndex] = useState(0);
   const [paletteKey, setPaletteKey] = useState<string>(PLAYGROUND_PALETTES[0]?.key ?? 'current');
+  const [chartKey, setChartKey] = useState(0);
+  const [chartState, setChartState] = useState<'submitted' | 'correct' | 'eliminated'>('submitted');
+  const [statsVariant, setStatsVariant] = useState<'success' | 'eliminated'>('success');
 
   const palette: PlaygroundPalette = useMemo(() => {
     const found = PLAYGROUND_PALETTES.find((p) => p.key === paletteKey);
@@ -70,16 +70,6 @@ const PlaygroundScreen = () => {
       router.replace('/');
     }
   }, [router]);
-
-  const optionData = useMemo(
-    () => [
-      { key: 'A', label: 'Go for it on 4th & 2' },
-      { key: 'B', label: 'Punt and pin them deep' },
-      { key: 'C', label: 'Kick the FG' },
-      { key: 'D', label: 'Fake punt' },
-    ],
-    [],
-  );
 
   const darkTheme = useMemo(() => isDarkHex(palette.bg), [palette.bg]);
   const noiseOpacity = darkTheme ? 0.08 : 0.03;
@@ -145,7 +135,7 @@ const PlaygroundScreen = () => {
                 />
                 <Chip
                   label="Reset"
-                  onPress={() => reset(setSelectedOption, setPlayersRemaining)}
+                  onPress={() => reset(setSelectedRealOption, setPlayersRemaining)}
                   palette={palette}
                 />
               </Row>
@@ -161,11 +151,7 @@ const PlaygroundScreen = () => {
                 <View style={{ height: SPACING.MD }} />
                 <Button label="Primary CTA" onPress={() => {}} />
                 <View style={{ height: SPACING.SM }} />
-                <Button
-                  label="Secondary"
-                  variant="secondary"
-                  onPress={() => {}}
-                />
+                <Button label="Secondary" variant="secondary" onPress={() => {}} />
               </Card>
 
               <ContestListTicket
@@ -180,10 +166,7 @@ const PlaygroundScreen = () => {
                 onPress={() => {}}
               />
 
-              <ContestStatsCard
-                numberOfRemainingPlayers={playersRemaining}
-                roundNumber={5}
-              />
+              <ContestStatsCard numberOfRemainingPlayers={playersRemaining} roundNumber={5} />
 
               <AnswerSummaryCard
                 header="Round Recap"
@@ -198,6 +181,55 @@ const PlaygroundScreen = () => {
               <View style={styles.scorebugWrap}>
                 <Scorebug playerCount={playersRemaining} />
               </View>
+            </Section>
+
+            <Section title="Contest Stats Card" titleColor={palette.ink}>
+              <Row>
+                <Chip
+                  label="Success"
+                  onPress={() => setStatsVariant('success')}
+                  palette={palette}
+                />
+                <Chip
+                  label="Eliminated"
+                  onPress={() => setStatsVariant('eliminated')}
+                  palette={palette}
+                />
+              </Row>
+              <ContestStatsCard
+                numberOfRemainingPlayers={playersRemaining}
+                roundNumber={3}
+                variant={statsVariant}
+              />
+            </Section>
+
+            <Section title="Answer Distribution" titleColor={palette.ink}>
+              <Row>
+                <Chip
+                  label="Submitted"
+                  onPress={() => setChartState('submitted')}
+                  palette={palette}
+                />
+                <Chip label="Correct" onPress={() => setChartState('correct')} palette={palette} />
+                <Chip
+                  label="Eliminated"
+                  onPress={() => setChartState('eliminated')}
+                  palette={palette}
+                />
+                <Chip label="Replay" onPress={() => setChartKey((k) => k + 1)} palette={palette} />
+              </Row>
+
+              <AnswerDistributionChart
+                key={chartKey}
+                distribution={[
+                  { option: 'A', label: 'Go for it', count: 523 },
+                  { option: 'B', label: 'Punt', count: 312 },
+                  { option: 'C', label: 'Kick FG', count: 487 },
+                  { option: 'D', label: 'Fake punt', count: 160 },
+                ]}
+                correctAnswer={chartState === 'submitted' ? null : 'C'}
+                userAnswer={chartState === 'submitted' ? 'B' : chartState === 'correct' ? 'C' : 'A'}
+              />
             </Section>
 
             <Section title="AnswerOption (real)" titleColor={palette.ink}>
@@ -293,71 +325,6 @@ function nextPlayers(current: number): number {
   const index = stops.indexOf(current);
   return stops[(index + 1) % stops.length] ?? 1482;
 }
-
-const EnergyBar = ({ value, palette }: { value: number; palette: PlaygroundPalette }) => {
-  const clamped = Math.max(0, Math.min(1, value));
-  const danger = clamped >= 0.8;
-  const colors = danger
-    ? ([palette.danger, palette.warm] as const)
-    : ([palette.energy, palette.ink] as const);
-
-  return (
-    <View style={[styles.energyTrack, { backgroundColor: withAlpha(palette.ink, 0.1) }]}>
-      <LinearGradient
-        colors={colors}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
-        style={[styles.energyFill, { width: `${Math.round(clamped * 100)}%` }]}
-      />
-    </View>
-  );
-};
-
-const SheenButton = ({
-  label,
-  onPress,
-  palette,
-}: {
-  label: string;
-  onPress: () => void;
-  palette: PlaygroundPalette;
-}) => {
-  const sheen = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    const anim = Animated.loop(
-      Animated.sequence([
-        Animated.delay(900),
-        Animated.timing(sheen, { toValue: 1, duration: 1200, useNativeDriver: true }),
-        Animated.timing(sheen, { toValue: 0, duration: 0, useNativeDriver: true }),
-      ]),
-    );
-    anim.start();
-    return () => anim.stop();
-  }, [sheen]);
-
-  const translateX = sheen.interpolate({ inputRange: [0, 1], outputRange: [-120, 220] });
-  const labelColor = textOnHex(palette.primary);
-
-  return (
-    <Pressable
-      onPress={onPress}
-      style={({ pressed }) => [styles.sheenBtnWrap, pressed && styles.pressed]}
-    >
-      <LinearGradient
-        colors={[palette.primary, palette.ink] as const}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={[styles.sheenBtn, { shadowColor: palette.ink }]}
-      >
-        <Animated.View style={[styles.sheenSweep, { transform: [{ translateX }] }]} />
-        <Text weight="bold" style={[styles.sheenLabel, { color: labelColor }]}>
-          {label}
-        </Text>
-      </LinearGradient>
-    </Pressable>
-  );
-};
 
 const Section = ({
   title,
@@ -705,6 +672,18 @@ const styles = StyleSheet.create({
     width: '100%',
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.20)',
+  },
+  chartVariant: {
+    marginTop: SPACING.MD,
+    padding: SPACING.SM,
+    borderRadius: RADIUS.MD,
+    backgroundColor: withAlpha(COLORS.PRIMARY_DARK, 0.03),
+    gap: SPACING.SM,
+  },
+  variantTitle: {
+    fontSize: TYPOGRAPHY.SMALL,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
 });
 

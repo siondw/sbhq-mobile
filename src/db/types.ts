@@ -10,7 +10,7 @@ export type Database = {
     Tables: {
       answers: {
         Row: {
-          answer: string;
+          answer: Database['public']['Enums']['answer_option'];
           contest_id: string;
           id: string;
           participant_id: string | null;
@@ -19,7 +19,7 @@ export type Database = {
           timestamp: string | null;
         };
         Insert: {
-          answer: string;
+          answer: Database['public']['Enums']['answer_option'];
           contest_id: string;
           id?: string;
           participant_id?: string | null;
@@ -28,7 +28,7 @@ export type Database = {
           timestamp?: string | null;
         };
         Update: {
-          answer?: string;
+          answer?: Database['public']['Enums']['answer_option'];
           contest_id?: string;
           id?: string;
           participant_id?: string | null;
@@ -132,7 +132,7 @@ export type Database = {
       questions: {
         Row: {
           contest_id: string | null;
-          correct_option: string[] | null;
+          correct_option: Database['public']['Enums']['answer_option'][] | null;
           id: string;
           options: Json;
           question: string;
@@ -140,7 +140,7 @@ export type Database = {
         };
         Insert: {
           contest_id?: string | null;
-          correct_option?: string[] | null;
+          correct_option?: Database['public']['Enums']['answer_option'][] | null;
           id?: string;
           options: Json;
           question: string;
@@ -148,7 +148,7 @@ export type Database = {
         };
         Update: {
           contest_id?: string | null;
-          correct_option?: string[] | null;
+          correct_option?: Database['public']['Enums']['answer_option'][] | null;
           id?: string;
           options?: Json;
           question?: string;
@@ -196,9 +196,16 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      get_answer_distribution: {
+        Args: { p_contest_id: string; p_round: number };
+        Returns: {
+          answer: string;
+          count: number;
+        }[];
+      };
     };
     Enums: {
+      answer_option: 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
       contest_state: 'UPCOMING' | 'LOBBY_OPEN' | 'ROUND_IN_PROGRESS' | 'ROUND_CLOSED' | 'FINISHED';
     };
     CompositeTypes: {
@@ -325,6 +332,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      answer_option: ['A', 'B', 'C', 'D', 'E', 'F'],
       contest_state: ['UPCOMING', 'LOBBY_OPEN', 'ROUND_IN_PROGRESS', 'ROUND_CLOSED', 'FINISHED'],
     },
   },

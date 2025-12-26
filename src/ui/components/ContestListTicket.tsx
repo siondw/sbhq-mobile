@@ -77,10 +77,7 @@ const ContestListTicket = ({
       </View>
 
       <View
-        style={[
-          styles.cutoutLeft,
-          { backgroundColor: cutoutBackgroundColor ?? colors.background },
-        ]}
+        style={[styles.cutoutLeft, { backgroundColor: cutoutBackgroundColor ?? colors.background }]}
         pointerEvents="none"
       />
       <View
@@ -124,7 +121,14 @@ const ContestListTicket = ({
   );
 };
 
-function createStyles(colors: { muted: string; danger: string; surface: string; border: string; ink: string; background: string }) {
+function createStyles(colors: {
+  muted: string;
+  danger: string;
+  surface: string;
+  border: string;
+  ink: string;
+  background: string;
+}) {
   return StyleSheet.create({
     ticketWrap: {
       width: '100%',

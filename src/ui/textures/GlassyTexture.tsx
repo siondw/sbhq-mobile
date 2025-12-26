@@ -6,45 +6,50 @@ import { useShineAnimation } from '../animations';
 import { withAlpha } from '../theme';
 import type { GlassyTextureProps } from './types';
 
-const GlassyTexture = ({ colors, shinePreset = 'SUBTLE', style, children }: GlassyTextureProps) => {
+const GlassyTexture = ({
+  colors,
+  shinePreset = 'SUBTLE',
+  showShine = true,
+  style,
+  children,
+}: GlassyTextureProps) => {
   const { translateX: shineTranslateX, config } = useShineAnimation({ preset: shinePreset });
 
   return (
     <View style={[styles.container, style]}>
       {children}
       <LinearGradient
-        colors={[
-          withAlpha(colors.ink, 0.08),
-          'rgba(0,0,0,0.04)',
-        ]}
+        colors={[withAlpha(colors.ink, 0.08), 'rgba(0,0,0,0.04)']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradientOverlay}
         pointerEvents="none"
       />
-      <Animated.View
-        style={[
-          styles.shineContainer,
-          {
-            opacity: config.containerOpacity,
-            transform: [{ translateX: shineTranslateX }, { rotate: '35deg' }],
-          },
-        ]}
-        pointerEvents="none"
-      >
-        <LinearGradient
-          colors={[
-            'rgba(255, 255, 255, 0)',
-            `rgba(255, 255, 255, ${config.maxOpacity * 0.5})`,
-            `rgba(255, 255, 255, ${config.maxOpacity})`,
-            `rgba(255, 255, 255, ${config.maxOpacity * 0.5})`,
-            'rgba(255, 255, 255, 0)',
+      {showShine && (
+        <Animated.View
+          style={[
+            styles.shineContainer,
+            {
+              opacity: config.containerOpacity,
+              transform: [{ translateX: shineTranslateX }, { rotate: '35deg' }],
+            },
           ]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-          style={styles.shine}
-        />
-      </Animated.View>
+          pointerEvents="none"
+        >
+          <LinearGradient
+            colors={[
+              'rgba(255, 255, 255, 0)',
+              `rgba(255, 255, 255, ${config.maxOpacity * 0.5})`,
+              `rgba(255, 255, 255, ${config.maxOpacity})`,
+              `rgba(255, 255, 255, ${config.maxOpacity * 0.5})`,
+              'rgba(255, 255, 255, 0)',
+            ]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.shine}
+          />
+        </Animated.View>
+      )}
     </View>
   );
 };

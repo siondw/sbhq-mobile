@@ -4,17 +4,18 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
-import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
+import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
-import { resolveOptionLabel, resolveOptionLabels } from '../utils/questionOptions';
+import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const EliminatedScreen = () => {
   const { colors } = useTheme();
@@ -26,6 +27,10 @@ const EliminatedScreen = () => {
   const { count: remainingPlayers } = useParticipantCount(contestId);
   const { loading, error, playerState, refresh, contest, participant, question, answer } =
     useContestState(contestId, derivedUser?.id);
+  const { distribution } = useAnswerDistribution(
+    contestId,
+    participant?.elimination_round ?? undefined,
+  );
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
@@ -43,15 +48,6 @@ const EliminatedScreen = () => {
   }, [playerState, router, contestId, loading]);
 
   const eliminatedRound = participant?.elimination_round ?? contest?.current_round ?? 1;
-
-  const selectedAnswerLabel = useMemo(() => {
-    return resolveOptionLabel(question?.options, answer?.answer) ?? 'No answer';
-  }, [question?.options, answer?.answer]);
-
-  const correctAnswerLabel = useMemo(() => {
-    const labels = resolveOptionLabels(question?.options, question?.correct_option);
-    return labels ? labels.join(', ') : null;
-  }, [question?.options, question?.correct_option]);
 
   if (loading) {
     return (
@@ -80,21 +76,30 @@ const EliminatedScreen = () => {
           <Text weight="bold" style={styles.title}>
             Eliminated
           </Text>
-          <Text style={styles.body}>You are out for this contest. Thanks for playing.</Text>
         </View>
-
-        <AnswerSummaryCard
-          header="Round Summary"
-          roundLabel={`Eliminated in Round ${eliminatedRound}`}
-          question={question?.question ?? 'Waiting for the round details'}
-          selectedAnswer={selectedAnswerLabel}
-          correctAnswer={correctAnswerLabel}
-        />
 
         <ContestStatsCard
           numberOfRemainingPlayers={remainingPlayers}
-          roundNumber={contest?.current_round ?? eliminatedRound}
+          roundNumber={eliminatedRound}
+          variant="eliminated"
         />
+
+        {distribution.length > 0 && question?.correct_option && (
+          <View style={styles.chartSection}>
+            <AnswerDistributionChart
+              distribution={distribution.map((d) => {
+                const options = normalizeQuestionOptions(question?.options);
+                return {
+                  option: d.answer,
+                  label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
+                  count: d.count,
+                };
+              })}
+              correctAnswer={question.correct_option?.[0] ?? null}
+              userAnswer={answer?.answer ?? null}
+            />
+          </View>
+        )}
 
         <View style={styles.footer}>
           <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
@@ -124,16 +129,23 @@ const createStyles = (colors: { background: string; danger: string }) =>
     },
     headerBlock: {
       gap: SPACING.XS,
+      alignItems: 'center',
+      marginBottom: SPACING.LG,
     },
     title: {
-      fontSize: TYPOGRAPHY.TITLE,
+      fontSize: 64,
       color: colors.danger,
+      textAlign: 'center',
     },
     body: {
       fontSize: TYPOGRAPHY.BODY,
+      textAlign: 'center',
     },
     footer: {
       marginTop: SPACING.SM,
+    },
+    chartSection: {
+      marginTop: SPACING.MD,
     },
     spacer: {
       height: SPACING.SM,

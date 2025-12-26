@@ -2,10 +2,10 @@ import { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 import { SELECTION_PRESET, SHINE_PRESET } from './constants';
 import type {
-    SelectionAnimationResult,
-    ShineAnimationResult,
-    UseSelectionAnimationOptions,
-    UseShineAnimationOptions,
+  SelectionAnimationResult,
+  ShineAnimationResult,
+  UseSelectionAnimationOptions,
+  UseShineAnimationOptions,
 } from './types';
 
 export const useShineAnimation = (options: UseShineAnimationOptions = {}): ShineAnimationResult => {
@@ -17,7 +17,6 @@ export const useShineAnimation = (options: UseShineAnimationOptions = {}): Shine
     containerOpacity: customContainerOpacity,
     startX = -200,
     endX = 600,
-    loop = false,
   } = options;
 
   const presetConfig = SHINE_PRESET[preset];

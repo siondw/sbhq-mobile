@@ -19,6 +19,7 @@ UI Nits:
 - Submitted Screen
   -- [x] Removed full white container; only summary card uses surface background.
   -- [x] Added question + selected answer summary via reusable AnswerSummaryCard.
+  -- [ ] Add football animation moving left-to-right underneath the question/answer card as waiting indicator.
 
 - Eliminated Screen
   -- [x] Updated styling, show eliminated round and answer comparison.
