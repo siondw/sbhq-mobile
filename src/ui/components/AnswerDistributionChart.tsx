@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { GlassyTexture } from '../textures';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
@@ -42,20 +42,17 @@ const AnswerDistributionChart = ({
     const animations = animatedValues.map((animValue) =>
       Animated.timing(animValue, {
         toValue: 1,
-        duration: 500,
+        duration: 1200,
+        easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }),
     );
 
-    Animated.stagger(100, animations).start();
+    Animated.stagger(300, animations).start();
   }, [animatedValues]);
 
   return (
     <View style={styles.container}>
-      <Text weight="bold" style={[styles.header, { color: colors.ink }]}>
-        Answer Distribution
-      </Text>
-
       <View style={styles.chartContainer}>
         {correctAnswer && userAnswer && userAnswer !== correctAnswer && (
           <View style={styles.legend}>
@@ -91,6 +88,9 @@ const AnswerDistributionChart = ({
             outputRange: ['0%', `${barHeight}%`],
           });
 
+          const labelLength = item.label.length;
+          const fontSize = labelLength > 12 ? TYPOGRAPHY.SMALL : TYPOGRAPHY.BODY;
+
           return (
             <View key={item.option} style={styles.barWrapper}>
               <View style={styles.barContainer}>
@@ -123,7 +123,7 @@ const AnswerDistributionChart = ({
                   </GlassyTexture>
                 </Animated.View>
               </View>
-              <Text weight="bold" style={[styles.optionLabel, { color: colors.ink }]}>
+              <Text weight="bold" style={[styles.optionLabel, { color: colors.ink, fontSize }]}>
                 {item.label}
               </Text>
             </View>
@@ -153,12 +153,12 @@ const styles = StyleSheet.create({
   barWrapper: {
     flex: 1,
     alignItems: 'center',
-    gap: SPACING.XS,
   },
   barContainer: {
-    flex: 1,
+    height: 140,
     width: '100%',
     justifyContent: 'flex-end',
+    marginBottom: SPACING.XS,
   },
   barOuter: {
     width: '100%',
@@ -184,12 +184,14 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.SMALL - 2,
   },
   optionLabel: {
-    fontSize: TYPOGRAPHY.BODY,
+    textAlign: 'center',
+    height: 36,
+    lineHeight: 18,
   },
   legend: {
     position: 'absolute',
-    top: SPACING.XS,
-    right: SPACING.XS,
+    top: -SPACING.SM,
+    right: SPACING.MD,
     flexDirection: 'column',
     gap: 4,
     backgroundColor: withAlpha('#000000', 0.05),

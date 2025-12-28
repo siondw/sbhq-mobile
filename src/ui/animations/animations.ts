@@ -2,10 +2,10 @@ import { useEffect, useRef } from 'react';
 import { Animated } from 'react-native';
 import { SELECTION_PRESET, SHINE_PRESET } from './constants';
 import type {
-    SelectionAnimationResult,
-    ShineAnimationResult,
-    UseSelectionAnimationOptions,
-    UseShineAnimationOptions,
+  SelectionAnimationResult,
+  ShineAnimationResult,
+  UseSelectionAnimationOptions,
+  UseShineAnimationOptions,
 } from './types';
 
 export const useShineAnimation = (options: UseShineAnimationOptions = {}): ShineAnimationResult => {
@@ -17,6 +17,7 @@ export const useShineAnimation = (options: UseShineAnimationOptions = {}): Shine
     containerOpacity: customContainerOpacity,
     startX = -200,
     endX = 600,
+    loop = true,
   } = options;
 
   const presetConfig = SHINE_PRESET[preset];
@@ -27,26 +28,43 @@ export const useShineAnimation = (options: UseShineAnimationOptions = {}): Shine
   const containerOpacity = customContainerOpacity ?? presetConfig.containerOpacity;
 
   const shine = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const shineAnim = Animated.loop(
-      Animated.sequence([
-        Animated.delay(delay),
+    const shineSequence = Animated.sequence([
+      Animated.delay(delay),
+      Animated.parallel([
         Animated.timing(shine, {
           toValue: 1,
           duration,
           useNativeDriver: true,
         }),
-        Animated.timing(shine, {
-          toValue: 0,
-          duration: 0,
+        Animated.timing(opacity, {
+          toValue: maxOpacity,
+          duration: duration / 2,
           useNativeDriver: true,
         }),
       ]),
-    );
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: duration / 2,
+        useNativeDriver: true,
+      }),
+      Animated.timing(shine, {
+        toValue: 0,
+        duration: 0,
+        useNativeDriver: true,
+      }),
+    ]);
+
+    const shineAnim = loop ? Animated.loop(shineSequence) : shineSequence;
     shineAnim.start();
-    return () => shineAnim.stop();
-  }, [shine, delay, duration]);
+    return () => {
+      if ('stop' in shineAnim) {
+        shineAnim.stop();
+      }
+    };
+  }, [shine, opacity, delay, duration, maxOpacity, loop]);
 
   const translateX = shine.interpolate({
     inputRange: [0, 1],
@@ -55,6 +73,7 @@ export const useShineAnimation = (options: UseShineAnimationOptions = {}): Shine
 
   return {
     translateX,
+    opacity,
     config: {
       maxOpacity,
       containerOpacity,

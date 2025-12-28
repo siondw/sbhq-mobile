@@ -30,7 +30,10 @@ UI Nits:
 
 Priority Fixes:
 
-P3
+P1
+
+- [ ] Audit listneers and hooks, optimize where needed
+      P3
 
 - [ ] Consolidate participant lookup into a single call (avoid double fetch in getParticipantForUser/getOrCreateParticipant).
       Logging (debug-only)

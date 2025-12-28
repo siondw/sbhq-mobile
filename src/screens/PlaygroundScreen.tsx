@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
+  Animated,
   Image,
   ImageBackground,
   Platform,
@@ -11,10 +12,12 @@ import {
   type ImageSourcePropType,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
+import { Ionicons } from '@expo/vector-icons';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
+import { useShineAnimation } from '../ui/animations';
 import AnswerOption from '../ui/components/AnswerOption';
-import AnswerSummaryCard from '../ui/components/AnswerSummaryCard';
 import Button from '../ui/components/Button';
 import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';
@@ -50,6 +53,167 @@ const footballGifs: Array<{ label: string; source: ImageSourcePropType }> = [
 
 const noiseTexture = require('../../assets/noise.png');
 
+// Correct screen animation component for playground
+const CorrectAnimation = ({ color }: { color: string }) => {
+  const checkmarkScale = useRef(new Animated.Value(0)).current;
+  const checkmarkOpacity = useRef(new Animated.Value(0)).current;
+  const textScale = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+
+  const contentAnim = useRef(new Animated.Value(0)).current;
+  const chartAnim = useRef(new Animated.Value(0)).current;
+  const [showChart, setShowChart] = useState(false);
+
+  const {
+    translateX: shineTranslateX,
+    opacity: shineOpacity,
+    config: shineConfig,
+  } = useShineAnimation({
+    preset: 'NORMAL',
+    delay: 400,
+    loop: false,
+  });
+
+  useEffect(() => {
+    // Reset chart visibility
+    setShowChart(false);
+
+    // Checkmark and text scale/fade in together
+    Animated.parallel([
+      Animated.spring(checkmarkScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(checkmarkOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.spring(textScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(textOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Summary container fades in after text+shine complete (~1400ms)
+    Animated.sequence([
+      Animated.delay(1400),
+      Animated.timing(contentAnim, {
+        toValue: 1,
+        duration: 500,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Chart fades in after summary (~2100ms)
+    setTimeout(() => setShowChart(true), 2100);
+    Animated.sequence([
+      Animated.delay(2100),
+      Animated.timing(chartAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [checkmarkScale, checkmarkOpacity, textScale, textOpacity, contentAnim, chartAnim]);
+
+  return (
+    <View style={styles.eliminatedPreview}>
+      <View style={{ alignItems: 'center' }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: SPACING.SM,
+            position: 'relative',
+            overflow: 'hidden',
+          }}
+        >
+          <Animated.View
+            style={{
+              opacity: textOpacity,
+              transform: [{ scale: textScale }],
+            }}
+          >
+            <Text
+              weight="bold"
+              style={{ fontSize: 56, color, textAlign: 'center', letterSpacing: -1 }}
+            >
+              Correct!
+            </Text>
+          </Animated.View>
+          <Animated.View
+            style={{
+              opacity: checkmarkOpacity,
+              transform: [{ scale: checkmarkScale }],
+            }}
+          >
+            <Ionicons name="checkmark" size={64} color={color} />
+          </Animated.View>
+          <Animated.View
+            style={{
+              position: 'absolute',
+              top: -120,
+              left: -150,
+              width: 600,
+              height: 200,
+              borderRadius: 200,
+              overflow: 'hidden',
+              zIndex: 2,
+              opacity: shineOpacity,
+              transform: [{ translateX: shineTranslateX }, { rotate: '-35deg' }],
+            }}
+            pointerEvents="none"
+          >
+            <LinearGradient
+              colors={[
+                'rgba(255, 255, 255, 0)',
+                'rgba(255, 255, 255, 0.04)',
+                'rgba(255, 255, 255, 0.08)',
+                'rgba(255, 255, 255, 0.03)',
+                'rgba(255, 255, 255, 0.1)',
+                'rgba(255, 255, 255, 0.12)',
+                'rgba(255, 255, 255, 0.08)',
+                'rgba(255, 255, 255, 0.04)',
+                'rgba(255, 255, 255, 0)',
+              ]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={{ flex: 1, width: '100%', height: '100%' }}
+            />
+          </Animated.View>
+        </View>
+      </View>
+      <Animated.View style={{ marginTop: SPACING.LG, width: '100%', opacity: contentAnim }}>
+        <ContestStatsCard numberOfRemainingPlayers={342} roundNumber={5} variant="success" />
+      </Animated.View>
+      <Animated.View style={{ marginTop: SPACING.XL, width: '100%', opacity: chartAnim }}>
+        {showChart && (
+          <AnswerDistributionChart
+            distribution={[
+              { option: 'A', label: 'Go for it', count: 523 },
+              { option: 'B', label: 'Punt', count: 312 },
+              { option: 'C', label: 'Kick FG', count: 487 },
+              { option: 'D', label: 'Fake punt', count: 160 },
+            ]}
+            correctAnswer="C"
+            userAnswer="C"
+          />
+        )}
+      </Animated.View>
+    </View>
+  );
+};
+
 const PlaygroundScreen = () => {
   const router = useRouter();
   const [selectedRealOption, setSelectedRealOption] = useState<string | null>('A');
@@ -59,6 +223,7 @@ const PlaygroundScreen = () => {
   const [chartKey, setChartKey] = useState(0);
   const [chartState, setChartState] = useState<'submitted' | 'correct' | 'eliminated'>('submitted');
   const [statsVariant, setStatsVariant] = useState<'success' | 'eliminated'>('success');
+  const [checkmarkKey, setCheckmarkKey] = useState(0);
 
   const palette: PlaygroundPalette = useMemo(() => {
     const found = PLAYGROUND_PALETTES.find((p) => p.key === paletteKey);
@@ -167,14 +332,6 @@ const PlaygroundScreen = () => {
               />
 
               <ContestStatsCard numberOfRemainingPlayers={playersRemaining} roundNumber={5} />
-
-              <AnswerSummaryCard
-                header="Round Recap"
-                roundLabel="Live"
-                question="Which team scores first?"
-                selectedAnswer={selectedRealOption ?? '—'}
-                correctAnswer={null}
-              />
             </Section>
 
             <Section title="Scorebug" titleColor={palette.ink}>
@@ -201,6 +358,17 @@ const PlaygroundScreen = () => {
                 roundNumber={3}
                 variant={statsVariant}
               />
+            </Section>
+
+            <Section title="Correct Screen Header" titleColor={palette.ink}>
+              <Row>
+                <Chip
+                  label="Replay Animation"
+                  onPress={() => setCheckmarkKey((k) => k + 1)}
+                  palette={palette}
+                />
+              </Row>
+              <CorrectAnimation key={checkmarkKey} color={theme.colors.success} />
             </Section>
 
             <Section title="Answer Distribution" titleColor={palette.ink}>
@@ -684,6 +852,11 @@ const styles = StyleSheet.create({
     fontSize: TYPOGRAPHY.SMALL,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  eliminatedPreview: {
+    padding: SPACING.LG,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

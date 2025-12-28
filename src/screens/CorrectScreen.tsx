@@ -1,6 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { ActivityIndicator, Animated, StyleSheet, View } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+import { Ionicons } from '@expo/vector-icons';
 
 import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
@@ -10,12 +13,12 @@ import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
+import { useShineAnimation } from '../ui/animations';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
-import Card from '../ui/components/Card';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import Text from '../ui/components/Text';
-import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
+import { SPACING, useTheme } from '../ui/theme';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const CorrectScreen = () => {
@@ -31,6 +34,81 @@ const CorrectScreen = () => {
   );
   const { count: remainingPlayers } = useParticipantCount(contestId);
   const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
+
+  // Staggered scale/fade animations
+  const checkmarkScale = useRef(new Animated.Value(0)).current;
+  const checkmarkOpacity = useRef(new Animated.Value(0)).current;
+  const textScale = useRef(new Animated.Value(0)).current;
+  const textOpacity = useRef(new Animated.Value(0)).current;
+
+  const contentAnim = useRef(new Animated.Value(0)).current;
+  const chartAnim = useRef(new Animated.Value(0)).current;
+  const [showChart, setShowChart] = useState(false);
+
+  const {
+    translateX: shineTranslateX,
+    opacity: shineOpacity,
+  } = useShineAnimation({
+    preset: 'NORMAL',
+    delay: 800,
+    loop: false,
+  });
+
+  useEffect(() => {
+    // Checkmark scales and fades in
+    Animated.parallel([
+      Animated.spring(checkmarkScale, {
+        toValue: 1,
+        tension: 50,
+        friction: 7,
+        useNativeDriver: true,
+      }),
+      Animated.timing(checkmarkOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Text scales and fades in 400ms later
+    Animated.sequence([
+      Animated.delay(400),
+      Animated.parallel([
+        Animated.spring(textScale, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+        Animated.timing(textOpacity, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]),
+    ]).start();
+
+    // Content fades in 1000ms later
+    Animated.sequence([
+      Animated.delay(1000),
+      Animated.timing(contentAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Show chart at 1600ms, then fade it in
+    setTimeout(() => setShowChart(true), 1600);
+    Animated.sequence([
+      Animated.delay(1600),
+      Animated.timing(chartAnim, {
+        toValue: 1,
+        duration: 600,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [checkmarkScale, checkmarkOpacity, textScale, textOpacity, contentAnim, chartAnim]);
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
@@ -70,21 +148,74 @@ const CorrectScreen = () => {
     <View style={styles.container}>
       <Header user={derivedUser} />
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <Card>
-          <Text weight="bold" style={styles.title}>
-            Correct!
-          </Text>
-          <Text style={styles.body}>Nice work. Waiting for the next round.</Text>
-        </Card>
-        <View style={styles.summary}>
+        <View style={styles.headerBlock}>
+          <View
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: SPACING.SM,
+              position: 'relative',
+              overflow: 'hidden',
+            }}
+          >
+            <Animated.View
+              style={{
+                opacity: textOpacity,
+                transform: [{ scale: textScale }],
+              }}
+            >
+              <Text weight="bold" style={styles.title}>
+                Correct!
+              </Text>
+            </Animated.View>
+            <Animated.View
+              style={{
+                opacity: checkmarkOpacity,
+                transform: [{ scale: checkmarkScale }],
+              }}
+            >
+              <Ionicons name="checkmark" size={64} color={colors.success} />
+            </Animated.View>
+            <Animated.View
+              style={[
+                styles.shineContainer,
+                {
+                  opacity: shineOpacity,
+                  transform: [{ translateX: shineTranslateX }, { rotate: '-15deg' }],
+                },
+              ]}
+              pointerEvents="none"
+            >
+              <LinearGradient
+                colors={[
+                  'rgba(255, 255, 255, 0)',
+                  'rgba(255, 255, 255, 0.15)',
+                  'rgba(255, 255, 255, 0.25)',
+                  'rgba(255, 255, 255, 0.12)',
+                  'rgba(255, 255, 255, 0.3)',
+                  'rgba(255, 255, 255, 0.4)',
+                  'rgba(255, 255, 255, 0.25)',
+                  'rgba(255, 255, 255, 0.12)',
+                  'rgba(255, 255, 255, 0)',
+                ]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.shine}
+              />
+            </Animated.View>
+          </View>
+        </View>
+
+        <Animated.View style={[styles.statsSection, { opacity: contentAnim }]}>
           <ContestStatsCard
             numberOfRemainingPlayers={remainingPlayers}
             roundNumber={contest?.current_round ?? 1}
+            variant="success"
           />
-        </View>
+        </Animated.View>
 
-        {distribution.length > 0 && question?.correct_option && (
-          <View style={styles.chartSection}>
+        {distribution.length > 0 && question?.correct_option && showChart && (
+          <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
             <AnswerDistributionChart
               distribution={distribution.map((d) => {
                 const options = normalizeQuestionOptions(question?.options);
@@ -97,14 +228,14 @@ const CorrectScreen = () => {
               correctAnswer={question.correct_option?.[0] ?? null}
               userAnswer={answer?.answer ?? null}
             />
-          </View>
+          </Animated.View>
         )}
       </View>
     </View>
   );
 };
 
-const createStyles = (colors: { background: string }) =>
+const createStyles = (colors: { background: string; success: string }) =>
   StyleSheet.create({
     container: {
       flex: 1,
@@ -113,7 +244,8 @@ const createStyles = (colors: { background: string }) =>
     content: {
       flex: 1,
       paddingHorizontal: SPACING.MD,
-      justifyContent: 'center',
+      paddingTop: SPACING.XL,
+      gap: SPACING.LG,
     },
     center: {
       flex: 1,
@@ -121,18 +253,39 @@ const createStyles = (colors: { background: string }) =>
       justifyContent: 'center',
       padding: SPACING.LG,
     },
+    headerBlock: {
+      alignItems: 'center',
+      gap: SPACING.XS,
+    },
+    iconContainer: {
+      marginTop: SPACING.XS,
+    },
     title: {
-      fontSize: TYPOGRAPHY.TITLE,
-      marginBottom: SPACING.XS,
+      fontSize: 56,
+      color: colors.success,
+      textAlign: 'center',
+      letterSpacing: -1,
     },
-    body: {
-      fontSize: TYPOGRAPHY.BODY,
-    },
-    summary: {
-      marginTop: SPACING.MD,
+    statsSection: {
+      marginTop: SPACING.LG,
     },
     chartSection: {
-      marginTop: SPACING.MD,
+      marginTop: SPACING.XL,
+    },
+    shineContainer: {
+      position: 'absolute',
+      top: -120,
+      left: -150,
+      width: 600,
+      height: 200,
+      borderRadius: 200,
+      overflow: 'hidden',
+      zIndex: 2,
+    },
+    shine: {
+      flex: 1,
+      width: '100%',
+      height: '100%',
     },
     spacer: {
       height: SPACING.SM,

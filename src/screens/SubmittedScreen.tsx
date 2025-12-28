@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { ROUTES } from '../configs/routes';
-import { PLAYER_STATE } from '../logic/constants';
+import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
@@ -28,8 +28,17 @@ const SubmittedScreen = () => {
     contestId,
     derivedUser?.id,
   );
+
   const { count: participantCount } = useParticipantCount(contestId);
-  const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
+
+  const roundToFetch =
+    contest?.state === CONTEST_STATE.ROUND_CLOSED && contest.current_round !== null
+      ? contest.current_round
+      : undefined;
+
+  const { distribution } = useAnswerDistribution(contestId, roundToFetch);
+
+  useEffect(() => {}, [contest?.state, distribution.length]);
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
@@ -140,7 +149,7 @@ const SubmittedScreen = () => {
           </View>
         </GlassyTexture>
 
-        {contest?.state === 'ROUND_CLOSED' && distribution.length > 0 && (
+        {contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0 && (
           <View style={styles.chartSection}>
             <AnswerDistributionChart
               distribution={distribution.map((d) => ({

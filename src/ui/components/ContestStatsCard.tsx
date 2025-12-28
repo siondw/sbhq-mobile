@@ -50,7 +50,7 @@ const ContestStatsCard = ({
       )}
       {!isEliminated && (
         <View style={styles.statItem}>
-          <Ionicons name="logo-usd" size={ICON_SIZE} color={colors.energy} />
+          <Ionicons name="logo-usd" size={ICON_SIZE} color={iconColor} />
           <Text style={styles.text}>{chanceOfWinning}% Chance of Winning</Text>
         </View>
       )}
