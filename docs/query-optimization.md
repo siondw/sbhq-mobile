@@ -2,18 +2,15 @@
 
 ## Context
 
-Optimizing data fetching and realtime subscriptions for SBHQ mobile app to support 20-1000 concurrent users per contest.
+Optimizing data fetching and realtime subscriptions for SBHQ mobile app. Goals:
 
-## Root Problem
-
-- ❌ Multiple screens independently call `useContestState`, creating duplicate subscriptions
-- ❌ Each screen has separate state instance - when realtime updates fire, only one instance updates
-- ❌ Other screens don't re-render because they have stale state
-- ❌ Original bug: AnswerDistributionChart doesn't appear when contest state changes
+- Single source of truth for contest state across all screens
+- Reduce subscription setup/teardown churn during navigation
+- Cleaner architecture with screens consuming shared context
 
 ## Solution Overview
 
-Create `ContestStateProvider` context to share single subscription and state across all screens.
+Create `ContestStateProvider` context using Expo Router's **route groups** to share a single `useContestState` instance across all contest-flow screens.
 
 ---
 
@@ -23,124 +20,175 @@ Create `ContestStateProvider` context to share single subscription and state acr
 
 - [ ] Create `src/logic/contexts/` folder
 - [ ] Create `src/logic/contexts/ContestStateContext.tsx`
-  - [ ] Accept `contestId` and `userId` as props
-  - [ ] Manage single `useContestState` instance
-  - [ ] Manage single `useParticipantCount` instance
-  - [ ] Manage `useAnswerDistribution` with caching by round
-  - [ ] Watch for `correct_option` updates on current round → refetch distribution
-  - [ ] Export `ContestStateProvider` component
-  - [ ] Export `useContestData()` hook
-  - [ ] Add proper TypeScript types
+  - [ ] Define `ContestStateContextValue` type (mirrors `UseContestStateResult`)
+  - [ ] Create React Context with `createContext<ContestStateContextValue | null>(null)`
+  - [ ] Create `ContestStateProvider` component that:
+    - [ ] Accepts `contestId` and `userId` as props
+    - [ ] Calls `useContestState(contestId, userId)` internally
+    - [ ] Provides state via Context.Provider
+  - [ ] Create `useContestData()` hook that:
+    - [ ] Calls `useContext(ContestStateContext)`
+    - [ ] Throws helpful error if used outside provider
+  - [ ] Export `ContestStateProvider` and `useContestData`
+- [ ] Create `src/logic/contexts/index.ts` barrel export
 
-### Phase 2: Integrate Provider
+### Phase 2: Create Route Group & Integrate Provider
 
-- [ ] Update `app/_layout.tsx`
+- [ ] Create `app/(contest)/` route group folder
+- [ ] Move contest-flow routes into route group:
+  - [ ] `app/lobby/index.tsx` → `app/(contest)/lobby/index.tsx`
+  - [ ] `app/submitted/index.tsx` → `app/(contest)/submitted/index.tsx`
+  - [ ] `app/correct/index.tsx` → `app/(contest)/correct/index.tsx`
+  - [ ] `app/eliminated/index.tsx` → `app/(contest)/eliminated/index.tsx`
+  - [ ] `app/winner/index.tsx` → `app/(contest)/winner/index.tsx`
+  - [ ] `app/contest/[contestId].tsx` → `app/(contest)/game/[contestId].tsx`
+- [ ] Create `app/(contest)/_layout.tsx`:
   - [ ] Import `ContestStateProvider` and `useAuth`
-  - [ ] Extract `contestId` from route segments/searchParams using `useSegments()` and `useLocalSearchParams()`
+  - [ ] Extract `contestId` from `useLocalSearchParams()`
   - [ ] Get `userId` from `useAuth().derivedUser?.id`
-  - [ ] Conditionally wrap `Slot` with provider when in contest flow
-  - [ ] Pass `contestId` and `userId` as props to provider
+  - [ ] Wrap `<Slot />` with `<ContestStateProvider contestId={contestId} userId={userId}>`
+  - [ ] Add `<Stack>` navigator with `headerShown: false`
+- [ ] Update `app/_layout.tsx`:
+  - [ ] Remove individual contest screen Stack.Screen entries
+  - [ ] Route group handles its own layout
 
 ### Phase 3: Update Screens to Use Context
 
 - [ ] Update `src/screens/LobbyScreen.tsx`
-  - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Replace `useParticipantCount()` with `participantCount` from context
-  - [ ] Remove `contestId` and `userId` params (get from context)
+  - [ ] Replace `useContestState(params.contestId, derivedUser?.id)` with `useContestData()`
+  - [ ] Keep `useParticipantCount` as-is (separate polling hook)
+  - [ ] Remove `contestId` extraction from params (get from context)
 
 - [ ] Update `src/screens/GameScreen.tsx`
   - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Replace `useParticipantCount()` with `participantCount` from context
-  - [ ] Remove `contestId` and `userId` params (get from context)
+  - [ ] Keep `useParticipantCount` as-is
+  - [ ] Remove `contestId` extraction from params
 
 - [ ] Update `src/screens/SubmittedScreen.tsx`
   - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Replace `useParticipantCount()` with `participantCount` from context
-  - [ ] Replace `useAnswerDistribution()` with `getDistributionForRound()` from context
-  - [ ] Remove `contestId` and `userId` params (get from context)
-  - [ ] Remove debug console.logs
+  - [ ] Keep `useParticipantCount` as-is
+  - [ ] Keep `useAnswerDistribution` as-is (screens manage their own distribution fetching)
+  - [ ] Remove `contestId` extraction from params
 
 - [ ] Update `src/screens/CorrectScreen.tsx`
   - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Replace `useParticipantCount()` with `participantCount` from context
-  - [ ] Replace `useAnswerDistribution()` with `getDistributionForRound()` from context
-  - [ ] Remove `contestId` and `userId` params (get from context)
+  - [ ] Keep `useParticipantCount` as-is
+  - [ ] Keep `useAnswerDistribution` as-is
+  - [ ] Remove `contestId` extraction from params
 
 - [ ] Update `src/screens/EliminatedScreen.tsx`
   - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Replace `useParticipantCount()` with `participantCount` from context
-  - [ ] Replace `useAnswerDistribution()` with `getDistributionForRound()` from context
-  - [ ] Remove `contestId` and `userId` params (get from context)
+  - [ ] Keep `useParticipantCount` as-is
+  - [ ] Keep `useAnswerDistribution` as-is
+  - [ ] Remove `contestId` extraction from params
 
 - [ ] Update `src/screens/WinnerScreen.tsx`
   - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Replace `useParticipantCount()` with `participantCount` from context
-  - [ ] Remove `contestId` and `userId` params (get from context)
+  - [ ] Keep `useParticipantCount` as-is
+  - [ ] Remove `contestId` extraction from params
 
-### Phase 4: Clean Up Debug Logs
+### Phase 4: Update Route References
 
-- [ ] Remove console.logs from `src/logic/hooks/useContestState.ts`
-  - [ ] Line 43: "Current contest state in hook"
-  - [ ] Line 131-132: "Contest state changed to" and "Calling setContest with"
-  - [ ] Line 217: "Hook returning contest state"
+- [ ] Update `src/configs/routes.ts` if route paths changed
+- [ ] Search codebase for hardcoded route strings and update
+- [ ] Verify `router.replace()` calls in screens still work with new paths
 
-- [ ] Remove console.logs from `src/logic/hooks/useAnswerDistribution.ts`
-  - [ ] Line 27: "Starting fetch - round"
-  - [ ] Line 39: "Success - got X items"
-  - [ ] Line 42: "Error"
+### Phase 5: Code Quality
 
-- [ ] Remove console.logs from `src/screens/SubmittedScreen.tsx`
-  - [ ] Line 32-36: "Render - contest"
-  - [ ] Line 45: "roundToFetch"
-  - [ ] Line 50-55: "State update" useEffect
+- [ ] Run TypeScript type checking: `npx tsc --noEmit`
+- [ ] Run ESLint: `npm run lint` (or `npm run lint:fix`)
+- [ ] Run Prettier: `npm run format`
+- [ ] Verify no architectural violations (context in `logic/contexts/`, no DB in UI)
 
-### Phase 5: Testing
+### Phase 6: Testing (Optional)
 
 - [ ] Manual testing
   - [ ] Navigate through all contest screens (Lobby → Game → Submitted → Correct/Eliminated → Winner)
-  - [ ] Verify chart appears when contest state changes to ROUND_CLOSED
-  - [ ] Verify participant count updates when players are eliminated
-  - [ ] Verify answer distribution appears with correct data
+  - [ ] Verify state persists across navigation (no loading flash)
+  - [ ] Verify realtime updates work (contest state changes)
   - [ ] Check navigation flows still work correctly
   - [ ] Verify answer submission works
   - [ ] Test elimination logic
 
 - [ ] Verify optimizations
-  - [ ] Check Supabase dashboard - confirm only 1 subscription per user (not 4+)
-  - [ ] Verify no duplicate subscriptions to same contest
-  - [ ] Monitor for subscription cleanup on navigation
+  - [ ] Check Supabase dashboard - confirm subscription count is stable during navigation
+  - [ ] Verify no subscription teardown/setup on screen transitions
   - [ ] Confirm all screens show consistent data
-
-### Phase 6: Code Quality
-
-- [ ] Run TypeScript type checking: `npm run tsc`
-- [ ] Run ESLint: `npm run lint` (or `npm run lint:fix` for auto-fixes)
-- [ ] Run Prettier: `npm run format`
-- [ ] Verify no architectural violations
-- [ ] Review changes match established patterns
 
 ---
 
 ## Expected Impact
 
-### Before Optimization (100 users)
+### Before (Current)
 
-- 400 total subscriptions (4 per user: contest, participant, questions, answers)
-- 200 duplicate subscriptions (contest + questions shared across users)
-- Screens don't re-render on state changes ❌
-- Chart doesn't appear ❌
-- Stale participant counts ❌
+- Each screen calls `useContestState()` independently
+- Navigation causes subscription teardown → setup cycle
+- Brief re-initialization on each screen transition
+- Each screen extracts `contestId` from params
 
-### After Optimization (100 users)
+### After
 
-- 400 total subscriptions (still 4 per user through provider)
-- 200 duplicate subscriptions (contest + questions still shared)
-- ✅ All screens re-render correctly
-- ✅ Chart appears when round closes
-- ✅ Single source of truth for all contest data
-- ✅ Easier to maintain and debug
+- ✅ Single `useContestState` instance shared via Context
+- ✅ Subscriptions stay alive across screen navigation
+- ✅ Instant screen transitions (data already loaded)
+- ✅ Single source of truth - impossible for screens to have stale data
+- ✅ Cleaner screens - just consume `useContestData()`
+- ✅ Reduced connection churn on Supabase
 
-**Note:** Subscription duplication at server level (100 users = 100 identical contest subscriptions) is a known limitation. For scale beyond 500+ users, consider server-side optimizations (broadcast channels, connection pooling).
+**Note:** This doesn't reduce per-user subscription count (still 4 per user). It reduces subscription setup/teardown cycles during the game flow.
+
+---
+
+## File Structure After Implementation
+
+```
+app/
+  _layout.tsx              # Root layout (auth, theme)
+  index.tsx                # Entry/splash
+  contests/index.tsx       # Contest list (outside provider)
+  (contest)/               # Route group for contest flow
+    _layout.tsx            # ContestStateProvider wrapper
+    lobby/index.tsx
+    game/[contestId].tsx   # Renamed from contest/[contestId]
+    submitted/index.tsx
+    correct/index.tsx
+    eliminated/index.tsx
+    winner/index.tsx
+
+src/logic/
+  contexts/
+    index.ts
+    ContestStateContext.tsx
+  hooks/
+    useContestState.ts     # Unchanged - provider uses this internally
+    useParticipantCount.ts # Unchanged - screens use directly
+    useAnswerDistribution.ts # Unchanged - screens use directly
+```
+
+---
+
+## Architecture Notes
+
+### Why Route Groups?
+
+Expo Router route groups `(folder)` provide:
+- Shared layout without affecting URL (routes stay as `/lobby`, `/submitted`, etc.)
+- Clean provider scoping - provider mounts when entering contest flow, unmounts when leaving
+- No conditional logic needed in root layout
+
+### What We're NOT Doing (Intentionally)
+
+- **Not sharing `useParticipantCount`** - It's a polling hook with configurable interval. Screens can decide their own poll frequency.
+- **Not sharing `useAnswerDistribution`** - Only 3 screens need it, and they fetch at different times. Adding caching logic adds complexity without clear benefit.
+- **Not centralizing navigation logic** - Each screen managing its own `playerState` → route logic is explicit and easy to reason about.
+
+### Context vs. State Library
+
+We chose React Context over Zustand/Jotai because:
+- Single piece of state (contest data) - Context handles this fine
+- No complex selectors needed
+- Stays within React idioms
+- No additional dependency
 
 ---
 
@@ -168,33 +216,3 @@ Create `ContestStateProvider` context to share single subscription and state acr
 
 - `id` (uuid), `participant_id` (uuid), `round` (int), `answer` (enum), `timestamp` (timestamp), `contest_id` (uuid), `question_id` (uuid)
 - Each user subscribes to their own answers only
-
----
-
-## Architecture Notes
-
-### Folder Organization
-
-- ✅ Contexts go in `src/logic/contexts/` (new folder)
-- ✅ Hooks stay in `src/logic/hooks/`
-- ✅ Screens stay thin - just consume context
-- ✅ All Supabase usage stays in `src/db/`
-
-### Context Update Flow
-
-1. Database change (e.g., contest state: ROUND_IN_PROGRESS → ROUND_CLOSED)
-2. Supabase realtime broadcasts UPDATE event
-3. **Single** `ContestStateProvider` receives event (only one subscription)
-4. Provider calls `setContest` internally
-5. Context value updates
-6. React detects context change
-7. **All** screens using `useContestData()` automatically re-render
-8. Chart appears, counts update, etc.
-
-### Design Decisions
-
-- **Participant count:** Keep current polling approach (only changes when questions get answers assigned)
-- **Answer distribution:** Fetch once when round closes, refetch when `correct_option` updates
-- **Questions subscription:** Keep wildcard `event: '*'` (needed for `correct_option` updates)
-- **ContestRegistration:** No changes needed (single user queries, not N+1)
-- **Provider placement:** `app/_layout.tsx` with props (not internal param extraction)
