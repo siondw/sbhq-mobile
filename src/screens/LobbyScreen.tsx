@@ -96,7 +96,7 @@ const LobbyScreen = () => {
 
           {/* Reassurance Footer */}
           <View style={styles.bottomSection}>
-            <StatusBadge label="YOU ARE LOCKED IN" icon="checkmark-circle" />
+            <StatusBadge label="GAME TIME" icon="checkmark-circle" />
             <Text style={styles.waitingText}>
               Stay on this screen. The game will start automatically.
             </Text>

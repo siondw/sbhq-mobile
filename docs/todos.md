@@ -36,8 +36,14 @@ P1
 
 P2
 
-- [ ] Audit listneers and hooks, optimize where needed
+- [x] Audit listneers and hooks, optimize where needed
 - [ ] Pull to refresh on contest list screeen
+- [ ] UI Nits:
+  - [ ] On round closed, if i bump the round number, before opening submissions again. the corect screen rerenders.
+    - [ ] Decide behavior, should we change this form the db admin side and prevent that or fix on the UI side
+- [ ] Question to solve:
+  - [ ] What if we get to a state where the final 2 users both get the wrong answer. How do we prevent against them both being eliminated?
+    - [ ] Or should we add capabilities to reinstate an entire round from the adming ide 
 
 P3
 

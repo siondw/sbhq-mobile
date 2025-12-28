@@ -1,5 +1,5 @@
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import type { RealtimePostgresChangesPayload } from '../../db/realtime';
 import {
   getAnswerForQuestion,
   submitAnswer,

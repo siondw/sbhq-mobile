@@ -1,6 +1,8 @@
 import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from './client';
 
+export type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
 export type PostgresEvent = 'INSERT' | 'UPDATE' | 'DELETE' | '*';
 
 export interface RealtimeSubscriptionConfig<TRow extends Record<string, unknown>> {
