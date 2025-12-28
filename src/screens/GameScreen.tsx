@@ -24,8 +24,18 @@ const GameScreen = () => {
   const { derivedUser } = useAuth();
   const router = useRouter();
   const headerHeight = useHeaderHeight();
-  const { contestId, loading, error, contest, participant, question, answer, playerState, submit, refresh } =
-    useContestData();
+  const {
+    contestId,
+    loading,
+    error,
+    contest,
+    participant,
+    question,
+    answer,
+    playerState,
+    submit,
+    refresh,
+  } = useContestData();
   const { count: participantCount } = useParticipantCount(contestId);
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 

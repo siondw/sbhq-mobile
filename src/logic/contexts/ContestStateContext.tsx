@@ -39,4 +39,3 @@ export const useContestData = (): ContestStateContextValue => {
   }
   return context;
 };
-

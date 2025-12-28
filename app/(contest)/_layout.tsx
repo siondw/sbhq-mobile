@@ -16,4 +16,3 @@ const ContestLayout = () => {
 };
 
 export default ContestLayout;
-

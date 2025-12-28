@@ -221,7 +221,17 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
       refresh: fetchContestState,
       submit: handleSubmit,
     }),
-    [loading, error, contest, participant, question, answer, playerState, fetchContestState, handleSubmit],
+    [
+      loading,
+      error,
+      contest,
+      participant,
+      question,
+      answer,
+      playerState,
+      fetchContestState,
+      handleSubmit,
+    ],
   );
 };
 

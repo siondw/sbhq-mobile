@@ -172,6 +172,7 @@ src/logic/
 ### Why Route Groups?
 
 Expo Router route groups `(folder)` provide:
+
 - Shared layout without affecting URL (routes stay as `/lobby`, `/submitted`, etc.)
 - Clean provider scoping - provider mounts when entering contest flow, unmounts when leaving
 - No conditional logic needed in root layout
@@ -185,6 +186,7 @@ Expo Router route groups `(folder)` provide:
 ### Context vs. State Library
 
 We chose React Context over Zustand/Jotai because:
+
 - Single piece of state (contest data) - Context handles this fine
 - No complex selectors needed
 - Stays within React idioms
@@ -216,4 +218,3 @@ We chose React Context over Zustand/Jotai because:
 
 - `id` (uuid), `participant_id` (uuid), `round` (int), `answer` (enum), `timestamp` (timestamp), `contest_id` (uuid), `question_id` (uuid)
 - Each user subscribes to their own answers only
-
