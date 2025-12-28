@@ -1,9 +1,10 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
+import LoadingView from '../ui/components/LoadingView';
 import { SPACING, useTheme } from '../ui/theme';
 import DevLandingScreen from './DevLandingScreen';
 import LoginScreen from './LoginScreen';
@@ -25,19 +26,11 @@ const IndexScreen = () => {
   }
 
   if (loading) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (session) {
-    return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   return <LoginScreen />;

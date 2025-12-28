@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
 import { ROUTES } from '../configs/routes';
@@ -13,6 +13,7 @@ import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestListTicket from '../ui/components/ContestListTicket';
+import LoadingView from '../ui/components/LoadingView';
 import Text from '../ui/components/Text';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
@@ -91,11 +92,7 @@ const ContestListScreen = () => {
   };
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator color={colors.primary} />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (error) {

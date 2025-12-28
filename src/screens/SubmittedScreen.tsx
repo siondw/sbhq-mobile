@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
+
 import { ROUTES } from '../configs/routes';
 import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
@@ -11,6 +12,7 @@ import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
+import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
 import { GlassyTexture } from '../ui/textures';
@@ -59,11 +61,7 @@ const SubmittedScreen = () => {
   const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (error) {

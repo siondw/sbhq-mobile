@@ -32,16 +32,12 @@ Priority Fixes:
 
 P1
 
-- [ ] Audit listneers and hooks, optimize where needed
-      P3
+- [ ] Apple Auth setup
 
+P2
+- [ ] Audit listneers and hooks, optimize where needed
+- [ ] Pull to refresh on contest list screeen
+
+P3
 - [ ] Consolidate participant lookup into a single call (avoid double fetch in getParticipantForUser/getOrCreateParticipant).
       Logging (debug-only)
-- [x] Document logging rules (use src/utils/debug.ts, prefix tags, remove before merge).
-- [x] Remove debug logs once auth issue is resolved (AuthProvider/useContests/useContestRegistration/LoginScreen/IndexScreen/db/contests).
-- [x] Add contests fetch timing logs to isolate auth race on mobile.
-- [x] Add contests REST probe logs to compare Supabase query vs direct fetch.
-- [x] Add Supabase fetch logging wrapper for request start/end timing.
-- [x] Add app state change auth logs to validate resume timing.
-- [x] Add AsyncStorage logging wrapper to trace auth session hydration.
-- [x] Add getSession timing logs for contests query to identify auth lock.

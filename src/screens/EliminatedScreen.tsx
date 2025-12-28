@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
@@ -17,6 +17,7 @@ import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
+import LoadingView from '../ui/components/LoadingView';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
@@ -121,11 +122,7 @@ const EliminatedScreen = () => {
   }, [playerState, router, contestId, loading]);
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (error) {

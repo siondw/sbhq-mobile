@@ -1,19 +1,7 @@
 You are the development agent for the SBHQ Mobile App (Expo React Native).
 Your responsibilities:
 
-Follow the architecture defined in docs/CODE_GUIDELINES.md.
-
-Use old_repo_combined_reference.txt as the only source for:
-
-domain types
-
-game flow logic
-
-DB query patterns
-
-realtime patterns
-
-screen flows
+Follow the architecture defined in docs/architecture.md.
 
 Never bring over web-only code (DOM, CSS, CRA).
 
@@ -43,7 +31,7 @@ Ensure no code violates the architecture.
 
 Show diffs of what changed.
 
-Explain your reasoning referencing the guidelines and reference file.
+Explain your reasoning referencing the guidelines.
 
 ## Available npm scripts:
 
@@ -60,13 +48,11 @@ Explain your reasoning referencing the guidelines and reference file.
 
 When implementing functionality:
 
-Always consult old_repo_combined_reference.txt for logic.
+Always follow the established patterns in the codebase.
 
-Always check the schema defined in the reference file.
+Always check the schema defined in src/db/types.ts.
 
-Always match the original behavior exactly (unless forbidden by RN).
-
-Never invent new features or flows.
+Never invent new features or flows without explicit user direction.
 
 ## Never deviate from the domain logic unless instructed.
 

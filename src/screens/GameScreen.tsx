@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
 import { ROUTES } from '../configs/routes';
@@ -12,6 +12,7 @@ import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import AnswerOption from '../ui/components/AnswerOption';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
+import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
@@ -76,11 +77,7 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
   }, [playerState, router, contestId, contest?.start_time, loading]);
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (error) {

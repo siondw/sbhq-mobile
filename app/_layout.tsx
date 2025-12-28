@@ -15,6 +15,7 @@ import 'react-native-reanimated';
 
 import { THEME_CONFIG } from '../src/configs/constants';
 import { AuthProvider } from '../src/logic/hooks/AuthProvider';
+import CustomSplashScreen from '../src/screens/SplashScreen';
 import {
   ThemeProvider as CustomThemeProvider,
   DARK_CARBON_TEAL_PALETTES,
@@ -25,7 +26,7 @@ import {
 
 export {
   // Catch any errors thrown by the Layout component.
-  ErrorBoundary,
+  ErrorBoundary
 } from 'expo-router';
 
 export const unstable_settings = {
@@ -57,8 +58,22 @@ export default function RootLayout() {
     }
   }, [loaded]);
 
+  const selectedTheme = useMemo(() => {
+    const paletteMatch = DARK_CARBON_TEAL_PALETTES.find(
+      (item) => item.key === THEME_CONFIG.SELECTED_PALETTE,
+    );
+    if (!paletteMatch) {
+      return DEFAULT_THEME;
+    }
+    return themeFromPlaygroundPalette(paletteMatch.palette);
+  }, []);
+
   if (!loaded) {
-    return null;
+    return (
+      <CustomThemeProvider theme={selectedTheme}>
+        <CustomSplashScreen />
+      </CustomThemeProvider>
+    );
   }
 
   return <RootLayoutNav />;

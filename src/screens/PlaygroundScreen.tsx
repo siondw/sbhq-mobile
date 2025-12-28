@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import LottieView from 'lottie-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -307,6 +308,24 @@ const PlaygroundScreen = () => {
             </Section>
 
             <Section title="Actual Components" titleColor={palette.ink}>
+              <Card>
+                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+                  Lottie Football Animation
+                </Text>
+                <View style={{ height: SPACING.MD }} />
+                <View style={{ alignItems: 'center' }}>
+                  <LottieView
+                    source={require('../../assets/gifs/football.json')}
+                    autoPlay
+                    loop
+                    style={{ width: 120, height: 120 }}
+                  />
+                  <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
+                    Ball: Primary • Laces: Energy
+                  </Text>
+                </View>
+              </Card>
+
               <Card>
                 <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
                   Card + Button + Countdown

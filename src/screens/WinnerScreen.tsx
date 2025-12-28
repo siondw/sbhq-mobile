@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { ActivityIndicator, Animated, Easing, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
@@ -11,6 +11,7 @@ import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
+import LoadingView from '../ui/components/LoadingView';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
@@ -66,11 +67,7 @@ const WinnerScreen = () => {
   }, [playerState, router, contestId, loading]);
 
   if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator />
-      </View>
-    );
+    return <LoadingView />;
   }
 
   if (error) {
