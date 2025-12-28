@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { ROUTES } from '../configs/routes';
 import { getQuestionForRound } from '../db/questions';
+import type { QuestionRow } from '../db/types';
 import { PLAYER_STATE } from '../logic/constants';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
@@ -19,7 +20,6 @@ import ContestStatsCard from '../ui/components/ContestStatsCard';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
-import type { QuestionRow } from '../db/types';
 
 const EliminatedScreen = () => {
   const { colors } = useTheme();
