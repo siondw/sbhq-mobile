@@ -16,7 +16,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
-import { useShineAnimation } from '../ui/animations';
+import { usePulseAnimation, useShineAnimation } from '../ui/animations';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import AnswerOption from '../ui/components/AnswerOption';
 import Button from '../ui/components/Button';
@@ -294,11 +294,6 @@ const PlaygroundScreen = () => {
                 />
               </Row>
               <Row>
-                <Chip
-                  label={`GIF: ${footballGifs[gifIndex]?.label ?? 'none'}`}
-                  onPress={() => setGifIndex((i) => (i + 1) % footballGifs.length)}
-                  palette={palette}
-                />
                 <Chip
                   label="Reset"
                   onPress={() => reset(setSelectedRealOption, setPlayersRemaining)}
@@ -877,6 +872,47 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+
+  // Lobby Preview Styles
+  lobbyPreviewContainer: {
+    height: 400,
+    borderRadius: RADIUS.XL,
+    overflow: 'hidden',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(53,74,87,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  lobbyContent: {
+    alignItems: 'center',
+    gap: SPACING.XL,
+    zIndex: 10,
+    width: '100%',
+  },
+  liveBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 6,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+    gap: 8,
+    borderWidth: 1,
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  lockedInBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 100,
+  },
 });
 
 export default PlaygroundScreen;
+
