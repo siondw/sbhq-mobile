@@ -1,4 +1,3 @@
-import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
@@ -10,7 +9,6 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
-import { usePulseAnimation } from '../ui/animations';
 import Header from '../ui/components/AppHeader';
 import HeroCountdown from '../ui/components/HeroCountdown';
 import StatusBadge from '../ui/components/StatusBadge';
@@ -73,11 +71,7 @@ const LobbyScreen = () => {
       <View style={[styles.mainContainer, { paddingTop: headerHeight }]}>
         <View style={styles.content}>
           {/* Top Stats */}
-          <GlassyTexture
-            colors={colors}
-            showShine={false}
-            style={styles.statsPill}
-          >
+          <GlassyTexture colors={colors} showShine={false} style={styles.statsPill}>
             <View style={styles.statsDot} />
             <Text weight="medium" style={styles.statsText}>
               {participantCount.toLocaleString()} PLAYERS

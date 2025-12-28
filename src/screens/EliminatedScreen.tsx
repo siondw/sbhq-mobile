@@ -30,8 +30,10 @@ const EliminatedScreen = () => {
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
   const { count: remainingPlayers } = useParticipantCount(contestId);
-  const { loading, error, playerState, refresh, participant, answer } =
-    useContestState(contestId, derivedUser?.id);
+  const { loading, error, playerState, refresh, participant, answer } = useContestState(
+    contestId,
+    derivedUser?.id,
+  );
 
   const { distribution } = useAnswerDistribution(
     contestId,

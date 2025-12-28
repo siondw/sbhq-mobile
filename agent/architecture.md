@@ -1,396 +1,272 @@
-Cool, that makes sense. Let’s collapse `db` + `queries` into a single folder and keep the rest simple.
-
-Here’s an updated `ARCHITECTURE.md` you can drop straight into the repo that matches:
-
-- `db/`
-- `logic/`
-- `ui/`
-- `screens/`
-- `configs/`
-- `utils/`
-- `app/` (for Expo Router)
-
----
-
 # SBHQ Player App – Architecture
 
-This doc describes how the SBHQ Player App is structured: what each folder does and how data/logic/UI fit together.
+This document describes **how the SBHQ Player App is structured** and how data, logic, and UI flow through the system.
 
-This repo is **player-only**. All admin / Game Master tools are in a separate project that talks to the same Supabase backend.
+This repository is **player-only**.  
+All admin / Game Master functionality lives in a **separate project** that talks to the same Supabase backend.
 
 ---
 
 ## 1. Stack & Scope
 
-- **Runtime:** React Native + Expo (iOS, Android, Web via `react-native-web`)
+### Tech Stack
+
+- **Runtime:** React Native + Expo
+- **Routing:** Expo Router
 - **Backend:** Supabase
-  - Auth (Google + Email OTP)
-  - Database: `users`, `contests`, `participants`, `questions`, `answers`
-  - Realtime: Postgres changes
+  - Auth (Google, Email OTP)
+  - Database (users, contests, participants, questions, answers)
+  - Realtime (Postgres changes)
 
-- **This app handles for a player:**
-  - Login / register (Supabase auth)
-  - Seeing available contests and registering
-  - Lobby (Kahoot-style pregame with countdown / participants)
-  - Question → Submitted → Correct / Eliminated → Winner flow
+### Scope of This App
 
-Admin controls (start game, open/close submissions, set correct answers, advance rounds) are all **external**.
+This app handles everything a **player** can do:
+
+- Authenticate
+- View and register for contests
+- Participate in live contests
+- Submit answers
+- See outcomes (correct / eliminated / winner)
+
+It does **not**:
+
+- Start contests
+- Create or edit questions
+- Set correct answers
+- Advance rounds
 
 ---
 
-## 2. Top-level layout
+## 2. High-Level Architecture
+
+The app is structured into clear layers:
+
+```
+
+Supabase (DB + Realtime)
+↓
+src/db        → data access only
+↓
+src/logic       → hooks + pure domain logic
+↓
+src/screens    → screen composition
+↓
+src/ui       → visual components
+
+```
+
+Each layer has a **single responsibility** and depends only on layers below it.
+
+---
+
+## 3. Top-Level Layout
 
 ```text
 app/         # Expo Router entrypoints (very thin)
 src/
-  db/        # Supabase client, DB types, and all DB operations
-  logic/     # Game logic + feature hooks (auth, lobby, contest)
-  ui/        # Reusable React Native UI components & visual infrastructure
-    components/   # React components (Button, Card, Text, etc.)
-    animations/   # Animation hooks and presets
-    textures/     # Visual texture effects (GlassyTexture, etc.)
-    theme/        # Theme system (colors, spacing, typography)
-  screens/   # Screen components (compose logic + UI)
-  configs/   # Env, constants, app-wide config
-  utils/     # Generic helpers (dates, formatting, etc.)
+  db/        # Supabase client, DB types, DB operations
+  logic/     # App logic (hooks + pure domain logic)
+  ui/        # Reusable UI components & theme system
+  screens/   # Screen-level components
+  configs/   # Env + app-wide configuration
+  utils/     # Generic pure helpers
 ```
 
 ---
 
-## 3. `src/db/` – Supabase + all DB access
+## 4. `src/db/` – Data Layer
 
-**Goal:** One place that knows how to talk to Supabase.
+**Purpose:** One place that knows how to talk to Supabase.
 
-This folder includes:
+### Responsibilities
 
-- **Client setup**
-  - `client.ts` – initializes Supabase client using env vars.
+- Supabase client initialization
+- Database row types
+- Reads, writes, and realtime subscriptions
 
-- **Types**
-  - `types.ts` – TypeScript types that mirror table shapes:
-    - `UserRow`, `ContestRow`, `ParticipantRow`, `QuestionRow`, `AnswerRow`
+### Typical Files
 
-  - Optionally generated from Supabase, or hand-written and kept in sync.
+- `client.ts` – Supabase client setup
+- `types.ts` – Row types (`ContestRow`, `ParticipantRow`, etc.)
+- Domain modules:
+  - `auth.ts`
+  - `contests.ts`
+  - `participants.ts`
+  - `questions.ts`
+  - `answers.ts`
 
-- **DB operations (reads/writes/subscriptions)**
-  - You can break these into files by domain, for example:
-    - `auth.ts` – login/logout helpers, get current session.
-    - `contests.ts` – list contests, get contest by id, subscribe to contest updates.
-    - `participants.ts` – get/create participant, subscribe to participant changes.
-    - `questions.ts` – get questions, get current round question, subscribe to question changes.
-    - `answers.ts` – submit answer, fetch previous answer for reconnection.
+### Key Idea
 
-Everything that talks to Supabase lives here.
-
-**Rules:**
-
-- Only `db/` imports Supabase.
-- No React imports in this folder.
-- Other folders don’t call Supabase directly; they call functions from `db/`.
+Other parts of the app **never call Supabase directly**.
+They call functions from `src/db/`.
 
 ---
 
-## 4. `src/logic/` – Game + app logic
+## 5. `src/logic/` – App & Game Logic
 
-**Goal:** Central place for **how SBHQ works** and how the app derives player state from data.
+This is the **brain** of the app.
 
-There are two flavours of logic here:
+### 5.1 `logic/hooks/` – React hooks
 
-### 4.1 `src/logic/hooks/` – React hooks
+Hooks connect the data layer to the UI:
 
-React hooks that connect the data layer to the UI layer:
+Examples:
 
-- `useAuth()` – Manages Supabase session, current user, login/logout flows. Returns derivedUser with id, email, role, username.
-- `useContests()` – Fetches available contests list with loading/error states and refresh functionality.
-- `useContestRegistration()` – Handles joining/registering for contests, tracks participant status per contest.
-- `useContestState(contestId)` – Main contest flow hook that:
-  - Subscribes to contest, questions, participant, answers in real-time
-  - Uses pure logic from `logic/contest/` to compute player state
-  - Returns what screen-state the player is in (answering/submitted/correct/eliminated/winner)
-  - Provides current question/round info and `submitAnswer` callback
-- `useParticipantCount(contestId)` – Tracks remaining active player count for a contest.
-- `useHeaderHeight()` – Returns header height for proper content padding.
+- `useAuth()`
+- `useContests()`
+- `useContestRegistration()`
+- `useContestState(contestId)`
+- `useParticipantCount(contestId)`
 
-These hooks:
+Responsibilities:
 
-- Can import from `db/` and from `logic/<domain>/` pure functions
-- Cannot import from `ui/` or `screens/`
-- Return `{ data, loading, error, ...actions }` shape
-- Handle subscription cleanup properly
+- Fetch data
+- Manage realtime subscriptions
+- Track loading/error state
+- Call pure domain logic to derive player state
 
-### 4.2 `src/logic/<domain>/` – Pure domain logic
+Hooks return shaped state + actions for screens to consume.
 
-Pure functions organized by domain (no React, no side effects):
+---
 
-**`logic/contest/`**
+### 5.2 `logic/<domain>/` – Pure domain logic
 
-- `derivePlayerState.ts` – Given contest/participant/question/answer data, returns player status:
-  - `LOBBY`
-  - `ANSWERING`
-  - `SUBMITTED_WAITING`
-  - `CORRECT_WAITING_NEXT`
-  - `ELIMINATED`
-  - `WINNER`
-- `contestUtils.ts` – Contest-related calculations and helpers
+Pure, testable functions with **no React and no side effects**.
 
-**`logic/constants.ts`**
+Example domains:
 
-- Domain-level constants (SCREAMING_SNAKE_CASE)
+- `logic/contest/`
+  - `derivePlayerState(...)`
+  - Contest-related helpers
+
+- `logic/constants.ts`
+  - Domain-level enums and constants
 
 These functions:
 
-- Take data as parameters, return computed results
-- No React imports, no hooks, no `useState/useEffect`
-- Can be tested in isolation
-- Used by hooks in `logic/hooks/`
-
-**Rules:**
-
-- `logic/hooks/` imports from `db/` and `logic/<domain>/`
-- `logic/<domain>/` should not import from `logic/hooks/` (one-way dependency)
-- Screens/UI never import pure logic directly - they use hooks from `logic/hooks/`
-- It's the "brain" of the app that the screens will use.
+- Take data as input
+- Return computed results
+- Are used by hooks in `logic/hooks/`
 
 ---
 
-## 5. `src/ui/` – Visual components & theme system
+## 6. `src/ui/` – Visual System
 
-**Goal:** All the React Native building blocks and visual infrastructure.
+**Purpose:** All reusable visual building blocks.
 
-### 5.1 `src/ui/components/` – React components
+Subfolders:
 
-Reusable UI components that make up the interface:
+- `components/` – Buttons, cards, headers, etc.
+- `animations/` – Shared animation hooks and presets
+- `textures/` – Visual effects (glassy, shine, etc.)
+- `theme/` – Colors, spacing, typography, theme context
 
-- Primitives:
-  - `Button` – Configurable button with variants (primary, secondary, success)
-  - `Text` – Text component with weight prop system (regular, medium, bold)
-  - `Card` – Base card container with consistent styling
-- SBHQ-specific UI components:
-  - `AnswerOption` – Radio-style answer selection component
-  - `AnswerSummaryCard` – Displays question and answer details
-  - `AppHeader` – Application header with branding and user info
-  - `ContestListTicket` – Ticket-style contest list item with live indicator
-  - `ContestStatsCard` – Displays contest statistics (players, rounds, odds)
-  - `Countdown` – Animated countdown timer with gradient text masking
-  - `TicketCard` – Decorative ticket-style card with cutouts and texture layers
+UI components:
 
-### 5.2 `src/ui/animations/` – Reusable animations
-
-Centralized animation hooks and presets for consistent motion design:
-
-**Files:**
-
-- `index.ts` – Barrel export for convenient imports
-- `animations.ts` – Animation hook implementations:
-  - `usePulseAnimation(duration)` – Returns opacity and scale values for pulsing effects
-  - `useShineAnimation(options)` – Returns translateX and config for shine/shimmer effects
-- `constants.ts` – Animation timing and preset configurations:
-  - `ANIMATION_DURATION` – Timing constants (FAST, NORMAL, SLOW, SHINE)
-  - `ANIMATION_OPACITY` – Opacity presets (SUBTLE, MEDIUM, STRONG)
-  - `SHINE_PRESET` – Shine effect configurations (SUBTLE, NORMAL, DRAMATIC)
-- `types.ts` – TypeScript types for animation hooks
-
-**Usage:**
-
-Components import animations for consistent motion:
-
-```tsx
-import { usePulseAnimation, useShineAnimation } from '../animations';
-
-const { opacity, scale } = usePulseAnimation(900);
-const { translateX, config } = useShineAnimation({ preset: 'SUBTLE' });
-```
-
-### 5.3 `src/ui/textures/` – Visual texture effects
-
-Reusable texture components for consistent glassy/3D visual effects:
-
-**Files:**
-
-- `index.ts` – Barrel export for convenient imports
-- `GlassyTexture.tsx` – Glassy 3D texture component that wraps children with:
-  - Multi-layer gradient overlay (energy, warm, ink colors)
-  - Animated shine effect using `useShineAnimation`
-  - Configurable intensity presets (SUBTLE, NORMAL, DRAMATIC)
-- `types.ts` – TypeScript types for texture components
-
-**Usage:**
-
-Wrap any component to add glassy texture effect:
-
-```tsx
-import { GlassyTexture } from '../textures';
-
-<GlassyTexture
-  colors={{ energy: colors.energy, warm: colors.warm, ink: colors.ink }}
-  shinePreset="SUBTLE"
-  style={styles.wrapper}
->
-  <Button label="Click Me" />
-</GlassyTexture>;
-```
-
-### 5.4 `src/ui/theme/` – Theme system
-
-Centralized theme infrastructure with a single palette-based system:
-
-**Files:**
-
-- `index.ts` – Barrel export for convenient imports
-- `spacing.ts` – Spacing and radius tokens (SPACING, RADIUS)
-- `typography.ts` – Typography tokens (TYPOGRAPHY, HEADER_CONTENT_HEIGHT)
-- `utils.ts` – Color utilities (withAlpha, isDarkHex, textOnHex)
-- `palettes.ts` – Color palette definitions:
-  - `DEFAULT_PALETTE` – The app's default color scheme
-  - `DARK_CARBON_TEAL_PALETTES` – Alternative dark theme palettes
-  - `ALL_PALETTES` – Combined list for theme switching
-- `context.tsx` – Theme React context:
-  - `ThemeProvider` – Context provider component
-  - `useTheme()` – Hook to access theme colors
-  - `themeFromPlaygroundPalette()` – Convert palette to theme
-  - `DEFAULT_THEME` – Default theme instance
-
-**Usage:**
-
-Components import from the barrel export:
-
-```tsx
-import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
-```
-
-Screens import components and theme:
-
-```tsx
-import Button from '../ui/components/Button';
-import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
-```
-
-**Theme Configuration:**
-
-The active palette is configured in `src/configs/constants.ts`:
-
-```tsx
-export const THEME_CONFIG = {
-  SELECTED_PALETTE: 'default', // or 'carbon-teal-classic', etc.
-} as const;
-```
-
-**Rules:**
-
-- All colors come from the theme palette (never hardcoded)
-- Components use `useTheme()` to access dynamic colors
-- Spacing, typography, and utilities are imported from theme tokens
-- Theme constants can be imported by `logic/hooks/` when needed (e.g., HEADER_CONTENT_HEIGHT)
-- Components receive data + callbacks via props
-- Do not make DB calls directly
-- Do not use business logic hooks directly (e.g., Header receives user prop instead of calling useAuth)
+- Receive data via props
+- Do not fetch data
 - Do not own navigation
+- Do not contain business logic
 
 ---
 
-## 6. `src/screens/` – Screens (actual pages in the app)
+## 7. `src/screens/` – Screens
 
-**Goal:** Components that represent entire screens and are hooked into navigation.
+Screens represent **full pages** in the app.
 
-Expected screens:
+Examples:
 
-- `LoginScreen` – uses `logic/useAuth`, shows login options.
-- `ContestListScreen` – shows available contests from `db/`/`logic`.
-- `LobbyScreen` – shows pregame/lobby state with countdown & participants.
-- `GameScreen` – main in-contest screen that:
-  - renders Question / Submitted / Correct / Eliminated / Winner states based on `useContestState`.
-
-- `WinnerScreen` (optional) – separate screen for final winner celebration if you don’t just handle it inside `GameScreen`.
+- `LoginScreen`
+- `ContestListScreen`
+- `LobbyScreen`
+- `GameScreen`
+- `WinnerScreen` (optional)
 
 Screens:
 
-- Use hooks from `logic/` to pull in state and actions.
-- Use components from `ui/` to render.
-- Handle navigation decisions (e.g., when to redirect to lobby, when to go back to contest list, etc.).
+- Call hooks from `logic/`
+- Render UI from `ui/`
+- Handle navigation decisions
+- Remain intentionally thin
 
 ---
 
-## 7. `src/configs/` – Config and environment
+## 8. `src/configs/` – Configuration
 
-**Goal:** Centralized config.
+Centralized app configuration:
 
-Examples:
+- Environment variables
+- App-wide constants
+- Feature flags
+- Theme selection
 
-- `env.ts`:
-  - Reads Supabase URL & anon key from Expo env vars:
-    - `EXPO_PUBLIC_SUPABASE_URL`
-    - `EXPO_PUBLIC_SUPABASE_ANON_KEY`
-
-- Any other app-wide constants:
-  - default contest id for dev
-  - timeouts, feature flags, etc.
-
-This keeps environment details out of `logic/` and `db/` files.
+Keeps config out of logic and UI.
 
 ---
 
-## 8. `src/utils/` – Generic helpers
+## 9. `src/utils/` – Generic Helpers
 
-**Goal:** Small, stateless helpers.
+Small, stateless helpers:
 
-Examples:
+- Date/time formatting
+- String helpers
+- Simple math utilities
 
-- Date formatting: `formatCountdown`, `formatTimeRemaining`.
-- String helpers.
-- Simple pure utility functions that don’t belong in `logic/`.
-
-Should not reference React or Supabase directly.
+No React. No Supabase.
 
 ---
 
-## 9. `app/` – Expo Router entrypoints
+## 10. `app/` – Expo Router
 
 Expo Router uses `app/` as the route map.
 
 Pattern:
 
-- Files in `app/` are thin wrappers that import from `src/screens/`.
-
-Example:
-
 ```text
 app/
-  index.tsx               → mounts LoginScreen / ContestListScreen
+  index.tsx
   lobby/
-    index.tsx             → mounts LobbyScreen
+    index.tsx
   contest/
-    [contestId].tsx       → mounts GameScreen
-  winner/
-    index.tsx             → mounts WinnerScreen (if separate)
+    [contestId].tsx
 ```
 
-These files:
+Files in `app/`:
 
-- Do minimal work: mostly `<ScreenComponent />` plus route params.
-- No Supabase logic here.
+- Are extremely thin
+- Import screens from `src/screens/`
+- Pass route params
+- Do not contain logic or DB access
 
 ---
 
-### Summary
+## 11. How to Navigate the Codebase
 
-- **Data layer** = `db/`
-- **React hooks** = `logic/hooks/`
-- **Pure domain logic** = `logic/<domain>/`
-- **Visual pieces** = `ui/`
-- **Actual pages** = `screens/`
-- **Routing** = `app/`
-- **Env/consts** = `configs/`
-- **Helpers** = `utils/`
+- “How do I fetch contests?”
+  → `src/db/contests.ts`
 
-You always know where to go:
+- “How does contest state work?”
+  → `src/logic/hooks/useContestState.ts`
+  → `src/logic/contest/derivePlayerState.ts`
 
-- "How do I fetch contests?" → `src/db/contests.ts`
-- "How do I use contests in a screen?" → `src/logic/hooks/useContests.ts`
-- "How do I decide if a player is eliminated?" → `src/logic/contest/derivePlayerState.ts`
-- "Where's the question UI?" → `src/ui/components/AnswerOption.tsx` and `src/screens/GameScreen.tsx`
-- "What routes exist?" → `src/configs/routes.ts`
-- "How do I add a pulsing animation?" → `src/ui/animations/` - use `usePulseAnimation()`
-- "How do I add a glassy texture effect?" → `src/ui/textures/` - use `<GlassyTexture>`
-- "Where are theme colors/spacing?" → `src/ui/theme/` - use `useTheme()` and `SPACING`
+- “Where is this UI built?”
+  → `src/ui/components/`
 
-If you want, next step we can write a tiny README stub for each folder (`src/db/README.md`, `src/logic/README.md`, etc.) so the structure is self-documenting when someone opens it in VS Code.
+- “Which screen am I on?”
+  → `src/screens/`
+
+- “Where are routes defined?”
+  → `app/`
+
+---
+
+## Summary
+
+- **Data access** → `src/db/`
+- **Hooks** → `src/logic/hooks/`
+- **Pure logic** → `src/logic/<domain>/`
+- **UI system** → `src/ui/`
+- **Screens** → `src/screens/`
+- **Routing** → `app/`
+- **Config** → `src/configs/`
+- **Helpers** → `src/utils/`

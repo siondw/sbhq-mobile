@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -9,14 +10,15 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import RollingFootball from '../ui/animations/RollingFootball';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
+import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
 import Text from '../ui/components/Text';
-import { GlassyTexture } from '../ui/textures';
-import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
+import { SPACING, useTheme, withAlpha } from '../ui/theme';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const SubmittedScreen = () => {
@@ -39,8 +41,6 @@ const SubmittedScreen = () => {
       : undefined;
 
   const { distribution } = useAnswerDistribution(contestId, roundToFetch);
-
-  useEffect(() => {}, [contest?.state, distribution.length]);
 
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
@@ -77,89 +77,51 @@ const SubmittedScreen = () => {
 
   return (
     <View style={styles.container}>
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        <LinearGradient
+          colors={[withAlpha(colors.background, 0), withAlpha(colors.ink, 0.05)]}
+          style={StyleSheet.absoluteFill}
+          locations={[0.4, 1]}
+        />
+      </View>
+
       <Header user={derivedUser} />
+
       <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <View style={styles.scorebugSection}>
+        <View style={[styles.scorebugContainer, { top: headerHeight + SPACING.MD }]}>
           <Scorebug playerCount={participantCount} />
         </View>
-        <View style={styles.statusSection}>
-          <Text weight="bold" style={styles.title}>
-            Answer Locked In
-          </Text>
-          <Text style={styles.subtitle}>Waiting for the round to end...</Text>
-        </View>
 
-        <GlassyTexture colors={colors} showShine={false} style={styles.questionCard}>
-          <View style={styles.questionSection}>
-            <Text weight="medium" style={[styles.questionLabel, { color: colors.muted }]}>
-              Question
-            </Text>
-            <Text weight="bold" style={[styles.questionText, { color: colors.ink }]}>
-              {question?.question ?? 'Waiting for the next update'}
-            </Text>
+        <View style={styles.centerStack}>
+          {/* Football positioned above the card */}
+          <View style={styles.footballContainer}>
+            <RollingFootball />
           </View>
 
-          <View style={[styles.divider, { backgroundColor: withAlpha(colors.ink, 0.1) }]} />
-
-          <View style={styles.optionsGrid}>
-            {options.map((option, index) => {
-              const isSelected = option.key === answer?.answer;
-              return (
-                <React.Fragment key={option.key}>
-                  {index > 0 && (
-                    <View
-                      style={[
-                        styles.verticalDivider,
-                        { backgroundColor: withAlpha(colors.ink, 0.1) },
-                      ]}
-                    />
-                  )}
-                  <View
-                    style={[
-                      styles.optionItem,
-                      isSelected && {
-                        backgroundColor: withAlpha(colors.primary, 0.1),
-                      },
-                    ]}
-                  >
-                    <Text
-                      weight="bold"
-                      style={[
-                        styles.optionKey,
-                        { color: isSelected ? colors.primary : colors.muted },
-                      ]}
-                    >
-                      {option.key}
-                    </Text>
-                    <Text
-                      weight="medium"
-                      style={[
-                        styles.optionLabel,
-                        { color: isSelected ? colors.ink : colors.muted },
-                      ]}
-                    >
-                      {option.label}
-                    </Text>
-                  </View>
-                </React.Fragment>
-              );
-            })}
-          </View>
-        </GlassyTexture>
-
-        {contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0 && (
-          <View style={styles.chartSection}>
-            <AnswerDistributionChart
-              distribution={distribution.map((d) => ({
-                option: d.answer,
-                label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
-                count: d.count,
-              }))}
-              correctAnswer={null}
-              userAnswer={answer?.answer ?? null}
+          <View style={styles.cardContainer}>
+            <SubmittedQuestionCard
+              round={contest?.current_round ?? 1}
+              question={question?.question ?? 'Waiting for update...'}
+              options={options}
+              selectedOptionKey={answer?.answer}
             />
+
+            {/* Distribution Chart */}
+            {contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0 && (
+              <View style={styles.chartSection}>
+                <AnswerDistributionChart
+                  distribution={distribution.map((d) => ({
+                    option: options.find((o) => o.label === d.answer)?.key ?? d.answer,
+                    label: d.answer,
+                    count: d.count,
+                  }))}
+                  correctAnswer={null}
+                  userAnswer={answer?.answer ?? null}
+                />
+              </View>
+            )}
           </View>
-        )}
+        </View>
       </View>
     </View>
   );
@@ -174,6 +136,8 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
     content: {
       flex: 1,
       paddingHorizontal: SPACING.MD,
+      justifyContent: 'center',
+      paddingBottom: 100,
     },
     center: {
       flex: 1,
@@ -181,69 +145,36 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
       justifyContent: 'center',
       padding: SPACING.LG,
     },
-    scorebugSection: {
-      marginBottom: SPACING.XL * 3,
-    },
-    statusSection: {
-      alignItems: 'center',
-      marginBottom: SPACING.MD,
-    },
-    title: {
-      fontSize: TYPOGRAPHY.TITLE,
-      color: colors.ink,
-      marginBottom: SPACING.XS,
-    },
-    subtitle: {
-      fontSize: TYPOGRAPHY.BODY,
-      color: colors.muted,
-      textAlign: 'center',
-    },
-    questionCard: {
-      borderRadius: RADIUS.LG,
-      overflow: 'hidden',
-    },
-    questionSection: {
-      padding: SPACING.MD,
-      gap: SPACING.XS,
-    },
-    questionLabel: {
-      fontSize: TYPOGRAPHY.SMALL,
-      textTransform: 'uppercase',
-      letterSpacing: 1,
-    },
-    questionText: {
-      fontSize: TYPOGRAPHY.BODY,
-      lineHeight: 20,
-    },
-    divider: {
-      height: 1,
-    },
-    optionsGrid: {
-      flexDirection: 'row',
-    },
-    verticalDivider: {
-      width: 1,
-    },
-    optionItem: {
-      flex: 1,
-      padding: SPACING.SM,
-      alignItems: 'center',
-      gap: SPACING.XS,
-    },
-    optionKey: {
-      fontSize: TYPOGRAPHY.SUBTITLE,
-    },
-    optionLabel: {
-      fontSize: TYPOGRAPHY.SMALL - 1,
-      textAlign: 'center',
-    },
-    chartSection: {
-      marginTop: SPACING.MD,
-    },
     spacer: {
       height: SPACING.SM,
+    },
+    scorebugContainer: {
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      right: 0,
+      alignItems: 'center',
+      zIndex: 10,
+    },
+    centerStack: {
+      width: '100%',
+      alignItems: 'center',
+    },
+    cardContainer: {
+      width: '100%',
+      maxWidth: 500,
+    },
+    chartSection: {
+      marginTop: SPACING.XL,
+      paddingTop: SPACING.SM,
+    },
+    footballContainer: {
+      width: '100%',
+      height: 100,
+      marginBottom: -30,
+      zIndex: 20,
+      elevation: 20,
     },
   });
 
 export default SubmittedScreen;
-

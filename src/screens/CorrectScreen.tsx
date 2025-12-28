@@ -46,10 +46,7 @@ const CorrectScreen = () => {
   const chartAnim = useRef(new Animated.Value(0)).current;
   const [showChart, setShowChart] = useState(false);
 
-  const {
-    translateX: shineTranslateX,
-    opacity: shineOpacity,
-  } = useShineAnimation({
+  const { translateX: shineTranslateX, opacity: shineOpacity } = useShineAnimation({
     preset: 'NORMAL',
     delay: 800,
     loop: false,

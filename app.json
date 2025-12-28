@@ -14,7 +14,7 @@
       "backgroundColor": "#0A1018"
     },
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
       "bundleIdentifier": "com.anonymous.sbhqmobile",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

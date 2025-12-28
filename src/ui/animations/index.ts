@@ -14,4 +14,3 @@ export type {
   UseShineAnimationOptions,
 } from './types';
 export { Ripple } from './Ripple';
-

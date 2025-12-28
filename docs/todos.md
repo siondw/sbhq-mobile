@@ -35,9 +35,11 @@ P1
 - [ ] Apple Auth setup
 
 P2
+
 - [ ] Audit listneers and hooks, optimize where needed
 - [ ] Pull to refresh on contest list screeen
 
 P3
+
 - [ ] Consolidate participant lookup into a single call (avoid double fetch in getParticipantForUser/getOrCreateParticipant).
       Logging (debug-only)

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -36,7 +36,7 @@ export const Ripple = ({
         withTiming(endScale, {
           duration,
           easing: Easing.out(Easing.ease),
-        })
+        }),
       ),
       -1,
       false,
@@ -48,7 +48,7 @@ export const Ripple = ({
         withTiming(0, {
           duration,
           easing: Easing.out(Easing.ease),
-        })
+        }),
       ),
       -1,
       false,
@@ -62,16 +62,7 @@ export const Ripple = ({
     };
   });
 
-  return (
-    <Animated.View
-      style={[
-        styles.ring,
-        { borderColor: color },
-        style,
-        animatedStyle,
-      ]}
-    />
-  );
+  return <Animated.View style={[styles.ring, { borderColor: color }, style, animatedStyle]} />;
 };
 
 const styles = StyleSheet.create({

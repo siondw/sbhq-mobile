@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
 import { usePulseAnimation, useShineAnimation } from '../ui/animations';
+import RollingFootball from '../ui/animations/RollingFootball';
 import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from '../ui/animations/constants';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import AnswerOption from '../ui/components/AnswerOption';
@@ -336,6 +337,18 @@ const PlaygroundScreen = () => {
                     Ball: Primary • Laces: Energy
                   </Text>
                 </View>
+              </Card>
+
+              <Card>
+                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+                  Rolling Football Animation (SVG + Reanimated)
+                </Text>
+                <View style={{ height: 100, overflow: 'hidden', position: 'relative' }}>
+                  <RollingFootball />
+                </View>
+                <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
+                  Pure SVG animation - No assets required
+                </Text>
               </Card>
 
               <Card>
@@ -932,4 +945,3 @@ const styles = StyleSheet.create({
 });
 
 export default PlaygroundScreen;
-

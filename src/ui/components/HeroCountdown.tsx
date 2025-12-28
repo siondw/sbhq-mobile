@@ -26,11 +26,11 @@ const HeroCountdown = ({ targetTime, onComplete }: HeroCountdownProps) => {
     const interval = setInterval(() => {
       const delta = targetTime - Date.now();
       setRemainingMs(delta);
-      
+
       // Pulse animation on every second
       scale.value = withSequence(
         withTiming(1.05, { duration: 100 }),
-        withTiming(1, { duration: 100 })
+        withTiming(1, { duration: 100 }),
       );
 
       if (delta <= 0) {
@@ -53,26 +53,22 @@ const HeroCountdown = ({ targetTime, onComplete }: HeroCountdownProps) => {
   const seconds = Math.max(0, Math.floor(remainingMs / 1000));
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
-  
+
   const displayHours = hours.toString().padStart(2, '0');
   const displayMinutes = (minutes % 60).toString().padStart(2, '0');
   const displaySeconds = (seconds % 60).toString().padStart(2, '0');
 
-  const display = hours > 0 
-    ? `${displayHours}:${displayMinutes}:${displaySeconds}`
-    : `${displayMinutes}:${displaySeconds}`;
+  const display =
+    hours > 0
+      ? `${displayHours}:${displayMinutes}:${displaySeconds}`
+      : `${displayMinutes}:${displaySeconds}`;
 
   return (
     <Animated.View style={[styles.container, animatedStyle]}>
       <MaskedView
         maskElement={
           <View style={styles.maskContainer}>
-            <Text
-              weight="bold"
-              style={styles.text}
-              numberOfLines={1}
-              adjustsFontSizeToFit
-            >
+            <Text weight="bold" style={styles.text} numberOfLines={1} adjustsFontSizeToFit>
               {display}
             </Text>
           </View>
