@@ -4,6 +4,8 @@ export {
   ANIMATION_OPACITY,
   SHINE_PRESET,
   SELECTION_PRESET,
+  FOOTBALL_RED_KEYPATHS,
+  FOOTBALL_DARK_RED_KEYPATHS,
 } from './constants';
 export type {
   SelectionAnimationResult,

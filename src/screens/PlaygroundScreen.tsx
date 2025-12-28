@@ -17,6 +17,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
 import { usePulseAnimation, useShineAnimation } from '../ui/animations';
+import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from '../ui/animations/constants';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import AnswerOption from '../ui/components/AnswerOption';
 import Button from '../ui/components/Button';
@@ -36,6 +37,7 @@ import {
   isDarkHex,
   themeFromPlaygroundPalette,
   withAlpha,
+  darken,
   type PlaygroundPalette,
 } from '../ui/theme';
 
@@ -231,6 +233,20 @@ const PlaygroundScreen = () => {
     return found?.palette ?? PLAYGROUND_PALETTES[0]?.palette ?? PLAYGROUND_PALETTES[0].palette;
   }, [paletteKey]);
 
+  const colorFilters = useMemo(() => {
+    const primaryFilters = FOOTBALL_RED_KEYPATHS.map((keypath) => ({
+      keypath,
+      color: palette.primary,
+    }));
+
+    const darkFilters = FOOTBALL_DARK_RED_KEYPATHS.map((keypath) => ({
+      keypath,
+      color: darken(palette.primary, 0.4),
+    }));
+
+    return [...primaryFilters, ...darkFilters];
+  }, [palette.primary]);
+
   useEffect(() => {
     if (!__DEV__) {
       router.replace('/');
@@ -314,6 +330,7 @@ const PlaygroundScreen = () => {
                     autoPlay
                     loop
                     style={{ width: 120, height: 120 }}
+                    colorFilters={colorFilters}
                   />
                   <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
                     Ball: Primary • Laces: Energy

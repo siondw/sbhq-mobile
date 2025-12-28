@@ -3,7 +3,7 @@ export { RADIUS, SPACING } from './spacing';
 export { HEADER_CONTENT_HEIGHT, TYPOGRAPHY } from './typography';
 
 // Theme utilities
-export { isDarkHex, textOnHex, withAlpha } from './utils';
+export { darken, isDarkHex, textOnHex, withAlpha } from './utils';
 
 // Theme context and types
 export {

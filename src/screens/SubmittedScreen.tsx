@@ -246,3 +246,4 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
   });
 
 export default SubmittedScreen;
+
