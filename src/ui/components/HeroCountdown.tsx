@@ -67,7 +67,12 @@ const HeroCountdown = ({ targetTime, onComplete }: HeroCountdownProps) => {
       <MaskedView
         maskElement={
           <View style={styles.maskContainer}>
-            <Text weight="bold" style={styles.text}>
+            <Text
+              weight="bold"
+              style={styles.text}
+              numberOfLines={1}
+              adjustsFontSizeToFit
+            >
               {display}
             </Text>
           </View>
@@ -80,7 +85,12 @@ const HeroCountdown = ({ targetTime, onComplete }: HeroCountdownProps) => {
           style={styles.gradient}
         >
           {/* Invisible text to maintain layout */}
-          <Text weight="bold" style={[styles.text, { opacity: 0 }]}>
+          <Text
+            weight="bold"
+            style={[styles.text, { opacity: 0 }]}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+          >
             {display}
           </Text>
         </LinearGradient>
