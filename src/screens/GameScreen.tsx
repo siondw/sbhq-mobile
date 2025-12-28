@@ -5,8 +5,8 @@ import { StyleSheet, View } from 'react-native';
 import { type AnswerOptionValue } from '../configs/constants';
 import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
-import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import AnswerOption from '../ui/components/AnswerOption';
@@ -18,18 +18,14 @@ import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
 import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
 
-interface GameScreenProps {
-  contestId?: string;
-}
-
-const GameScreen = ({ contestId }: GameScreenProps) => {
+const GameScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { derivedUser } = useAuth();
   const router = useRouter();
   const headerHeight = useHeaderHeight();
-  const { loading, error, contest, participant, question, answer, playerState, submit, refresh } =
-    useContestState(contestId, derivedUser?.id);
+  const { contestId, loading, error, contest, participant, question, answer, playerState, submit, refresh } =
+    useContestData();
   const { count: participantCount } = useParticipantCount(contestId);
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
@@ -65,9 +61,9 @@ const GameScreen = ({ contestId }: GameScreenProps) => {
         params: { contestId, startTime: contest?.start_time },
       });
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.push({ pathname: '/submitted', params: { contestId } });
+      router.push({ pathname: ROUTES.SUBMITTED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.push({ pathname: '/correct', params: { contestId } });
+      router.push({ pathname: ROUTES.CORRECT, params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
       router.push({ pathname: ROUTES.ELIMINATED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.WINNER) {

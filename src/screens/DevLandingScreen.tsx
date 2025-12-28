@@ -2,6 +2,7 @@ import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
+import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
 import LoginScreen from './LoginScreen';
 
@@ -9,6 +10,7 @@ const DevLandingScreen = () => {
   const { session, logout } = useAuth();
   const router = useRouter();
   const [previewScreen, setPreviewScreen] = useState<'picker' | 'login'>('picker');
+  const contestId = '00000000-0000-0000-0000-0000000000aa';
 
   if (previewScreen === 'login') {
     return <LoginScreen />;
@@ -29,13 +31,13 @@ const DevLandingScreen = () => {
             <Text style={styles.buttonText}>Contest List Screen</Text>
           </Pressable>
 
-          <Pressable style={styles.button} onPress={() => router.push('/playground' as any)}>
+          <Pressable style={styles.button} onPress={() => router.push('/playground')}>
             <Text style={styles.buttonText}>UI Playground</Text>
           </Pressable>
 
           <View style={styles.divider} />
 
-          <Link href="/lobby" asChild>
+          <Link href={{ pathname: ROUTES.LOBBY, params: { contestId } }} asChild>
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Lobby Screen</Text>
             </Pressable>
@@ -43,8 +45,8 @@ const DevLandingScreen = () => {
 
           <Link
             href={{
-              pathname: '/contest/[contestId]',
-              params: { contestId: '00000000-0000-0000-0000-0000000000aa' },
+              pathname: `${ROUTES.GAME}/[contestId]`,
+              params: { contestId },
             }}
             asChild
           >
@@ -53,25 +55,25 @@ const DevLandingScreen = () => {
             </Pressable>
           </Link>
 
-          <Link href="/submitted" asChild>
+          <Link href={{ pathname: ROUTES.SUBMITTED, params: { contestId } }} asChild>
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Submitted Screen</Text>
             </Pressable>
           </Link>
 
-          <Link href="/correct" asChild>
+          <Link href={{ pathname: ROUTES.CORRECT, params: { contestId } }} asChild>
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Correct Screen</Text>
             </Pressable>
           </Link>
 
-          <Link href="/eliminated" asChild>
+          <Link href={{ pathname: ROUTES.ELIMINATED, params: { contestId } }} asChild>
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Eliminated Screen</Text>
             </Pressable>
           </Link>
 
-          <Link href="/winner" asChild>
+          <Link href={{ pathname: ROUTES.WINNER, params: { contestId } }} asChild>
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Winner Screen</Text>
             </Pressable>

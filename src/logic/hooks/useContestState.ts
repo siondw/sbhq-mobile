@@ -209,17 +209,20 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     }
   }, []);
 
-  return {
-    loading,
-    error,
-    contest,
-    participant,
-    question,
-    answer,
-    playerState,
-    refresh: fetchContestState,
-    submit: handleSubmit,
-  };
+  return useMemo(
+    () => ({
+      loading,
+      error,
+      contest,
+      participant,
+      question,
+      answer,
+      playerState,
+      refresh: fetchContestState,
+      submit: handleSubmit,
+    }),
+    [loading, error, contest, participant, question, answer, playerState, fetchContestState, handleSubmit],
+  );
 };
 
 export default useContestState;

@@ -3,10 +3,10 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { ROUTES } from '../configs/routes';
+import { buildContestRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
-import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import Header from '../ui/components/AppHeader';
@@ -20,35 +20,35 @@ import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
 const LobbyScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const params = useLocalSearchParams<{ contestId?: string; startTime?: string }>();
+  const { startTime } = useLocalSearchParams<{ startTime?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
-  const { playerState, contest, loading } = useContestState(params.contestId, derivedUser?.id);
-  const { count: participantCount } = useParticipantCount(params.contestId, 15000); // Poll every 15s
+  const { playerState, contest, loading, contestId } = useContestData();
+  const { count: participantCount } = useParticipantCount(contestId, 15000); // Poll every 15s
 
-  const targetTime = params.startTime
-    ? new Date(params.startTime).getTime()
+  const targetTime = startTime
+    ? new Date(startTime).getTime()
     : contest?.start_time
       ? new Date(contest.start_time).getTime()
       : Date.now();
 
   useEffect(() => {
-    if (!params.contestId || loading) return;
+    if (!contestId || loading) return;
     if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(`/contest/${params.contestId}`);
+      router.replace(buildContestRoute(contestId));
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId: params.contestId } });
+      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace({ pathname: ROUTES.CORRECT, params: { contestId: params.contestId } });
+      router.replace({ pathname: ROUTES.CORRECT, params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId: params.contestId } });
+      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace({ pathname: ROUTES.WINNER, params: { contestId: params.contestId } });
+      router.replace({ pathname: ROUTES.WINNER, params: { contestId } });
     } else if (playerState === PLAYER_STATE.LOBBY) {
       // stay here
     }
-  }, [playerState, router, params.contestId, loading]);
+  }, [playerState, router, contestId, loading]);
 
   return (
     <View style={styles.screen}>

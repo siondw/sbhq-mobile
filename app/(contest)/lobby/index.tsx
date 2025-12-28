@@ -1,5 +1,5 @@
 import React from 'react';
-import LobbyScreen from '../../src/screens/LobbyScreen';
+import LobbyScreen from '../../../src/screens/LobbyScreen';
 
 const LobbyRoute = () => {
   return <LobbyScreen />;

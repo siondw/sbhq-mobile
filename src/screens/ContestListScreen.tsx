@@ -84,7 +84,7 @@ const ContestListScreen = () => {
     }
     if (contest.state === CONTEST_STATE.ROUND_IN_PROGRESS) {
       router.push({
-        pathname: `${ROUTES.CONTEST}/[contestId]`,
+        pathname: `${ROUTES.GAME}/[contestId]`,
         params: { contestId: contest.id },
       });
       return;

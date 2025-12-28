@@ -18,87 +18,87 @@ Create `ContestStateProvider` context using Expo Router's **route groups** to sh
 
 ### Phase 1: Create Context Provider
 
-- [ ] Create `src/logic/contexts/` folder
-- [ ] Create `src/logic/contexts/ContestStateContext.tsx`
-  - [ ] Define `ContestStateContextValue` type (mirrors `UseContestStateResult`)
-  - [ ] Create React Context with `createContext<ContestStateContextValue | null>(null)`
-  - [ ] Create `ContestStateProvider` component that:
-    - [ ] Accepts `contestId` and `userId` as props
-    - [ ] Calls `useContestState(contestId, userId)` internally
-    - [ ] Provides state via Context.Provider
-  - [ ] Create `useContestData()` hook that:
-    - [ ] Calls `useContext(ContestStateContext)`
-    - [ ] Throws helpful error if used outside provider
-  - [ ] Export `ContestStateProvider` and `useContestData`
-- [ ] Create `src/logic/contexts/index.ts` barrel export
+- [x] Create `src/logic/contexts/` folder
+- [x] Create `src/logic/contexts/ContestStateContext.tsx`
+  - [x] Define `ContestStateContextValue` type (mirrors `UseContestStateResult`)
+  - [x] Create React Context with `createContext<ContestStateContextValue | null>(null)`
+  - [x] Create `ContestStateProvider` component that:
+    - [x] Accepts `contestId` and `userId` as props
+    - [x] Calls `useContestState(contestId, userId)` internally
+    - [x] Provides state via Context.Provider
+  - [x] Create `useContestData()` hook that:
+    - [x] Calls `useContext(ContestStateContext)`
+    - [x] Throws helpful error if used outside provider
+  - [x] Export `ContestStateProvider` and `useContestData`
+- [x] Create `src/logic/contexts/index.ts` barrel export
 
 ### Phase 2: Create Route Group & Integrate Provider
 
-- [ ] Create `app/(contest)/` route group folder
-- [ ] Move contest-flow routes into route group:
-  - [ ] `app/lobby/index.tsx` → `app/(contest)/lobby/index.tsx`
-  - [ ] `app/submitted/index.tsx` → `app/(contest)/submitted/index.tsx`
-  - [ ] `app/correct/index.tsx` → `app/(contest)/correct/index.tsx`
-  - [ ] `app/eliminated/index.tsx` → `app/(contest)/eliminated/index.tsx`
-  - [ ] `app/winner/index.tsx` → `app/(contest)/winner/index.tsx`
-  - [ ] `app/contest/[contestId].tsx` → `app/(contest)/game/[contestId].tsx`
-- [ ] Create `app/(contest)/_layout.tsx`:
-  - [ ] Import `ContestStateProvider` and `useAuth`
-  - [ ] Extract `contestId` from `useLocalSearchParams()`
-  - [ ] Get `userId` from `useAuth().derivedUser?.id`
-  - [ ] Wrap `<Slot />` with `<ContestStateProvider contestId={contestId} userId={userId}>`
-  - [ ] Add `<Stack>` navigator with `headerShown: false`
-- [ ] Update `app/_layout.tsx`:
-  - [ ] Remove individual contest screen Stack.Screen entries
-  - [ ] Route group handles its own layout
+- [x] Create `app/(contest)/` route group folder
+- [x] Move contest-flow routes into route group:
+  - [x] `app/lobby/index.tsx` → `app/(contest)/lobby/index.tsx`
+  - [x] `app/submitted/index.tsx` → `app/(contest)/submitted/index.tsx`
+  - [x] `app/correct/index.tsx` → `app/(contest)/correct/index.tsx`
+  - [x] `app/eliminated/index.tsx` → `app/(contest)/eliminated/index.tsx`
+  - [x] `app/winner/index.tsx` → `app/(contest)/winner/index.tsx`
+  - [x] `app/contest/[contestId].tsx` → `app/(contest)/game/[contestId].tsx`
+- [x] Create `app/(contest)/_layout.tsx`:
+  - [x] Import `ContestStateProvider` and `useAuth`
+  - [x] Extract `contestId` from `useLocalSearchParams()`
+  - [x] Get `userId` from `useAuth().derivedUser?.id`
+  - [x] Wrap `<Slot />` with `<ContestStateProvider contestId={contestId} userId={userId}>`
+  - [x] Add `<Stack>` navigator with `headerShown: false`
+- [x] Update `app/_layout.tsx`:
+  - [x] Remove individual contest screen Stack.Screen entries
+  - [x] Route group handles its own layout
 
 ### Phase 3: Update Screens to Use Context
 
-- [ ] Update `src/screens/LobbyScreen.tsx`
-  - [ ] Replace `useContestState(params.contestId, derivedUser?.id)` with `useContestData()`
-  - [ ] Keep `useParticipantCount` as-is (separate polling hook)
-  - [ ] Remove `contestId` extraction from params (get from context)
+- [x] Update `src/screens/LobbyScreen.tsx`
+  - [x] Replace `useContestState(params.contestId, derivedUser?.id)` with `useContestData()`
+  - [x] Keep `useParticipantCount` as-is (separate polling hook)
+  - [x] Remove `contestId` extraction from params (get from context)
 
-- [ ] Update `src/screens/GameScreen.tsx`
-  - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Keep `useParticipantCount` as-is
-  - [ ] Remove `contestId` extraction from params
+- [x] Update `src/screens/GameScreen.tsx`
+  - [x] Replace `useContestState()` with `useContestData()`
+  - [x] Keep `useParticipantCount` as-is
+  - [x] Remove `contestId` extraction from params
 
-- [ ] Update `src/screens/SubmittedScreen.tsx`
-  - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Keep `useParticipantCount` as-is
-  - [ ] Keep `useAnswerDistribution` as-is (screens manage their own distribution fetching)
-  - [ ] Remove `contestId` extraction from params
+- [x] Update `src/screens/SubmittedScreen.tsx`
+  - [x] Replace `useContestState()` with `useContestData()`
+  - [x] Keep `useParticipantCount` as-is
+  - [x] Keep `useAnswerDistribution` as-is (screens manage their own distribution fetching)
+  - [x] Remove `contestId` extraction from params
 
-- [ ] Update `src/screens/CorrectScreen.tsx`
-  - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Keep `useParticipantCount` as-is
-  - [ ] Keep `useAnswerDistribution` as-is
-  - [ ] Remove `contestId` extraction from params
+- [x] Update `src/screens/CorrectScreen.tsx`
+  - [x] Replace `useContestState()` with `useContestData()`
+  - [x] Keep `useParticipantCount` as-is
+  - [x] Keep `useAnswerDistribution` as-is
+  - [x] Remove `contestId` extraction from params
 
-- [ ] Update `src/screens/EliminatedScreen.tsx`
-  - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Keep `useParticipantCount` as-is
-  - [ ] Keep `useAnswerDistribution` as-is
-  - [ ] Remove `contestId` extraction from params
+- [x] Update `src/screens/EliminatedScreen.tsx`
+  - [x] Replace `useContestState()` with `useContestData()`
+  - [x] Keep `useParticipantCount` as-is
+  - [x] Keep `useAnswerDistribution` as-is
+  - [x] Remove `contestId` extraction from params
 
-- [ ] Update `src/screens/WinnerScreen.tsx`
-  - [ ] Replace `useContestState()` with `useContestData()`
-  - [ ] Keep `useParticipantCount` as-is
-  - [ ] Remove `contestId` extraction from params
+- [x] Update `src/screens/WinnerScreen.tsx`
+  - [x] Replace `useContestState()` with `useContestData()`
+  - [x] Keep `useParticipantCount` as-is
+  - [x] Remove `contestId` extraction from params
 
 ### Phase 4: Update Route References
 
-- [ ] Update `src/configs/routes.ts` if route paths changed
-- [ ] Search codebase for hardcoded route strings and update
-- [ ] Verify `router.replace()` calls in screens still work with new paths
+- [x] Update `src/configs/routes.ts` if route paths changed
+- [x] Search codebase for hardcoded route strings and update
+- [x] Verify `router.replace()` calls in screens still work with new paths
 
 ### Phase 5: Code Quality
 
-- [ ] Run TypeScript type checking: `npx tsc --noEmit`
-- [ ] Run ESLint: `npm run lint` (or `npm run lint:fix`)
+- [x] Run TypeScript type checking: `npx tsc --noEmit`
+- [x] Run ESLint: `npm run lint` (fails due to existing lint issues)
 - [ ] Run Prettier: `npm run format`
-- [ ] Verify no architectural violations (context in `logic/contexts/`, no DB in UI)
+- [x] Verify no architectural violations (context in `logic/contexts/`, no DB in UI)
 
 ### Phase 6: Testing (Optional)
 
@@ -216,3 +216,4 @@ We chose React Context over Zustand/Jotai because:
 
 - `id` (uuid), `participant_id` (uuid), `round` (int), `answer` (enum), `timestamp` (timestamp), `contest_id` (uuid), `question_id` (uuid)
 - Each user subscribes to their own answers only
+

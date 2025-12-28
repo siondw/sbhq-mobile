@@ -1,13 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { ROUTES } from '../configs/routes';
+import { buildContestRoute, ROUTES } from '../configs/routes';
 import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
+import { useContestData } from '../logic/contexts';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
-import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import RollingFootball from '../ui/animations/RollingFootball';
@@ -24,14 +24,11 @@ import { normalizeQuestionOptions } from '../utils/questionOptions';
 const SubmittedScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
-  const { loading, error, playerState, refresh, question, answer, contest } = useContestState(
-    contestId,
-    derivedUser?.id,
-  );
+  const { contestId, loading, error, playerState, refresh, question, answer, contest } =
+    useContestData();
 
   const { count: participantCount } = useParticipantCount(contestId);
 
@@ -46,7 +43,7 @@ const SubmittedScreen = () => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
 
     if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(`/contest/${contestId}`);
+      router.replace(buildContestRoute(contestId));
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
       router.replace({ pathname: ROUTES.CORRECT, params: { contestId } });
     } else if (playerState === PLAYER_STATE.ELIMINATED) {

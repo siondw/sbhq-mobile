@@ -103,12 +103,7 @@ function RootLayoutNav() {
             <Stack.Screen name="index" />
             {__DEV__ ? <Stack.Screen name="playground" /> : null}
             <Stack.Screen name="contests/index" />
-            <Stack.Screen name="contest/[contestId]" />
-            <Stack.Screen name="lobby/index" />
-            <Stack.Screen name="submitted/index" />
-            <Stack.Screen name="correct/index" />
-            <Stack.Screen name="eliminated/index" />
-            <Stack.Screen name="winner/index" />
+            <Stack.Screen name="(contest)" />
           </Stack>
         </NavigationThemeProvider>
       </CustomThemeProvider>

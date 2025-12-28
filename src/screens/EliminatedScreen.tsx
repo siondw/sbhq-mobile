@@ -1,16 +1,15 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
-import { ROUTES } from '../configs/routes';
-import { getQuestionForRound } from '../db/questions';
-import type { QuestionRow } from '../db/types';
+import { buildContestRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { useContestData } from '../logic/contexts';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
-import { useContestState } from '../logic/hooks/useContestState';
+import { useEliminationQuestion } from '../logic/hooks/useEliminationQuestion';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
@@ -26,38 +25,20 @@ const EliminatedScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
+  const { contestId, loading, error, playerState, refresh, participant, answer } = useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
-  const { loading, error, playerState, refresh, participant, answer } = useContestState(
-    contestId,
-    derivedUser?.id,
-  );
 
   const { distribution } = useAnswerDistribution(
     contestId,
     participant?.elimination_round ?? undefined,
   );
 
-  const [eliminationQuestion, setEliminationQuestion] = useState<QuestionRow | null>(null);
-
-  useEffect(() => {
-    if (!contestId || !participant?.elimination_round) {
-      setEliminationQuestion(null);
-      return;
-    }
-
-    const fetchEliminationQuestion = async () => {
-      if (participant.elimination_round === null) return;
-      const result = await getQuestionForRound(contestId, participant.elimination_round);
-      if (result.ok) {
-        setEliminationQuestion(result.value);
-      }
-    };
-
-    void fetchEliminationQuestion();
-  }, [contestId, participant?.elimination_round]);
+  const { question: eliminationQuestion } = useEliminationQuestion(
+    contestId,
+    participant?.elimination_round,
+  );
 
   // Staggered slam animations
   const skullAnim = useRef(new Animated.Value(-200)).current;
@@ -111,7 +92,7 @@ const EliminatedScreen = () => {
   useEffect(() => {
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
     if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(`/contest/${contestId}`);
+      router.replace(buildContestRoute(contestId));
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
       router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {

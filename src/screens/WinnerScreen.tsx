@@ -1,11 +1,11 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
-import { ROUTES } from '../configs/routes';
+import { buildContestRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
-import { useContestState } from '../logic/hooks/useContestState';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import Header from '../ui/components/AppHeader';
@@ -19,14 +19,10 @@ const WinnerScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
-  const { contestId } = useLocalSearchParams<{ contestId?: string }>();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
+  const { contestId, loading, error, playerState, refresh, contest } = useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
-  const { loading, error, playerState, refresh, contest } = useContestState(
-    contestId,
-    derivedUser?.id,
-  );
   const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -54,7 +50,7 @@ const WinnerScreen = () => {
   useEffect(() => {
     if (!contestId || loading) return;
     if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(`/contest/${contestId}`);
+      router.replace(buildContestRoute(contestId));
     } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
       router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
     } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {

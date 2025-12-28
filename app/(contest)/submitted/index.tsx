@@ -1,5 +1,5 @@
 import React from 'react';
-import SubmittedScreen from '../../src/screens/SubmittedScreen';
+import SubmittedScreen from '../../../src/screens/SubmittedScreen';
 
 const SubmittedRoute = () => {
   return <SubmittedScreen />;
