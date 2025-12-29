@@ -173,13 +173,16 @@ Add push notifications to the SBHQ mobile app using Expo Notifications with Supa
 
 ### Phase 7: Permission Request Flow
 
-- [ ] **7.1** Decide when to request permissions
-  - [ ] After onboarding / first time account creation (can reuse the logic we use for shwoing the username modal, maybe we even make the modal multiple parts)
+- [x] **7.1** Decide when to request permissions
+  - [x] Added checkbox to OnboardingModal: "Notify me when my contests start and new rounds begin"
+  - [x] Permission requested on form submit if checkbox is checked (default: checked)
 
-- [ ] **7.2** (If needed) Create permission prompt UI component
-  - [ ] File: `src/ui/components/NotificationPermissionPrompt.tsx`
+- [x] **7.2** (If needed) Create permission prompt UI component
+  - [x] Integrated directly into OnboardingModal as a checkbox (no separate component needed)
 
-- [ ] **7.3** Integrate permission request into user flow
+- [x] **7.3** Integrate permission request into user flow
+  - [x] OnboardingModal calls `usePushNotifications().requestPermissions()` on submit
+  - [x] Token is automatically saved to Supabase when permission granted
 
 ---
 
@@ -301,6 +304,7 @@ Add push notifications to the SBHQ mobile app using Expo Notifications with Supa
 | `src/logic/notifications/deepLinks.ts` | New | Deep link utilities |
 | `src/logic/hooks/usePushNotifications.ts` | New | Main notification hook |
 | `src/logic/hooks/useNotificationObserver.ts` | New | Deep link observer |
+| `src/ui/components/OnboardingModal.tsx` | Updated | Added notification opt-in checkbox |
 | Edge Function `send-notification` | New | Backend push sender |
 
 ---

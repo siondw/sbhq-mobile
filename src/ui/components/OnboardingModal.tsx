@@ -3,12 +3,14 @@ import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   Keyboard,
   Modal,
+  Pressable,
   StyleSheet,
   TextInput,
   TouchableWithoutFeedback,
   View,
 } from 'react-native';
 
+import { usePushNotifications } from '../../logic/hooks/usePushNotifications';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import GlassyTexture from '../textures/GlassyTexture';
 import Button from './Button';
@@ -43,9 +45,11 @@ const getDigitsOnly = (formatted: string): string => {
 const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingModalProps) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const { requestPermissions } = usePushNotifications();
 
   const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [enableNotifications, setEnableNotifications] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const phoneInputRef = useRef<TextInput>(null);
@@ -65,11 +69,21 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
 
     Keyboard.dismiss();
     setIsSubmitting(true);
+
+    // Request notification permissions if user opted in
+    if (enableNotifications) {
+      await requestPermissions();
+    }
+
     const success = await onComplete(username.trim(), phoneDigits);
     if (!success) {
       setIsSubmitting(false);
     }
-  }, [isFormValid, isSubmitting, onComplete, username, phoneDigits]);
+  }, [isFormValid, isSubmitting, onComplete, username, phoneDigits, enableNotifications, requestPermissions]);
+
+  const toggleNotifications = useCallback(() => {
+    setEnableNotifications((prev) => !prev);
+  }, []);
 
   const handleOverlayPress = useCallback(() => {
     Keyboard.dismiss();
@@ -157,6 +171,23 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
                       )}
                     </View>
                   </View>
+
+                  {/* Notification opt-in */}
+                  <Pressable style={styles.checkboxRow} onPress={toggleNotifications}>
+                    <View
+                      style={[
+                        styles.checkbox,
+                        enableNotifications && styles.checkboxChecked,
+                      ]}
+                    >
+                      {enableNotifications && (
+                        <Ionicons name="checkmark" size={14} color={colors.surface} />
+                      )}
+                    </View>
+                    <Text style={styles.checkboxLabel}>
+                      Notify me when my contests start and new rounds begin
+                    </Text>
+                  </Pressable>
 
                   {error ? (
                     <View style={styles.errorContainer}>
@@ -288,6 +319,33 @@ function createStyles(colors: {
       color: colors.energy,
       marginTop: 4,
       marginLeft: SPACING.XS,
+    },
+    checkboxRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.SM,
+      marginTop: SPACING.LG,
+      paddingHorizontal: SPACING.XS,
+    },
+    checkbox: {
+      width: 22,
+      height: 22,
+      borderRadius: RADIUS.SM,
+      borderWidth: 2,
+      borderColor: withAlpha(colors.ink, 0.3),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    checkboxChecked: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary,
+    },
+    checkboxLabel: {
+      flex: 1,
+      fontSize: TYPOGRAPHY.SMALL,
+      fontFamily: TYPOGRAPHY.FONT_FAMILY_REGULAR,
+      color: colors.muted,
+      lineHeight: 18,
     },
     errorContainer: {
       flexDirection: 'row',

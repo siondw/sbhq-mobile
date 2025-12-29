@@ -205,10 +205,11 @@ export const usePushNotifications = () => {
   }, [user?.id, permissionStatus, expoPushToken, isRegistered, registerToken]);
 
   useEffect(() => {
-    const pushTokenListener = Notifications.addPushTokenListener((token) => {
-      if (typeof token.data === 'string') {
-        void registerToken(token.data);
-      }
+    // When the native device token (APNs/FCM) changes, we need to re-register.
+    // Note: The callback receives the native token, but we need the Expo token,
+    // so we call registerToken() without arguments to fetch a fresh Expo token.
+    const pushTokenListener = Notifications.addPushTokenListener(() => {
+      void registerToken();
     });
 
     return () => {
