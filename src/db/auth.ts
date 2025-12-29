@@ -1,5 +1,6 @@
 import type {
   AuthChangeEvent,
+  AuthResponse,
   OAuthResponse,
   Session,
   SignInWithOAuthCredentials,
@@ -89,31 +90,20 @@ export const setSession = async (tokens: {
   return Ok(undefined);
 };
 
-export const signInWithOtp = async (email: string): AsyncResult<void, DbError> => {
-  const { error } = await SUPABASE_CLIENT.auth.signInWithOtp({
-    email,
-    options: { shouldCreateUser: true },
-  });
-
-  if (error) {
-    return Err(authError(error.message));
-  }
-
-  return Ok(undefined);
-};
-
-export const verifyOtp = async (email: string, token: string): AsyncResult<void, DbError> => {
-  const { error } = await SUPABASE_CLIENT.auth.verifyOtp({
-    email,
+export const signInWithIdToken = async (
+  provider: 'apple' | 'google',
+  token: string,
+): AsyncResult<AuthResponse['data'], DbError> => {
+  const { data, error } = await SUPABASE_CLIENT.auth.signInWithIdToken({
+    provider,
     token,
-    type: 'email',
   });
 
   if (error) {
     return Err(authError(error.message));
   }
 
-  return Ok(undefined);
+  return Ok(data);
 };
 
 export const signOut = async (): AsyncResult<void, DbError> => {

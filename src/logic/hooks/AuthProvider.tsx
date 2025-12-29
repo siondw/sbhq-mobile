@@ -1,3 +1,4 @@
+import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
@@ -10,16 +11,15 @@ import {
   getSession,
   onAuthStateChange,
   setSession as setSupabaseSession,
+  signInWithIdToken,
   signInWithOAuth,
-  signInWithOtp,
   signOut,
   startAutoRefresh,
   stopAutoRefresh,
-  verifyOtp,
 } from '../../db/auth';
 import { getErrorMessage } from '../../db/errors';
 import type { UserRow } from '../../db/types';
-import { getUserById } from '../../db/users';
+import { getUserById, updateUserProfile } from '../../db/users';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -40,10 +40,13 @@ export interface DerivedUser {
 
 export interface AuthContextValue extends AuthState {
   loginWithGoogle: () => Promise<void>;
-  sendEmailOtp: (email: string) => Promise<void>;
-  verifyEmailOtp: (email: string, token: string) => Promise<void>;
+  loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
   derivedUser: DerivedUser | null;
+  isOnboardingComplete: boolean;
+  needsOnboarding: boolean;
+  completeOnboarding: (username: string, phoneNumber: string) => Promise<boolean>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -211,19 +214,33 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setError('No auth code returned from Supabase');
   }, []);
 
-  const sendEmailOtp = useCallback(async (email: string) => {
+  const loginWithApple = useCallback(async () => {
     setError(null);
-    const result = await signInWithOtp(email);
-    if (!result.ok) {
-      setError(getErrorMessage(result.error));
-    }
-  }, []);
 
-  const verifyEmailOtp = useCallback(async (email: string, token: string) => {
-    setError(null);
-    const result = await verifyOtp(email, token);
-    if (!result.ok) {
-      setError(getErrorMessage(result.error));
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (!credential.identityToken) {
+        setError('No identity token returned from Apple');
+        return;
+      }
+
+      const result = await signInWithIdToken('apple', credential.identityToken);
+      if (!result.ok) {
+        setError(getErrorMessage(result.error));
+      }
+    } catch (e) {
+      const error = e as { code?: string };
+      if (error.code === 'ERR_REQUEST_CANCELED') {
+        // User cancelled - don't show error
+        return;
+      }
+      setError('Apple sign-in failed');
     }
   }, []);
 
@@ -245,6 +262,48 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     };
   }, [user, profile]);
 
+  const isOnboardingComplete = useMemo(() => {
+    if (!profile) return false;
+    return Boolean(profile.username && profile.phone_number);
+  }, [profile]);
+
+  // Show onboarding if profile is incomplete (missing username or phone)
+  // Also show if profile is null (user row doesn't exist yet)
+  const needsOnboarding = useMemo(() => {
+    if (!session) return false;
+    if (profile === null) return true;
+    return !isOnboardingComplete;
+  }, [session, profile, isOnboardingComplete]);
+
+  const refreshProfile = useCallback(async () => {
+    if (!user) return;
+    await fetchProfile(user.id);
+  }, [user, fetchProfile]);
+
+  const completeOnboarding = useCallback(
+    async (username: string, phoneNumber: string): Promise<boolean> => {
+      if (!user) {
+        setError('No user logged in');
+        return false;
+      }
+
+      setError(null);
+      const result = await updateUserProfile(user.id, {
+        username,
+        phone_number: phoneNumber,
+      });
+
+      if (!result.ok) {
+        setError(getErrorMessage(result.error));
+        return false;
+      }
+
+      await fetchProfile(user.id);
+      return true;
+    },
+    [user, fetchProfile],
+  );
+
   const value = useMemo(
     () => ({
       session,
@@ -253,10 +312,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading,
       error,
       loginWithGoogle,
-      sendEmailOtp,
-      verifyEmailOtp,
+      loginWithApple,
       logout,
       derivedUser,
+      isOnboardingComplete,
+      needsOnboarding,
+      completeOnboarding,
+      refreshProfile,
     }),
     [
       session,
@@ -265,10 +327,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loading,
       error,
       loginWithGoogle,
-      sendEmailOtp,
-      verifyEmailOtp,
+      loginWithApple,
       logout,
       derivedUser,
+      isOnboardingComplete,
+      needsOnboarding,
+      completeOnboarding,
+      refreshProfile,
     ],
   );
 

@@ -14,13 +14,14 @@ import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import LoadingView from '../ui/components/LoadingView';
+import OnboardingModal from '../ui/components/OnboardingModal';
 import Text from '../ui/components/Text';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const ContestListScreen = () => {
   const router = useRouter();
   const { colors } = useTheme();
-  const { derivedUser, loading: authLoading } = useAuth();
+  const { derivedUser, needsOnboarding, completeOnboarding, error: authError, loading: authLoading } = useAuth();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -189,6 +190,13 @@ const ContestListScreen = () => {
           </View>
         }
       />
+      {needsOnboarding && (
+        <OnboardingModal
+          visible={true}
+          onComplete={completeOnboarding}
+          error={authError}
+        />
+      )}
     </View>
   );
 };

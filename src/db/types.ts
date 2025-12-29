@@ -169,6 +169,7 @@ export type Database = {
           created_at: string | null;
           email: string | null;
           id: string;
+          phone_number: string | null;
           role: string | null;
           updated_at: string | null;
           username: string | null;
@@ -177,6 +178,7 @@ export type Database = {
           created_at?: string | null;
           email?: string | null;
           id?: string;
+          phone_number?: string | null;
           role?: string | null;
           updated_at?: string | null;
           username?: string | null;
@@ -185,6 +187,7 @@ export type Database = {
           created_at?: string | null;
           email?: string | null;
           id?: string;
+          phone_number?: string | null;
           role?: string | null;
           updated_at?: string | null;
           username?: string | null;
@@ -196,6 +199,10 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
+      check_username_available: {
+        Args: { requested_username: string };
+        Returns: boolean;
+      };
       get_answer_distribution: {
         Args: { p_contest_id: string; p_round: number };
         Returns: {

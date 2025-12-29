@@ -26,6 +26,7 @@ import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import Countdown from '../ui/components/Countdown';
+import OnboardingModal from '../ui/components/OnboardingModal';
 import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
 import {
@@ -228,6 +229,7 @@ const PlaygroundScreen = () => {
   const [chartState, setChartState] = useState<'submitted' | 'correct' | 'eliminated'>('submitted');
   const [statsVariant, setStatsVariant] = useState<'success' | 'eliminated'>('success');
   const [checkmarkKey, setCheckmarkKey] = useState(0);
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const palette: PlaygroundPalette = useMemo(() => {
     const found = PLAYGROUND_PALETTES.find((p) => p.key === paletteKey);
@@ -317,6 +319,13 @@ const PlaygroundScreen = () => {
                   palette={palette}
                 />
               </Row>
+              <Row>
+                <Chip
+                  label="Open Onboarding"
+                  onPress={() => setShowOnboarding(true)}
+                  palette={palette}
+                />
+              </Row>
             </Section>
 
             <Section title="Actual Components" titleColor={palette.ink}>
@@ -349,18 +358,6 @@ const PlaygroundScreen = () => {
                 <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
                   Pure SVG animation - No assets required
                 </Text>
-              </Card>
-
-              <Card>
-                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                  Card + Button + Countdown
-                </Text>
-                <View style={{ height: SPACING.SM }} />
-                <Countdown targetTime={countdownTargetRef.current} />
-                <View style={{ height: SPACING.MD }} />
-                <Button label="Primary CTA" onPress={() => {}} />
-                <View style={{ height: SPACING.SM }} />
-                <Button label="Secondary" variant="secondary" onPress={() => {}} />
               </Card>
 
               <ContestListTicket
@@ -518,11 +515,22 @@ const PlaygroundScreen = () => {
               </Card>
             </Section>
           </ScrollView>
+
+          <OnboardingModal
+            visible={showOnboarding}
+            onComplete={async (u, p) => {
+              console.log('Complete:', u, p);
+              setShowOnboarding(false);
+              return true;
+            }}
+            onDismiss={() => setShowOnboarding(false)}
+          />
         </View>
       </ThemeProvider>
     </SafeAreaView>
   );
 };
+
 
 function reset(
   setSelectedOption: React.Dispatch<React.SetStateAction<string | null>>,

@@ -1,48 +1,51 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
 import LoadingView from '../ui/components/LoadingView';
-import { SPACING, useTheme } from '../ui/theme';
+import OnboardingModal from '../ui/components/OnboardingModal';
 import DevLandingScreen from './DevLandingScreen';
 import LoginScreen from './LoginScreen';
 
 const IndexScreen = () => {
-  const { session, loading } = useAuth();
-  const { colors } = useTheme();
+  const { session, loading, needsOnboarding, completeOnboarding, error } = useAuth();
   const router = useRouter();
   const isDev = __DEV__;
 
   useEffect(() => {
-    if (!isDev && session) {
+    if (!isDev && session && !needsOnboarding) {
       router.replace(ROUTES.CONTESTS);
     }
-  }, [isDev, session, router]);
-
-  if (isDev) {
-    return <DevLandingScreen />;
-  }
+  }, [isDev, session, needsOnboarding, router]);
 
   if (loading) {
     return <LoadingView />;
   }
 
-  if (session) {
-    return <LoadingView />;
+  if (!session) {
+    return <LoginScreen />;
   }
 
-  return <LoginScreen />;
-};
+  if (needsOnboarding) {
+    return (
+      <View style={{ flex: 1 }}>
+        <LoginScreen />
+        <OnboardingModal
+          visible={true}
+          onComplete={completeOnboarding}
+          error={error}
+        />
+      </View>
+    );
+  }
 
-const styles = StyleSheet.create({
-  center: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: SPACING.LG,
-  },
-});
+  if (isDev) {
+    return <DevLandingScreen />;
+  }
+
+  return <LoadingView />;
+};
 
 export default IndexScreen;
