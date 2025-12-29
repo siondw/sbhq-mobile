@@ -57,3 +57,38 @@ export const updateUserProfile = async (
 
   return Ok(undefined);
 };
+
+export const updatePushToken = async (
+  userId: string,
+  token: string,
+): AsyncResult<UserRow, DbError> => {
+  const { data, error } = await SUPABASE_CLIENT.from(DB_TABLES.USERS)
+    .update({
+      expo_push_token: token,
+      push_token_updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId)
+    .select('*')
+    .single();
+
+  if (error) {
+    return Err(networkError(`Failed to update push token: ${error.message}`));
+  }
+
+  return Ok(data as UserRow);
+};
+
+export const clearPushToken = async (userId: string): AsyncResult<void, DbError> => {
+  const { error } = await SUPABASE_CLIENT.from(DB_TABLES.USERS)
+    .update({
+      expo_push_token: null,
+      push_token_updated_at: new Date().toISOString(),
+    })
+    .eq('id', userId);
+
+  if (error) {
+    return Err(networkError(`Failed to clear push token: ${error.message}`));
+  }
+
+  return Ok(undefined);
+};

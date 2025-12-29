@@ -7,6 +7,7 @@ import {
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import { DefaultTheme, ThemeProvider as NavigationThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import * as Notifications from 'expo-notifications';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -14,7 +15,9 @@ import { useEffect, useMemo } from 'react';
 import 'react-native-reanimated';
 
 import { THEME_CONFIG } from '../src/configs/constants';
+import { NotificationProvider } from '../src/logic/contexts';
 import { AuthProvider } from '../src/logic/hooks/AuthProvider';
+import { useNotificationObserver } from '../src/logic/hooks/useNotificationObserver';
 import CustomSplashScreen from '../src/screens/SplashScreen';
 import {
   ThemeProvider as CustomThemeProvider,
@@ -33,6 +36,15 @@ export const unstable_settings = {
   // Default to the app entry stack route.
   initialRouteName: 'index',
 };
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: false,
+    shouldShowList: false,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
@@ -80,6 +92,8 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
+  useNotificationObserver();
+
   const selectedTheme = useMemo(() => {
     const paletteMatch = DARK_CARBON_TEAL_PALETTES.find(
       (item) => item.key === THEME_CONFIG.SELECTED_PALETTE,
@@ -96,17 +110,19 @@ function RootLayoutNav() {
 
   return (
     <AuthProvider>
-      <CustomThemeProvider theme={selectedTheme}>
-        <NavigationThemeProvider value={DefaultTheme}>
-          <StatusBar style={statusBarStyle} />
-          <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
-            <Stack.Screen name="index" />
-            {__DEV__ ? <Stack.Screen name="playground" /> : null}
-            <Stack.Screen name="contests/index" />
-            <Stack.Screen name="(contest)" />
-          </Stack>
-        </NavigationThemeProvider>
-      </CustomThemeProvider>
+      <NotificationProvider>
+        <CustomThemeProvider theme={selectedTheme}>
+          <NavigationThemeProvider value={DefaultTheme}>
+            <StatusBar style={statusBarStyle} />
+            <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
+              <Stack.Screen name="index" />
+              {__DEV__ ? <Stack.Screen name="playground" /> : null}
+              <Stack.Screen name="contests/index" />
+              <Stack.Screen name="(contest)" />
+            </Stack>
+          </NavigationThemeProvider>
+        </CustomThemeProvider>
+      </NotificationProvider>
     </AuthProvider>
   );
 }

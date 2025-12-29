@@ -323,12 +323,16 @@ const PlaygroundScreen = () => {
               <Row>
                 <Chip
                   label="Success"
-                  onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)}
+                  onPress={() =>
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                  }
                   palette={palette}
                 />
                 <Chip
                   label="Warning"
-                  onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)}
+                  onPress={() =>
+                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+                  }
                   palette={palette}
                 />
                 <Chip

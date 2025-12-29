@@ -135,3 +135,11 @@ export const FOOTBALL_DARK_RED_KEYPATHS = [
   'rugby ball.rugby ball shadow.Group 1.Fill 1',
   'rugby ball.baseline.line.Stroke 1',
 ];
+
+/**
+ * Rolling football animation configuration
+ */
+export const ROLLING_FOOTBALL = {
+  BALL_SIZE: 100,
+  DURATION: 12000,
+} as const;

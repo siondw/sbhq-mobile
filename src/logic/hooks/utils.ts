@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { ANIMATION_DURATION } from '../../ui/animations';
 import { lightImpact } from '../../utils/haptics';
 
-export const useRefresh = (refreshFns: (() => Promise<void>)[]) => {
+export const useRefresh = (refreshFns: Array<() => Promise<void>>) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const onRefresh = useCallback(async () => {
@@ -15,9 +15,7 @@ export const useRefresh = (refreshFns: (() => Promise<void>)[]) => {
     // Ensure spinner shows for at least REFRESH_MIN duration
     const elapsed = Date.now() - startTime;
     if (elapsed < ANIMATION_DURATION.REFRESH_MIN) {
-      await new Promise((resolve) =>
-        setTimeout(resolve, ANIMATION_DURATION.REFRESH_MIN - elapsed),
-      );
+      await new Promise((resolve) => setTimeout(resolve, ANIMATION_DURATION.REFRESH_MIN - elapsed));
     }
 
     setRefreshing(false);

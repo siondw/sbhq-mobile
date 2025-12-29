@@ -1,4 +1,4 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+﻿export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -90,6 +90,51 @@ export type Database = {
         };
         Relationships: [];
       };
+      notification_log: {
+        Row: {
+          contest_id: string | null;
+          dedupe_key: string;
+          id: string;
+          notification_type: string;
+          round: number | null;
+          sent_at: string | null;
+          user_id: string;
+        };
+        Insert: {
+          contest_id?: string | null;
+          dedupe_key: string;
+          id?: string;
+          notification_type: string;
+          round?: number | null;
+          sent_at?: string | null;
+          user_id: string;
+        };
+        Update: {
+          contest_id?: string | null;
+          dedupe_key?: string;
+          id?: string;
+          notification_type?: string;
+          round?: number | null;
+          sent_at?: string | null;
+          user_id?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'notification_log_contest_id_fkey';
+            columns: ['contest_id'];
+            isOneToOne: false;
+            referencedRelation: 'contests';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'notification_log_user_id_fkey';
+            columns: ['user_id'];
+            isOneToOne: false;
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+        ];
+      };
       participants: {
         Row: {
           contest_id: string | null;
@@ -168,8 +213,10 @@ export type Database = {
         Row: {
           created_at: string | null;
           email: string | null;
+          expo_push_token: string | null;
           id: string;
           phone_number: string | null;
+          push_token_updated_at: string | null;
           role: string | null;
           updated_at: string | null;
           username: string | null;
@@ -177,8 +224,10 @@ export type Database = {
         Insert: {
           created_at?: string | null;
           email?: string | null;
+          expo_push_token?: string | null;
           id?: string;
           phone_number?: string | null;
+          push_token_updated_at?: string | null;
           role?: string | null;
           updated_at?: string | null;
           username?: string | null;
@@ -186,8 +235,10 @@ export type Database = {
         Update: {
           created_at?: string | null;
           email?: string | null;
+          expo_push_token?: string | null;
           id?: string;
           phone_number?: string | null;
+          push_token_updated_at?: string | null;
           role?: string | null;
           updated_at?: string | null;
           username?: string | null;

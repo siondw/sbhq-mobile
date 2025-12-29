@@ -21,35 +21,38 @@ export const useContestRegistration = (
   const [error, setError] = useState<string | null>(null);
   const hasLoadedRef = useRef(false);
 
-  const fetchParticipantStatuses = useCallback(async (isRefresh = false) => {
-    if (!userId || contests.length === 0) return;
+  const fetchParticipantStatuses = useCallback(
+    async (isRefresh = false) => {
+      if (!userId || contests.length === 0) return;
 
-    // Only show loading on initial load, not on refresh or re-fetches
-    if (!isRefresh && !hasLoadedRef.current) {
-      setLoading(true);
-    }
-    setError(null);
-
-    const participantMap = new Map<string, ParticipantRow>();
-    const results = await Promise.all(
-      contests.map(async (contest) => {
-        const result = await getParticipantForUser(contest.id, userId);
-        return { contestId: contest.id, result };
-      }),
-    );
-
-    for (const { contestId, result } of results) {
-      if (result.ok && result.value) {
-        participantMap.set(contestId, result.value);
-      } else if (!result.ok) {
-        setError(getErrorMessage(result.error));
+      // Only show loading on initial load, not on refresh or re-fetches
+      if (!isRefresh && !hasLoadedRef.current) {
+        setLoading(true);
       }
-    }
+      setError(null);
 
-    setParticipants(participantMap);
-    hasLoadedRef.current = true;
-    setLoading(false);
-  }, [contests, userId]);
+      const participantMap = new Map<string, ParticipantRow>();
+      const results = await Promise.all(
+        contests.map(async (contest) => {
+          const result = await getParticipantForUser(contest.id, userId);
+          return { contestId: contest.id, result };
+        }),
+      );
+
+      for (const { contestId, result } of results) {
+        if (result.ok && result.value) {
+          participantMap.set(contestId, result.value);
+        } else if (!result.ok) {
+          setError(getErrorMessage(result.error));
+        }
+      }
+
+      setParticipants(participantMap);
+      hasLoadedRef.current = true;
+      setLoading(false);
+    },
+    [contests, userId],
+  );
 
   useEffect(() => {
     void fetchParticipantStatuses();

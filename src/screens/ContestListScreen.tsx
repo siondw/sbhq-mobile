@@ -1,12 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  ActivityIndicator,
-  FlatList,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-} from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
 import { ROUTES } from '../configs/routes';
@@ -77,7 +71,7 @@ const ContestListScreen = () => {
     if (showPullHint) {
       dismissPullHint();
     }
-    onRefresh();
+    void onRefresh();
   }, [showPullHint, dismissPullHint, onRefresh]);
 
   const loading = authLoading || contestsLoading || participantsLoading;

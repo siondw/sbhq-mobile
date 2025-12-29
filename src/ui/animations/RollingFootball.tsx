@@ -13,15 +13,13 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { darken, useTheme } from '../theme';
-import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from './constants';
+import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS, ROLLING_FOOTBALL } from './constants';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
-const BALL_SIZE = 100;
-const DURATION = 12000; // Slightly slower for two balls to feel less chaotic
 
 // Ellipse dimensions for "cam" effect (floor compensation)
-const A = BALL_SIZE / 2;
-const B = BALL_SIZE * 0.32;
+const A = ROLLING_FOOTBALL.BALL_SIZE / 2;
+const B = ROLLING_FOOTBALL.BALL_SIZE * 0.32;
 
 // --- Inner Component: Single Ball Instance ---
 
@@ -76,6 +74,7 @@ const FootballInstance = ({
   return (
     <Animated.View style={[styles.ballWrapper, animatedStyle]}>
       <LottieView
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, @typescript-eslint/no-unsafe-assignment
         source={require('../../../assets/gifs/football_clean.json')}
         progress={5 / 162}
         style={styles.lottie}
@@ -92,9 +91,8 @@ interface RollingFootballProps {
 }
 
 const RollingFootball = ({ style }: RollingFootballProps) => {
-  const startX = -BALL_SIZE;
-  const separation = SCREEN_WIDTH;
-  const endX = startX + separation; // Loop exactly one screen width
+  const startX = useMemo(() => -ROLLING_FOOTBALL.BALL_SIZE, []);
+  const endX = useMemo(() => startX + SCREEN_WIDTH, [startX]);
 
   const translateX = useSharedValue(startX);
   const rotate = useSharedValue(0);
@@ -108,7 +106,7 @@ const RollingFootball = ({ style }: RollingFootballProps) => {
     // Continuous smooth rotation
     rotate.value = withRepeat(
       withTiming(360 * fullRotations, {
-        duration: DURATION,
+        duration: ROLLING_FOOTBALL.DURATION,
         easing: Easing.linear,
       }),
       -1,
@@ -118,7 +116,7 @@ const RollingFootball = ({ style }: RollingFootballProps) => {
     // Continuous smooth translation
     translateX.value = withRepeat(
       withTiming(endX, {
-        duration: DURATION,
+        duration: ROLLING_FOOTBALL.DURATION,
         easing: Easing.linear,
       }),
       -1,
@@ -129,7 +127,7 @@ const RollingFootball = ({ style }: RollingFootballProps) => {
       cancelAnimation(translateX);
       cancelAnimation(rotate);
     };
-  }, [translateX, rotate]);
+  }, [translateX, rotate, startX, endX]);
 
   return (
     <View style={[styles.container, style]} pointerEvents="none">
@@ -140,7 +138,7 @@ const RollingFootball = ({ style }: RollingFootballProps) => {
       <FootballInstance
         translateX={translateX}
         rotate={rotate}
-        offsetX={separation}
+        offsetX={SCREEN_WIDTH}
         offsetY={-2} // Tiny vertical jitter
         scale={0.96} // Tiny scale difference
         opacity={0.85} // Slightly ghosted
@@ -155,15 +153,15 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    height: BALL_SIZE,
+    height: ROLLING_FOOTBALL.BALL_SIZE,
     zIndex: 0,
   },
   ballWrapper: {
     position: 'absolute', // Important for multiple balls to coexist
     left: 0,
     bottom: 0,
-    width: BALL_SIZE,
-    height: BALL_SIZE,
+    width: ROLLING_FOOTBALL.BALL_SIZE,
+    height: ROLLING_FOOTBALL.BALL_SIZE,
   },
   lottie: {
     width: '100%',
