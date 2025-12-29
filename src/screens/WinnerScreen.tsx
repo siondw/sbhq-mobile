@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { buildContestRoute, ROUTES } from '../configs/routes';
+import { celebrationHaptic } from '../utils/haptics';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
@@ -26,6 +27,9 @@ const WinnerScreen = () => {
   const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Trigger celebration haptic pattern on mount
+    celebrationHaptic();
+
     const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, {

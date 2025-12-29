@@ -5,6 +5,8 @@ import { Animated, StyleSheet, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
+import { successHaptic } from '../utils/haptics';
+
 import { buildContestRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestData } from '../logic/contexts';
@@ -50,6 +52,9 @@ const CorrectScreen = () => {
   });
 
   useEffect(() => {
+    // Trigger success haptic on mount
+    successHaptic();
+
     // Checkmark scales and fades in
     Animated.parallel([
       Animated.spring(checkmarkScale, {

@@ -32,11 +32,7 @@ const IndexScreen = () => {
     return (
       <View style={{ flex: 1 }}>
         <LoginScreen />
-        <OnboardingModal
-          visible={true}
-          onComplete={completeOnboarding}
-          error={error}
-        />
+        <OnboardingModal visible={true} onComplete={completeOnboarding} error={error} />
       </View>
     );
   }

@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
+import { heavyImpact } from '../utils/haptics';
 import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestData } from '../logic/contexts';
@@ -52,6 +53,7 @@ const GameScreen = () => {
   const handleSubmit = () => {
     if (!participant || !contest || !question) return;
     if (answer || !selectedOption) return;
+    heavyImpact();
     void submit({
       participantId: participant.id,
       contestId: contest.id,

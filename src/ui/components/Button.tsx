@@ -41,16 +41,19 @@ const Button = ({
               : colors.surface,
     [isPrimary, isSuccess, isDark, isSecondary, colors.primary, colors.success, colors.surface],
   );
-  const labelColor = useMemo(
-    () => (isDark ? '#FFFFFF' : textOnHex(bgColor)),
-    [isDark, bgColor],
-  );
+  const labelColor = useMemo(() => (isDark ? '#FFFFFF' : textOnHex(bgColor)), [isDark, bgColor]);
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.base,
-        isPrimary ? styles.primary : isSuccess ? styles.success : isDark ? styles.dark : styles.secondary,
+        isPrimary
+          ? styles.primary
+          : isSuccess
+            ? styles.success
+            : isDark
+              ? styles.dark
+              : styles.secondary,
         disabled && (isPrimary || isDark) && styles.disabled,
         pressed && !disabled && styles.pressed,
       ]}

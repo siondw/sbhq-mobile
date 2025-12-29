@@ -312,4 +312,3 @@ function createStyles(colors: {
 }
 
 export default OnboardingModal;
-

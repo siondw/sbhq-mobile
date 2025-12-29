@@ -16,6 +16,8 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+import { Vibration } from 'react-native';
 import { usePulseAnimation, useShineAnimation } from '../ui/animations';
 import RollingFootball from '../ui/animations/RollingFootball';
 import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from '../ui/animations/constants';
@@ -283,6 +285,77 @@ const PlaygroundScreen = () => {
           </View>
 
           <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+            <Section title="Haptics Testing" titleColor={palette.ink}>
+              <Row>
+                <Chip
+                  label="Selection"
+                  onPress={() => Haptics.selectionAsync()}
+                  palette={palette}
+                />
+                <Chip
+                  label="Light"
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Medium"
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Heavy"
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)}
+                  palette={palette}
+                />
+              </Row>
+              <Row>
+                <Chip
+                  label="Rigid"
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Soft"
+                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)}
+                  palette={palette}
+                />
+              </Row>
+              <Row>
+                <Chip
+                  label="Success"
+                  onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Warning"
+                  onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Error"
+                  onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)}
+                  palette={palette}
+                />
+              </Row>
+              <Row>
+                <Chip
+                  label="Vibrate 1s"
+                  onPress={() => Vibration.vibrate(1000)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Vibrate 3s"
+                  onPress={() => Vibration.vibrate(3000)}
+                  palette={palette}
+                />
+                <Chip
+                  label="Pattern"
+                  onPress={() => Vibration.vibrate([0, 200, 100, 200, 100, 400])}
+                  palette={palette}
+                />
+              </Row>
+            </Section>
+
             <Section title="Knobs" titleColor={palette.ink}>
               <View style={styles.palettePicker}>
                 <Text weight="medium" style={[styles.palettePickerLabel, { color: palette.ink }]}>
@@ -530,7 +603,6 @@ const PlaygroundScreen = () => {
     </SafeAreaView>
   );
 };
-
 
 function reset(
   setSelectedOption: React.Dispatch<React.SetStateAction<string | null>>,

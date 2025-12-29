@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { lightImpact } from '../../utils/haptics';
 import { useTheme } from '../theme';
 import Text from './Text';
 
@@ -32,6 +33,12 @@ const HeroCountdown = ({ targetTime, onComplete }: HeroCountdownProps) => {
         withTiming(1.05, { duration: 100 }),
         withTiming(1, { duration: 100 }),
       );
+
+      // Haptic feedback for last 10 seconds
+      const seconds = Math.floor(delta / 1000);
+      if (seconds <= 10 && seconds > 0) {
+        lightImpact();
+      }
 
       if (delta <= 0) {
         clearInterval(interval);

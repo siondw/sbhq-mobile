@@ -4,6 +4,8 @@ import { Animated, StyleSheet, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
+import { eliminationHaptic } from '../utils/haptics';
+
 import { buildContestRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { useContestData } from '../logic/contexts';
@@ -48,6 +50,9 @@ const EliminatedScreen = () => {
   const [showChart, setShowChart] = useState(false);
 
   useEffect(() => {
+    // Trigger elimination haptic pattern on mount (dramatic "you're out" feel)
+    eliminationHaptic();
+
     // Skull slams first
     Animated.spring(skullAnim, {
       toValue: 0,

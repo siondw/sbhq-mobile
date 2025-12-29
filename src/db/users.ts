@@ -19,9 +19,7 @@ export const getUserById = async (userId: string): AsyncResult<UserRow | null, D
   return Ok((data as UserRow | null) ?? null);
 };
 
-export const checkUsernameAvailable = async (
-  username: string,
-): AsyncResult<boolean, DbError> => {
+export const checkUsernameAvailable = async (username: string): AsyncResult<boolean, DbError> => {
   const { data, error } = await SUPABASE_CLIENT.rpc('check_username_available', {
     requested_username: username,
   });

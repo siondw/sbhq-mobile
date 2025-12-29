@@ -1,4 +1,3 @@
-import * as AppleAuthentication from 'expo-apple-authentication';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -60,7 +59,9 @@ const LoginScreen = () => {
               onPress={handleApple}
               disabled={loading}
               variant="dark"
-              iconLeft={<Ionicons name="logo-apple" size={22} color="white" style={{ marginTop: -2 }} />}
+              iconLeft={
+                <Ionicons name="logo-apple" size={22} color="white" style={{ marginTop: -2 }} />
+              }
             />
           </View>
 

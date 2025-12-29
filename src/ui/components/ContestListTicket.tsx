@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { lightImpact } from '../../utils/haptics';
 import { GlassyTexture } from '../textures';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import Button from './Button';
@@ -111,7 +112,10 @@ const ContestListTicket = ({
               label={buttonLabel}
               variant={buttonVariant === 'secondary' ? 'secondary' : buttonVariant}
               iconRight={buttonIconRight}
-              onPress={onPress}
+              onPress={() => {
+                lightImpact();
+                onPress();
+              }}
               disabled={buttonDisabled}
             />
           </GlassyTexture>

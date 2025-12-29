@@ -2,6 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { Animated, Pressable, StyleSheet, View } from 'react-native';
 
+import { selectionHaptic } from '../../utils/haptics';
 import { useSelectionAnimation } from '../animations';
 import { RADIUS, SPACING, useTheme, withAlpha } from '../theme';
 import Text from './Text';
@@ -21,7 +22,14 @@ const AnswerOption = ({ label, selected, disabled, onPress }: AnswerOptionProps)
   return (
     <Animated.View style={{ transform: [{ scale: buttonScale }] }}>
       <Pressable
-        onPress={disabled ? undefined : onPress}
+        onPress={
+          disabled
+            ? undefined
+            : () => {
+                selectionHaptic();
+                onPress();
+              }
+        }
         style={({ pressed }) => [
           styles.moveRow,
           {

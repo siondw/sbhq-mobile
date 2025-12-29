@@ -21,7 +21,13 @@ import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 const ContestListScreen = () => {
   const router = useRouter();
   const { colors } = useTheme();
-  const { derivedUser, needsOnboarding, completeOnboarding, error: authError, loading: authLoading } = useAuth();
+  const {
+    derivedUser,
+    needsOnboarding,
+    completeOnboarding,
+    error: authError,
+    loading: authLoading,
+  } = useAuth();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -191,11 +197,7 @@ const ContestListScreen = () => {
         }
       />
       {needsOnboarding && (
-        <OnboardingModal
-          visible={true}
-          onComplete={completeOnboarding}
-          error={authError}
-        />
+        <OnboardingModal visible={true} onComplete={completeOnboarding} error={authError} />
       )}
     </View>
   );
