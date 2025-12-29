@@ -7,7 +7,7 @@ interface ButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'success';
+  variant?: 'primary' | 'secondary' | 'success' | 'dark';
   iconRight?: ReactNode;
   iconLeft?: ReactNode;
 }
@@ -26,22 +26,32 @@ const Button = ({
   const isPrimary = variant === 'primary';
   const isSuccess = variant === 'success';
   const isSecondary = variant === 'secondary';
+  const isDark = variant === 'dark';
 
   const bgColor = useMemo(
-    () => (isPrimary ? colors.primary : isSuccess ? colors.success : colors.surface),
-    [isPrimary, isSuccess, colors.primary, colors.success, colors.surface],
+    () =>
+      isPrimary
+        ? colors.primary
+        : isSuccess
+          ? colors.success
+          : isDark
+            ? '#000000'
+            : isSecondary
+              ? '#FFFFFF'
+              : colors.surface,
+    [isPrimary, isSuccess, isDark, isSecondary, colors.primary, colors.success, colors.surface],
   );
   const labelColor = useMemo(
-    () => (isSecondary ? colors.primary : textOnHex(bgColor)),
-    [isSecondary, colors.primary, bgColor],
+    () => (isDark ? '#FFFFFF' : textOnHex(bgColor)),
+    [isDark, bgColor],
   );
 
   return (
     <Pressable
       style={({ pressed }) => [
         styles.base,
-        isPrimary ? styles.primary : isSuccess ? styles.success : styles.secondary,
-        disabled && isPrimary && styles.disabled,
+        isPrimary ? styles.primary : isSuccess ? styles.success : isDark ? styles.dark : styles.secondary,
+        disabled && (isPrimary || isDark) && styles.disabled,
         pressed && !disabled && styles.pressed,
       ]}
       onPress={onPress}
@@ -53,7 +63,6 @@ const Button = ({
           style={[
             styles.label,
             { color: labelColor },
-            !isPrimary && !isSuccess && styles.secondaryLabel,
             disabled && isSuccess && styles.successLabelDisabled,
           ]}
         >
@@ -92,8 +101,21 @@ function createStyles(colors: {
       elevation: 1,
     },
     secondary: {
-      backgroundColor: colors.surface,
-      borderColor: colors.primary,
+      backgroundColor: '#FFFFFF',
+      borderColor: colors.border,
+      shadowColor: colors.ink,
+      shadowOpacity: 0.06,
+      shadowOffset: { width: 0, height: 2 },
+      shadowRadius: 4,
+      elevation: 1,
+    },
+    dark: {
+      backgroundColor: '#000000',
+      shadowColor: '#000000',
+      shadowOpacity: 0.2,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 2,
     },
     success: {
       backgroundColor: colors.success,
@@ -123,9 +145,6 @@ function createStyles(colors: {
     },
     iconRight: {
       marginLeft: SPACING.XS,
-    },
-    secondaryLabel: {
-      color: colors.primary,
     },
     successLabelDisabled: {
       opacity: 0.8,

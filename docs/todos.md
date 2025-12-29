@@ -32,12 +32,13 @@ Priority Fixes:
 
 P1
 
-- [ ] Apple Auth setup
+- [x] Apple Auth setup
 
 P2
 
 - [x] Audit listneers and hooks, optimize where needed
 - [ ] Pull to refresh on contest list screeen
+- [ ] IOS haptic feedback
 - [ ] UI Nits:
   - [ ] On round closed, if i bump the round number, before opening submissions again. the corect screen rerenders.
     - [ ] Decide behavior, should we change this form the db admin side and prevent that or fix on the UI side

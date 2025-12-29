@@ -3,6 +3,8 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
+import { Ionicons } from '@expo/vector-icons';
+import GoogleIcon from '../../assets/icons/google.svg';
 import { ROUTES } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
@@ -52,13 +54,13 @@ const LoginScreen = () => {
         </View>
 
         <View style={styles.form}>
-          <View style={styles.appleButtonContainer}>
-            <AppleAuthentication.AppleAuthenticationButton
-              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
-              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-              cornerRadius={8}
-              style={styles.appleButton}
+          <View style={styles.buttonWrapper}>
+            <Button
+              label="Continue with Apple"
               onPress={handleApple}
+              disabled={loading}
+              variant="dark"
+              iconLeft={<Ionicons name="logo-apple" size={22} color="white" style={{ marginTop: -2 }} />}
             />
           </View>
 
@@ -68,6 +70,7 @@ const LoginScreen = () => {
               onPress={handleGoogle}
               disabled={loading}
               variant="secondary"
+              iconLeft={<GoogleIcon width={20} height={20} />}
             />
           </View>
 
@@ -123,14 +126,6 @@ const createStyles = (colors: {
       width: '100%',
       maxWidth: 360,
       alignItems: 'center',
-    },
-    appleButtonContainer: {
-      width: '100%',
-      marginBottom: SPACING.SM,
-    },
-    appleButton: {
-      width: '100%',
-      height: 50,
     },
     buttonWrapper: {
       width: '100%',
