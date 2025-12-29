@@ -38,7 +38,7 @@ P2
 
 - [x] Audit listneers and hooks, optimize where needed
 - [ ] Pull to refresh on contest list screeen
-- [ ] IOS haptic feedback
+- [x] IOS haptic feedback
 - [ ] Notifications
 - [ ] UI Nits:
   - [ ] On round closed, if i bump the round number, before opening submissions again. the corect screen rerenders.
@@ -51,3 +51,4 @@ P3
 
 - [ ] Consolidate participant lookup into a single call (avoid double fetch in getParticipantForUser/getOrCreateParticipant).
       Logging (debug-only)
+- [ ] Create an icon for the app
