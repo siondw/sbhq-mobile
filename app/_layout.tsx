@@ -92,8 +92,6 @@ export default function RootLayout() {
 }
 
 function RootLayoutNav() {
-  useNotificationObserver();
-
   const selectedTheme = useMemo(() => {
     const paletteMatch = DARK_CARBON_TEAL_PALETTES.find(
       (item) => item.key === THEME_CONFIG.SELECTED_PALETTE,
@@ -114,15 +112,24 @@ function RootLayoutNav() {
         <CustomThemeProvider theme={selectedTheme}>
           <NavigationThemeProvider value={DefaultTheme}>
             <StatusBar style={statusBarStyle} />
-            <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
-              <Stack.Screen name="index" />
-              {__DEV__ ? <Stack.Screen name="playground" /> : null}
-              <Stack.Screen name="contests/index" />
-              <Stack.Screen name="(contest)" />
-            </Stack>
+            <AppNavigator />
           </NavigationThemeProvider>
         </CustomThemeProvider>
       </NotificationProvider>
     </AuthProvider>
+  );
+}
+
+/** Inner component that can safely use hooks requiring AuthProvider */
+function AppNavigator() {
+  useNotificationObserver();
+
+  return (
+    <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
+      <Stack.Screen name="index" />
+      {__DEV__ ? <Stack.Screen name="playground" /> : null}
+      <Stack.Screen name="contests/index" />
+      <Stack.Screen name="(contest)" />
+    </Stack>
   );
 }

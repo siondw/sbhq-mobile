@@ -33,13 +33,14 @@ Priority Fixes:
 P1
 
 - [x] Apple Auth setup
+- [ ] Notifications
 
 P2
 
 - [x] Audit listneers and hooks, optimize where needed
 - [x] Pull to refresh on contest list screeen
 - [x] IOS haptic feedback
-- [ ] Notifications
+- [ ] Settings bar to logout and change user settings
 - [ ] UI Nits:
   - [ ] On round closed, if i bump the round number, before opening submissions again. the corect screen rerenders.
     - [ ] Decide behavior, should we change this form the db admin side and prevent that or fix on the UI side
@@ -52,3 +53,8 @@ P3
 - [ ] Consolidate participant lookup into a single call (avoid double fetch in getParticipantForUser/getOrCreateParticipant).
       Logging (debug-only)
 - [ ] Create an icon for the app
+- [ ] Optimize usePushNotifications dependency chain
+  - Issue: `refreshPermissions` effect triggers 2-3 times on auth due to dependency chain (user.id → registerToken → refreshPermissions → effect)
+  - Current behavior: Makes 2-3 registration calls on login (guarded to prevent infinite loop)
+  - Possible fix: Use mount-only effect with ref tracking, or restructure to eliminate circular deps
+  - Status: Ignored for now - only happens once per user session, guard prevents runaway costs

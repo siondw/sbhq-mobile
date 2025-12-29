@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { usePushNotifications } from '../../logic/hooks/usePushNotifications';
+import { useNotifications } from '../../logic/contexts';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import GlassyTexture from '../textures/GlassyTexture';
 import Button from './Button';
@@ -45,7 +45,7 @@ const getDigitsOnly = (formatted: string): string => {
 const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingModalProps) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const { requestPermissions } = usePushNotifications();
+  const { requestPermissions } = useNotifications();
 
   const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');

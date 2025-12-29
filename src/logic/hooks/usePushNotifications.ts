@@ -50,6 +50,8 @@ export const usePushNotifications = () => {
   const [isRegistered, setIsRegistered] = useState(false);
 
   const lastUserIdRef = useRef<string | null>(null);
+  const callCountRef = useRef(0);
+  const isRegisteringRef = useRef(false);
 
   const ensureAndroidChannel = useCallback(async () => {
     if (Platform.OS !== 'android') {
@@ -89,6 +91,17 @@ export const usePushNotifications = () => {
       tokenOverride?: string,
       permissionOverride?: Notifications.NotificationPermissionsStatus,
     ) => {
+      if (isRegisteringRef.current) {
+        return;
+      }
+
+      callCountRef.current += 1;
+
+      if (callCountRef.current > 5) {
+        console.error(`[PUSH] TOO MANY CALLS (${callCountRef.current}), blocking further requests`);
+        return;
+      }
+
       setError(null);
 
       if (!user?.id) {
@@ -96,32 +109,37 @@ export const usePushNotifications = () => {
         return;
       }
 
-      const settings =
-        permissionOverride ?? permissionStatus ?? (await Notifications.getPermissionsAsync());
-      setPermissionStatus(settings);
+      isRegisteringRef.current = true;
 
-      if (!isPermissionGranted(settings)) {
-        setIsRegistered(false);
-        return;
+      try {
+        const settings = permissionOverride ?? (await Notifications.getPermissionsAsync());
+        setPermissionStatus(settings);
+
+        if (!isPermissionGranted(settings)) {
+          setIsRegistered(false);
+          return;
+        }
+
+        const token = tokenOverride ?? (await getExpoPushToken());
+        if (!token) {
+          setIsRegistered(false);
+          return;
+        }
+
+        const result = await updatePushToken(user.id, token);
+        if (!result.ok) {
+          setError(getErrorMessage(result.error));
+          setIsRegistered(false);
+          return;
+        }
+
+        setExpoPushToken(token);
+        setIsRegistered(true);
+      } finally {
+        isRegisteringRef.current = false;
       }
-
-      const token = tokenOverride ?? (await getExpoPushToken());
-      if (!token) {
-        setIsRegistered(false);
-        return;
-      }
-
-      const result = await updatePushToken(user.id, token);
-      if (!result.ok) {
-        setError(getErrorMessage(result.error));
-        setIsRegistered(false);
-        return;
-      }
-
-      setExpoPushToken(token);
-      setIsRegistered(true);
     },
-    [user?.id, permissionStatus, getExpoPushToken],
+    [user?.id, getExpoPushToken],
   );
 
   const refreshPermissions = useCallback(async () => {
@@ -189,25 +207,6 @@ export const usePushNotifications = () => {
   }, [user?.id]);
 
   useEffect(() => {
-    if (!user?.id) {
-      return;
-    }
-
-    if (!permissionStatus || !isPermissionGranted(permissionStatus)) {
-      return;
-    }
-
-    if (isRegistered && expoPushToken) {
-      return;
-    }
-
-    void registerToken(expoPushToken ?? undefined, permissionStatus);
-  }, [user?.id, permissionStatus, expoPushToken, isRegistered, registerToken]);
-
-  useEffect(() => {
-    // When the native device token (APNs/FCM) changes, we need to re-register.
-    // Note: The callback receives the native token, but we need the Expo token,
-    // so we call registerToken() without arguments to fetch a fresh Expo token.
     const pushTokenListener = Notifications.addPushTokenListener(() => {
       void registerToken();
     });
