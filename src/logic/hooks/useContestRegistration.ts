@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getErrorMessage } from '../../db/errors';
 import { getOrCreateParticipant, getParticipantForUser } from '../../db/participants';
 import type { ContestRow, ParticipantRow } from '../../db/types';
@@ -9,6 +9,7 @@ export interface UseContestRegistrationResult {
   error: string | null;
   registerForContest: (contestId: string) => Promise<ParticipantRow | null>;
   getParticipantStatus: (contestId: string) => ParticipantRow | undefined;
+  refresh: () => Promise<void>;
 }
 
 export const useContestRegistration = (
@@ -18,11 +19,15 @@ export const useContestRegistration = (
   const [participants, setParticipants] = useState<Map<string, ParticipantRow>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const hasLoadedRef = useRef(false);
 
-  const fetchParticipantStatuses = useCallback(async () => {
+  const fetchParticipantStatuses = useCallback(async (isRefresh = false) => {
     if (!userId || contests.length === 0) return;
 
-    setLoading(true);
+    // Only show loading on initial load, not on refresh or re-fetches
+    if (!isRefresh && !hasLoadedRef.current) {
+      setLoading(true);
+    }
     setError(null);
 
     const participantMap = new Map<string, ParticipantRow>();
@@ -42,6 +47,7 @@ export const useContestRegistration = (
     }
 
     setParticipants(participantMap);
+    hasLoadedRef.current = true;
     setLoading(false);
   }, [contests, userId]);
 
@@ -80,5 +86,6 @@ export const useContestRegistration = (
     error,
     registerForContest,
     getParticipantStatus,
+    refresh: () => fetchParticipantStatuses(true),
   };
 };

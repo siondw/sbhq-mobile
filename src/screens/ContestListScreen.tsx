@@ -1,6 +1,12 @@
 import { useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
-import { FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
 import { ROUTES } from '../configs/routes';
@@ -10,12 +16,15 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { useRefresh } from '../logic/hooks/utils';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import LoadingView from '../ui/components/LoadingView';
 import OnboardingModal from '../ui/components/OnboardingModal';
+import PullHint from '../ui/components/PullHint';
 import Text from '../ui/components/Text';
+import { getHasSeenPullHint, setHasSeenPullHint } from '../utils/storage';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const ContestListScreen = () => {
@@ -32,13 +41,44 @@ const ContestListScreen = () => {
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
-  const { contests, loading: contestsLoading, error: contestsError, refresh } = useContests();
+  const {
+    contests,
+    loading: contestsLoading,
+    error: contestsError,
+    refresh: refreshContests,
+  } = useContests();
   const {
     participants,
     loading: participantsLoading,
     error: participantsError,
     registerForContest,
+    refresh: refreshParticipants,
   } = useContestRegistration(contests, derivedUser?.id);
+  const { refreshing, onRefresh } = useRefresh([refreshContests, refreshParticipants]);
+
+  const [showPullHint, setShowPullHint] = useState(false);
+
+  useEffect(() => {
+    const checkPullHint = async () => {
+      const hasSeen = await getHasSeenPullHint();
+      if (!hasSeen) {
+        setShowPullHint(true);
+      }
+    };
+    void checkPullHint();
+  }, []);
+
+  const dismissPullHint = useCallback(() => {
+    setShowPullHint(false);
+    void setHasSeenPullHint();
+  }, []);
+
+  const handleRefresh = useCallback(() => {
+    if (showPullHint) {
+      dismissPullHint();
+    }
+    onRefresh();
+  }, [showPullHint, dismissPullHint, onRefresh]);
 
   const loading = authLoading || contestsLoading || participantsLoading;
   const error = contestsError || participantsError;
@@ -108,7 +148,7 @@ const ContestListScreen = () => {
         <Text weight="bold">Error loading contests</Text>
         <Text>{error}</Text>
         <View style={styles.spacer} />
-        <Button label="Retry" onPress={() => void refresh()} />
+        <Button label="Retry" onPress={handleRefresh} />
       </View>
     );
   }
@@ -122,6 +162,18 @@ const ContestListScreen = () => {
         numColumns={numColumns}
         columnWrapperStyle={numColumns > 1 ? styles.columnWrapper : undefined}
         contentContainerStyle={[styles.listContent, { paddingTop: headerHeight + SPACING.SM }]}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+        ListHeaderComponent={
+          <>
+            {refreshing && (
+              <View style={styles.refreshIndicator}>
+                <ActivityIndicator size="small" color={colors.primary} />
+              </View>
+            )}
+            {showPullHint && <PullHint onDismiss={dismissPullHint} />}
+          </>
+        }
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
           const isRegistered = !!participant;
@@ -209,7 +261,12 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
       flex: 1,
       backgroundColor: colors.background,
     },
+    refreshIndicator: {
+      alignItems: 'center',
+      paddingVertical: SPACING.MD,
+    },
     listContent: {
+      flexGrow: 1,
       paddingHorizontal: SPACING.MD,
       paddingBottom: SPACING.XXL,
       gap: SPACING.MD,

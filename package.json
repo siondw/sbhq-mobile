@@ -9,10 +9,10 @@
     "ios": "expo run:ios",
     "web": "expo start --web",
     "tsc": "tsc --noEmit",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
-    "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "lint": "eslint \"**/*.{ts,tsx}\"",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --fix",
+    "format": "prettier \"**/*.{ts,tsx}\" --write",
+    "format:check": "prettier \"**/*.{ts,tsx}\" --check"
   },
   "dependencies": {
     "@expo-google-fonts/poppins": "^0.3.1",

@@ -37,7 +37,7 @@ P1
 P2
 
 - [x] Audit listneers and hooks, optimize where needed
-- [ ] Pull to refresh on contest list screeen
+- [x] Pull to refresh on contest list screeen
 - [x] IOS haptic feedback
 - [ ] Notifications
 - [ ] UI Nits:

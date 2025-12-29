@@ -15,8 +15,10 @@ export const useContests = (): UseContestsResult => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchContests = useCallback(async () => {
-    setLoading(true);
+  const fetchContests = useCallback(async (isRefresh = false) => {
+    if (!isRefresh) {
+      setLoading(true);
+    }
     setError(null);
 
     const result = await getContests();
@@ -36,6 +38,6 @@ export const useContests = (): UseContestsResult => {
     contests,
     loading,
     error,
-    refresh: fetchContests,
+    refresh: () => fetchContests(true),
   };
 };

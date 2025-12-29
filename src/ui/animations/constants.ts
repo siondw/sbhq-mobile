@@ -1,5 +1,5 @@
 /**
- * Animation timing constants
+ * Animation timing constants (in milliseconds)
  */
 export const ANIMATION_DURATION = {
   FAST: 300,
@@ -7,6 +7,16 @@ export const ANIMATION_DURATION = {
   SLOW: 1000,
   SHINE: 2000,
   SHINE_DELAY: 3000,
+  REFRESH_MIN: 600,
+} as const;
+
+/**
+ * Animation delay constants (in milliseconds)
+ */
+export const ANIMATION_DELAY = {
+  SHORT: 500,
+  MEDIUM: 1000,
+  LONG: 3000,
 } as const;
 
 /**

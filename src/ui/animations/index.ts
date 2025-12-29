@@ -1,5 +1,6 @@
 export { usePulseAnimation, useShineAnimation, useSelectionAnimation } from './animations';
 export {
+  ANIMATION_DELAY,
   ANIMATION_DURATION,
   ANIMATION_OPACITY,
   SHINE_PRESET,
