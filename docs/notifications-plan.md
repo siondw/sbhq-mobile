@@ -262,11 +262,11 @@ Add push notifications to the SBHQ mobile app using Expo Notifications with Supa
 ### Phase 9: Testing (Optional, dont complete, let user handle)
 
 #### Device Testing
-- [ ] **9.1** Test on physical iOS device
-- [ ] **9.2** Test permission request flow
+- [x] **9.1** Test on physical iOS device
+- [x] **9.2** Test permission request flow
 
 #### Token Registration
-- [ ] **9.3** Verify token saved to users table after permission grant
+- [x] **9.3** Verify token saved to users table after permission grant
 - [ ] **9.4** Verify token updates on refresh
 - [ ] **9.5** Verify token cleared on logout
 
@@ -276,7 +276,7 @@ Add push notifications to the SBHQ mobile app using Expo Notifications with Supa
 - [ ] **9.8** Verify notifications show when app is killed
 
 #### Deep Linking
-- [ ] **9.9** Tap notification â†’ navigates to correct screen (app in background)
+- [x] **9.9** Tap notification â†’ navigates to correct screen (app in background)
 - [ ] **9.10** Tap notification â†’ navigates to correct screen (app killed)
 - [ ] **9.11** Test each notification type's deep link:
   - [ ] STARTS_IN_10M â†’ `/lobby`
