@@ -6,16 +6,24 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "autoIncrement": true
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "autoIncrement": true
     },
     "production": {
       "autoIncrement": true
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascApiKeyId": "FZD5C64263",
+        "ascApiKeyIssuerId": "4dfdd2e6-36c1-4426-a9d5-bfc446e8d01a",
+        "ascApiKeyPath": "./private.p8"
+      }
+    }
   }
 }

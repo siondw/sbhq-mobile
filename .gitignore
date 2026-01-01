@@ -44,3 +44,5 @@ secrets.env
 
 .venv/
 nul
+
+private.p8
