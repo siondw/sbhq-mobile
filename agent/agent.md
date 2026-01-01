@@ -170,3 +170,19 @@ Hooks must:
 - Do not violate architecture
 - Explain reasoning and changes
 - Favor clarity over cleverness
+
+---
+
+## Testing (Concise Rules)
+
+Tests are written for humans: concise, intentional, and easy to maintain.
+
+- Prefer high-signal tests over edge-case spam; don’t retest the same thing repeatedly.
+- Write long tests only for genuinely complex scenarios (flows/state machines).
+- Flow tests include a short scenario comment + the expected route/screen sequence.
+- Never “fudge” tests: expected outcomes must match the user-prescribed behavior.
+- Favor stable assertions (route/screen sequence, key UI markers) over brittle snapshots.
+- Leave production code alone by default: implement tests entirely under `tests/` unless a major test-architecture decision requires a prod change and the user explicitly confirms it.
+- Test layout: use `tests/` with `tests/unit/`, `tests/flows/`, and `tests/mocks/`.
+
+See `agent/testing.md` for the full testing strategy.
