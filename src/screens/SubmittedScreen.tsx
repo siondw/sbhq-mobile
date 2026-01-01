@@ -33,7 +33,6 @@ const SubmittedScreen = () => {
 
   const { count: participantCount } = useParticipantCount(contestId);
 
-  console.log('[DEBUG] SubmittedScreen render, playerState:', playerState, 'contestId:', contestId);
 
   const roundToFetch =
     contest?.state === CONTEST_STATE.ROUND_CLOSED && contest.current_round !== null

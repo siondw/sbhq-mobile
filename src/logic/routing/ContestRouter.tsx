@@ -55,21 +55,17 @@ export const ContestRouter = ({
   }, [isPendingResultForPath, playerState, validState, clearPendingResultIntent]);
 
   useEffect(() => {
-    console.log('[ContestRouter] playerState:', playerState, 'validState:', validState);
 
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) {
-      console.log('[ContestRouter] Skipping redirect - not ready');
       return;
     }
 
     if (shouldHoldResultRedirect) {
-      console.log('[ContestRouter] Holding redirect for result intent');
       return;
     }
 
     // If playerState doesn't match this screen's valid state, redirect
     if (playerState !== validState) {
-      console.log('[ContestRouter] Redirecting from', validState, 'to state:', playerState);
 
       switch (playerState) {
         case PLAYER_STATE.LOBBY:
@@ -108,10 +104,8 @@ export const ContestRouter = ({
   // If wrong state, show loading during redirect
   if (!loading && contestId && playerState !== validState && playerState !== PLAYER_STATE.UNKNOWN) {
     if (shouldHoldResultRedirect) {
-      console.log('[ContestRouter] Holding screen on LoadingView for result intent');
       return <LoadingView />;
     }
-    console.log('[ContestRouter] Wrong state, showing LoadingView');
     return <LoadingView />;
   }
 

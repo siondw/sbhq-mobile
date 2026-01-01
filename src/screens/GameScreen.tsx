@@ -40,7 +40,6 @@ const GameScreen = () => {
   } = useContestData();
   const { count: participantCount } = useParticipantCount(contestId);
 
-  console.log('[DEBUG] GameScreen render, playerState:', playerState, 'contestId:', contestId);
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
   const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);

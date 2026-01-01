@@ -35,7 +35,6 @@ const CorrectScreen = () => {
     useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
 
-  console.log('[DEBUG] CorrectScreen render, playerState:', playerState, 'contestId:', contestId);
   const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
 
   // Staggered scale/fade animations

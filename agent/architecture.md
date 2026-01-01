@@ -240,7 +240,26 @@ Files in `app/`:
 
 ---
 
-## 11. How to Navigate the Codebase
+## 11. Notifications
+
+Push notifications are handled end-to-end through Expo Notifications and Supabase.
+
+Flow:
+
+- Backend sends Expo notifications with a deep link payload (`url`, `contestId`, `round`, `type`).
+- `usePushNotifications` handles permissions and token registration.
+- `useNotificationObserver` validates the URL and routes based on intent.
+- Non-result notifications (`/lobby`, `/game`) skip navigation if the user is already
+  in the same contest flow; `ContestRouter` handles the state-based redirect.
+- Result notifications (`/correct`, `/eliminated`) route directly and set a pending
+  intent in `NotificationRoutingContext` so the UI can hold while realtime state catches up.
+
+Deep link helpers live in `src/logic/notifications/`, and all routing decisions converge
+through `ContestRouter` and `derivePlayerState`.
+
+---
+
+## 12. How to Navigate the Codebase
 
 - “How do I fetch contests?”
   → `src/db/contests.ts`
@@ -260,7 +279,7 @@ Files in `app/`:
 
 ---
 
-## Summary
+## 13. Summary
 
 - **Data access** → `src/db/`
 - **Hooks** → `src/logic/hooks/`

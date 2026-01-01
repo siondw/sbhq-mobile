@@ -33,7 +33,6 @@ const EliminatedScreen = () => {
   const { contestId, loading, error, playerState, refresh, participant, answer } = useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
 
-  console.log('[DEBUG] EliminatedScreen render, playerState:', playerState, 'contestId:', contestId);
 
   const { distribution } = useAnswerDistribution(
     contestId,

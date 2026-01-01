@@ -119,7 +119,23 @@ On successful login:
 
 ---
 
-## 4. Admin / Game Master Responsibility (Out of This Repo)
+## 4. Notifications
+
+Users can opt in to push notifications. Notifications are intent-based and deep link
+into the contest flow:
+
+- **STARTS_IN_10M**: Contest starts in 10 minutes -> Lobby
+- **STARTS_IN_60S**: Contest starts in 60 seconds -> Lobby
+- **QUESTION_OPEN**: New round is open -> Game (answering)
+- **RESULT_CORRECT**: User answered correctly -> Correct screen
+- **RESULT_ELIMINATED**: User was eliminated -> Eliminated screen
+
+The app validates and routes these links, then the live contest state determines
+the final screen shown.
+
+---
+
+## 5. Admin / Game Master Responsibility (Out of This Repo)
 
 All of the following is **not part of this codebase** and is handled in a separate admin project:
 

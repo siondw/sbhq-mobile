@@ -28,7 +28,6 @@ const LobbyScreen = () => {
   const { playerState, contest, loading, contestId } = useContestData();
   const { count: participantCount } = useParticipantCount(contestId, 15000); // Poll every 15s
 
-  console.log('[DEBUG] LobbyScreen render, playerState:', playerState, 'contestId:', contestId);
 
   const targetTime = startTime
     ? new Date(startTime).getTime()
