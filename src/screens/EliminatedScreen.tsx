@@ -6,8 +6,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { eliminationHaptic } from '../utils/haptics';
 
-import { buildContestRoute, ROUTES } from '../configs/routes';
+import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
@@ -31,6 +32,8 @@ const EliminatedScreen = () => {
   const headerHeight = useHeaderHeight();
   const { contestId, loading, error, playerState, refresh, participant, answer } = useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
+
+  console.log('[DEBUG] EliminatedScreen render, playerState:', playerState, 'contestId:', contestId);
 
   const { distribution } = useAnswerDistribution(
     contestId,
@@ -94,21 +97,6 @@ const EliminatedScreen = () => {
     ]).start();
   }, [skullAnim, textAnim, contentAnim, chartAnim]);
 
-  useEffect(() => {
-    if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
-    if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(buildContestRoute(contestId));
-    } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace({ pathname: ROUTES.CORRECT, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace({ pathname: ROUTES.WINNER, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.LOBBY) {
-      router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
-    }
-  }, [playerState, router, contestId, loading]);
-
   if (loading) {
     return <LoadingView />;
   }
@@ -125,10 +113,16 @@ const EliminatedScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Header user={derivedUser} />
-      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <View style={styles.headerBlock}>
+    <ContestRouter
+      contestId={contestId}
+      playerState={playerState}
+      loading={loading}
+      validState={PLAYER_STATE.ELIMINATED}
+    >
+      <View style={styles.container}>
+        <Header user={derivedUser} />
+        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+          <View style={styles.headerBlock}>
           <Animated.View
             style={{
               transform: [{ translateY: textAnim }],
@@ -180,6 +174,7 @@ const EliminatedScreen = () => {
         </Animated.View>
       </View>
     </View>
+    </ContestRouter>
   );
 };
 

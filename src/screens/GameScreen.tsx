@@ -4,8 +4,9 @@ import { StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
 import { heavyImpact } from '../utils/haptics';
-import { ROUTES } from '../configs/routes';
+import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
@@ -38,6 +39,8 @@ const GameScreen = () => {
     refresh,
   } = useContestData();
   const { count: participantCount } = useParticipantCount(contestId);
+
+  console.log('[DEBUG] GameScreen render, playerState:', playerState, 'contestId:', contestId);
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
   const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
@@ -63,27 +66,6 @@ const GameScreen = () => {
     });
   };
 
-  useEffect(() => {
-    if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
-
-    // Only navigate away from game screen if we're NOT in answering state
-    if (playerState === PLAYER_STATE.LOBBY) {
-      router.push({
-        pathname: ROUTES.LOBBY,
-        params: { contestId, startTime: contest?.start_time },
-      });
-    } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.push({ pathname: ROUTES.SUBMITTED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.push({ pathname: ROUTES.CORRECT, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.push({ pathname: ROUTES.ELIMINATED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.WINNER) {
-      router.push({ pathname: ROUTES.WINNER, params: { contestId } });
-    }
-    // Note: ANSWERING should stay on this screen, so we don't navigate
-  }, [playerState, router, contestId, contest?.start_time, loading]);
-
   if (loading) {
     return <LoadingView />;
   }
@@ -102,52 +84,59 @@ const GameScreen = () => {
   const isAnswerLocked = playerState !== PLAYER_STATE.ANSWERING || !!answer;
 
   return (
-    <View style={styles.container}>
-      <Header user={derivedUser} />
-      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <View style={styles.scorebugSection}>
-          <Scorebug playerCount={participantCount} />
-        </View>
+    <ContestRouter
+      contestId={contestId}
+      playerState={playerState}
+      loading={loading}
+      validState={PLAYER_STATE.ANSWERING}
+    >
+      <View style={styles.container}>
+        <Header user={derivedUser} />
+        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+          <View style={styles.scorebugSection}>
+            <Scorebug playerCount={participantCount} />
+          </View>
 
-        <View style={styles.roundHeader}>
-          <Text weight="medium" style={styles.roundLabel}>
-            Round
-          </Text>
-          <Text weight="bold" style={styles.roundNumber}>
-            {contest?.current_round ?? '?'}
-          </Text>
-          <Text weight="medium" style={styles.roundSubtitle}>
-            Choose Wisely!
-          </Text>
-        </View>
+          <View style={styles.roundHeader}>
+            <Text weight="medium" style={styles.roundLabel}>
+              Round
+            </Text>
+            <Text weight="bold" style={styles.roundNumber}>
+              {contest?.current_round ?? '?'}
+            </Text>
+            <Text weight="medium" style={styles.roundSubtitle}>
+              Choose Wisely!
+            </Text>
+          </View>
 
-        <View style={styles.questionSection}>
-          <Text weight="bold" style={styles.question}>
-            {question?.question ?? 'Waiting for question...'}
-          </Text>
-        </View>
+          <View style={styles.questionSection}>
+            <Text weight="bold" style={styles.question}>
+              {question?.question ?? 'Waiting for question...'}
+            </Text>
+          </View>
 
-        <View style={styles.optionsSection}>
-          {options.map((option) => (
-            <AnswerOption
-              key={option.key}
-              label={option.label}
-              selected={selectedOption === option.key}
-              disabled={isAnswerLocked}
-              onPress={() => setSelectedOption(option.key)}
+          <View style={styles.optionsSection}>
+            {options.map((option) => (
+              <AnswerOption
+                key={option.key}
+                label={option.label}
+                selected={selectedOption === option.key}
+                disabled={isAnswerLocked}
+                onPress={() => setSelectedOption(option.key)}
+              />
+            ))}
+          </View>
+
+          <View style={styles.submitRow}>
+            <Button
+              label="Submit"
+              onPress={handleSubmit}
+              disabled={isAnswerLocked || !selectedOption}
             />
-          ))}
-        </View>
-
-        <View style={styles.submitRow}>
-          <Button
-            label="Submit"
-            onPress={handleSubmit}
-            disabled={isAnswerLocked || !selectedOption}
-          />
+          </View>
         </View>
       </View>
-    </View>
+    </ContestRouter>
   );
 };
 

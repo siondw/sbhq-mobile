@@ -16,6 +16,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.anonymous.sbhqmobile",
+      "icon": "./assets/images/SBHQ_IOS_ICON_1024x1024.png",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }

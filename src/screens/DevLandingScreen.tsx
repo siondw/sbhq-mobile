@@ -2,7 +2,7 @@ import { Link, useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-import { ROUTES } from '../configs/routes';
+import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import { useAuth } from '../logic/hooks/useAuth';
 import LoginScreen from './LoginScreen';
 
@@ -37,7 +37,7 @@ const DevLandingScreen = () => {
 
           <View style={styles.divider} />
 
-          <Link href={{ pathname: ROUTES.LOBBY, params: { contestId } }} asChild>
+          <Link href={buildLobbyRoute(contestId)} asChild>
             <Pressable style={styles.button}>
               <Text style={styles.buttonText}>Lobby Screen</Text>
             </Pressable>

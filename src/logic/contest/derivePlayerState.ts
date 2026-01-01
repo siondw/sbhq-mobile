@@ -16,6 +16,10 @@ export const derivePlayerState = (
     return PLAYER_STATE.ELIMINATED;
   }
 
+  const currentRound = contest.current_round ?? null;
+  const hasCurrentQuestion = !!question && currentRound !== null && question.round === currentRound;
+  const hasCurrentAnswer = !!answer && currentRound !== null && answer.round === currentRound;
+
   // Switch on contest state enum
   switch (contest.state) {
     case CONTEST_STATE.FINISHED:
@@ -25,10 +29,13 @@ export const derivePlayerState = (
       return PLAYER_STATE.LOBBY;
 
     case CONTEST_STATE.ROUND_IN_PROGRESS:
-      return answer ? PLAYER_STATE.SUBMITTED_WAITING : PLAYER_STATE.ANSWERING;
+      return hasCurrentAnswer ? PLAYER_STATE.SUBMITTED_WAITING : PLAYER_STATE.ANSWERING;
 
     case CONTEST_STATE.ROUND_CLOSED:
-      if (!question || !answer) {
+      if (!hasCurrentQuestion) {
+        return PLAYER_STATE.SUBMITTED_WAITING;
+      }
+      if (!hasCurrentAnswer) {
         return PLAYER_STATE.ELIMINATED; // Missed deadline
       }
       if (

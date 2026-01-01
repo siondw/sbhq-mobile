@@ -2,6 +2,7 @@ import { NOTIFICATION_URLS } from './constants';
 import type { NotificationType } from './types';
 import { NOTIFICATION_TYPES } from './types';
 
+const LOBBY_PATH_PREFIX = `${NOTIFICATION_URLS.LOBBY_ROOT}/`;
 const GAME_PATH_PREFIX = `${NOTIFICATION_URLS.GAME_ROOT}/`;
 
 const isValidRoundValue = (round?: number) =>
@@ -14,9 +15,8 @@ export const getDeepLinkForNotification = (
 ) => {
   switch (type) {
     case NOTIFICATION_TYPES.STARTS_IN_10M:
-      return NOTIFICATION_URLS.LOBBY;
     case NOTIFICATION_TYPES.STARTS_IN_60S:
-      return `${GAME_PATH_PREFIX}${contestId}`;
+      return `${LOBBY_PATH_PREFIX}${contestId}`;
     case NOTIFICATION_TYPES.QUESTION_OPEN:
       if (isValidRoundValue(round)) {
         return `${GAME_PATH_PREFIX}${contestId}?round=${round}`;
@@ -24,16 +24,34 @@ export const getDeepLinkForNotification = (
       return `${GAME_PATH_PREFIX}${contestId}`;
     case NOTIFICATION_TYPES.RESULT_POSTED:
       return `${GAME_PATH_PREFIX}${contestId}`;
+    case NOTIFICATION_TYPES.RESULT_CORRECT:
+      return `/correct/${contestId}`;
+    case NOTIFICATION_TYPES.RESULT_ELIMINATED:
+      if (isValidRoundValue(round)) {
+        return `/eliminated/${contestId}?round=${round}`;
+      }
+      return `/eliminated/${contestId}`;
   }
 };
 
-const hasOnlyRoundParam = (searchParams: URLSearchParams) => {
+const hasValidParams = (searchParams: URLSearchParams) => {
   for (const key of searchParams.keys()) {
     if (key !== 'round') {
       return false;
     }
   }
   return true;
+};
+
+const extractContestIdFromPath = (pathname: string, prefix: string): string | null => {
+  if (!pathname.startsWith(prefix)) {
+    return null;
+  }
+  const contestId = pathname.slice(prefix.length);
+  if (!contestId || contestId.includes('/')) {
+    return null;
+  }
+  return contestId;
 };
 
 export const isValidNotificationUrl = (url: string) => {
@@ -48,7 +66,7 @@ export const isValidNotificationUrl = (url: string) => {
     return false;
   }
 
-  if (!hasOnlyRoundParam(parsed.searchParams)) {
+  if (!hasValidParams(parsed.searchParams)) {
     return false;
   }
 
@@ -57,20 +75,29 @@ export const isValidNotificationUrl = (url: string) => {
     return false;
   }
 
-  if (parsed.pathname === NOTIFICATION_URLS.LOBBY) {
+  const lobbyContestId = extractContestIdFromPath(parsed.pathname, LOBBY_PATH_PREFIX);
+  if (lobbyContestId) {
     return true;
   }
 
-  if (!parsed.pathname.startsWith(GAME_PATH_PREFIX)) {
-    return false;
+  const gameContestId = extractContestIdFromPath(parsed.pathname, GAME_PATH_PREFIX);
+  if (gameContestId) {
+    return true;
   }
 
-  const contestId = parsed.pathname.slice(GAME_PATH_PREFIX.length);
-  if (!contestId || contestId.includes('/')) {
-    return false;
+  const correctPathPrefix = '/correct/';
+  const correctContestId = extractContestIdFromPath(parsed.pathname, correctPathPrefix);
+  if (correctContestId) {
+    return true;
   }
 
-  return true;
+  const eliminatedPathPrefix = '/eliminated/';
+  const eliminatedContestId = extractContestIdFromPath(parsed.pathname, eliminatedPathPrefix);
+  if (eliminatedContestId) {
+    return true;
+  }
+
+  return false;
 };
 
 export const extractContestIdFromUrl = (url: string): string | null => {
@@ -85,14 +112,22 @@ export const extractContestIdFromUrl = (url: string): string | null => {
     return null;
   }
 
-  if (!parsed.pathname.startsWith(GAME_PATH_PREFIX)) {
-    return null;
+  const lobbyContestId = extractContestIdFromPath(parsed.pathname, LOBBY_PATH_PREFIX);
+  if (lobbyContestId) {
+    return lobbyContestId;
   }
 
-  const contestId = parsed.pathname.slice(GAME_PATH_PREFIX.length);
-  if (!contestId || contestId.includes('/')) {
-    return null;
+  const gameContestId = extractContestIdFromPath(parsed.pathname, GAME_PATH_PREFIX);
+  if (gameContestId) {
+    return gameContestId;
   }
 
-  return contestId;
+  const correctPathPrefix = '/correct/';
+  const correctContestId = extractContestIdFromPath(parsed.pathname, correctPathPrefix);
+  if (correctContestId) {
+    return correctContestId;
+  }
+
+  const eliminatedPathPrefix = '/eliminated/';
+  return extractContestIdFromPath(parsed.pathname, eliminatedPathPrefix);
 };

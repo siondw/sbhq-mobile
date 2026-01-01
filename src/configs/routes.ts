@@ -1,7 +1,7 @@
 export const ROUTES = {
   INDEX: '/',
   CONTESTS: '/contests',
-  LOBBY: '/lobby',
+  LOBBY: '/lobby/[contestId]',
   GAME: '/game',
   SUBMITTED: '/submitted',
   CORRECT: '/correct',
@@ -11,5 +11,10 @@ export const ROUTES = {
 
 export const buildContestRoute = (contestId: string) => ({
   pathname: `${ROUTES.GAME}/[contestId]` as const,
+  params: { contestId },
+});
+
+export const buildLobbyRoute = (contestId: string) => ({
+  pathname: ROUTES.LOBBY,
   params: { contestId },
 });

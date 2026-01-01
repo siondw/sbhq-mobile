@@ -6,10 +6,12 @@ Add push notifications to the SBHQ mobile app using Expo Notifications with Supa
 
 | Type | When | Deep Link |
 |------|------|-----------|
-| `STARTS_IN_10M` | 10 min before start | `/lobby` |
-| `STARTS_IN_60S` | 60 sec before start | `/game/{contestId}` |
+| `STARTS_IN_10M` | 10 min before start | `/lobby/{contestId}` |
+| `STARTS_IN_60S` | 60 sec before start | `/lobby/{contestId}` |
 | `QUESTION_OPEN` | New round started | `/game/{contestId}?round={round}` |
-| `RESULT_POSTED` | Correct answer set | `/game/{contestId}` |
+| `RESULT_POSTED` | Correct answer set (auto-sends RESULT_CORRECT/RESULT_ELIMINATED) | `/game/{contestId}` |
+| `RESULT_CORRECT` | User answered correctly | `/correct/{contestId}` |
+| `RESULT_ELIMINATED` | User eliminated this round | `/eliminated/{contestId}?round={round}` |
 
 ---
 
@@ -276,18 +278,69 @@ Add push notifications to the SBHQ mobile app using Expo Notifications with Supa
 - [ ] **9.8** Verify notifications show when app is killed
 
 #### Deep Linking
-- [x] **9.9** Tap notification â†’ navigates to correct screen (app in background)
-- [ ] **9.10** Tap notification â†’ navigates to correct screen (app killed)
+- [ ] **9.9** Tap notification → navigates to correct screen (app in background)
+- [ ] **9.10** Tap notification → navigates to correct screen (app killed)
 - [ ] **9.11** Test each notification type's deep link:
-  - [ ] STARTS_IN_10M â†’ `/lobby`
-  - [ ] STARTS_IN_60S â†’ `/game/{contestId}`
-  - [ ] QUESTION_OPEN â†’ `/game/{contestId}?round={round}`
-  - [ ] RESULT_POSTED â†’ `/game/{contestId}`
+  - [ ] STARTS_IN_10M → `/lobby`
+  - [ ] STARTS_IN_60S → `/game/{contestId}`
+  - [ ] QUESTION_OPEN → `/game/{contestId}?round={round}`
+  - [ ] RESULT_POSTED → `/game/{contestId}`
 
 #### Edge Function
-- [ ] **9.12** Test Edge Function via curl/Postman
-- [ ] **9.13** Verify deduplication works (same notification not sent twice)
-- [ ] **9.14** Verify notification_log entries created
+- [x] **9.12** Test Edge Function via curl/Postman
+- [x] **9.13** Verify deduplication works (same notification not sent twice)
+- [x] **9.14** Verify notification_log entries created
+
+---
+
+### Phase 10: Refactor to useFocusEffect
+
+- [x] **10.1** Update useContestState to use useFocusEffect
+  - Import `useFocusEffect` from expo-router
+  - Add focus effect that calls `fetchContestState()` when screen gains focus
+  - Remove timestamp-based refresh mechanism (lastNavigationTimestamp effect)
+  - Remove `lastRefreshTimestampRef` and `isRefreshingRef` refs
+
+- [x] **10.2** Simplify NotificationContext
+  - Remove `lastNavigationTimestamp` state
+  - Remove `triggerRefresh` function
+  - Update `NotificationContextValue` interface
+
+- [x] **10.3** Update useNotificationObserver
+  - Remove `triggerRefresh` import and calls
+  - Routing still works - useFocusEffect handles data refresh on navigation
+
+---
+
+### Phase 11: Auto-Send Result Notifications with Separate Routes
+
+- [x] **11.1** Enable pg_net extension and modify elimination trigger
+  - [x] Deploy migration via `mcp__supabase__apply_migration`
+  - [x] Enable `CREATE EXTENSION IF NOT EXISTS pg_net`
+  - [x] Modify `eliminate_incorrect_players()` to call edge function via `net.http_post()`
+  - [x] Edge function called automatically when admin sets correct answer
+
+- [x] **11.2** Deploy updated edge function (v6+)
+  - [x] Add `RESULT_CORRECT` and `RESULT_ELIMINATED` notification types
+  - [x] When `type === 'RESULT_POSTED'`:
+    - [x] Query participants with `elimination_round IS NULL` (correct users) → send `RESULT_CORRECT`
+    - [x] Query participants with `elimination_round = round` (eliminated users) → send `RESULT_ELIMINATED`
+  - [x] Update `getNotificationUrl()` for new types
+  - [x] Update `getNotificationTemplate()` - both types show "Results posted"
+  - [x] Update dedupe keys for new types
+
+- [x] **11.3** Create client-side routes
+  - [x] New: `app/(contest)/correct/[contestId].tsx` → renders `CorrectScreen`
+  - [x] New: `app/(contest)/eliminated/[contestId].tsx` → renders `EliminatedScreen`
+
+- [x] **11.4** Update client notification types and constants
+  - [x] Add `RESULT_CORRECT` and `RESULT_ELIMINATED` to `NOTIFICATION_TYPES`
+  - [x] Add `CORRECT_ROOT` and `ELIMINATED_ROOT` to `NOTIFICATION_URLS`
+
+- [x] **11.5** Update deep link utilities
+  - [x] `getDeepLinkForNotification()` - handle new types with correct paths
+  - [x] `isValidNotificationUrl()` - validate `/correct/` and `/eliminated/` paths
+  - [x] `extractContestIdFromUrl()` - extract contest ID from new paths
 
 ---
 

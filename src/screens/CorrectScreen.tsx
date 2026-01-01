@@ -7,8 +7,9 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { successHaptic } from '../utils/haptics';
 
-import { buildContestRoute, ROUTES } from '../configs/routes';
+import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
+import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
 import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
@@ -33,6 +34,8 @@ const CorrectScreen = () => {
   const { contestId, loading, error, playerState, refresh, contest, question, answer } =
     useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
+
+  console.log('[DEBUG] CorrectScreen render, playerState:', playerState, 'contestId:', contestId);
   const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
 
   // Staggered scale/fade animations
@@ -110,21 +113,6 @@ const CorrectScreen = () => {
     ]).start();
   }, [checkmarkScale, checkmarkOpacity, textScale, textOpacity, contentAnim, chartAnim]);
 
-  useEffect(() => {
-    if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) return;
-    if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(buildContestRoute(contestId));
-    } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.WINNER) {
-      router.replace({ pathname: ROUTES.WINNER, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.LOBBY) {
-      router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
-    }
-  }, [playerState, router, contestId, loading]);
-
   if (loading) {
     return <LoadingView />;
   }
@@ -141,13 +129,19 @@ const CorrectScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Header user={derivedUser} />
-      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <View style={styles.headerBlock}>
-          <View
-            style={{
-              flexDirection: 'row',
+    <ContestRouter
+      contestId={contestId}
+      playerState={playerState}
+      loading={loading}
+      validState={PLAYER_STATE.CORRECT_WAITING_NEXT}
+    >
+      <View style={styles.container}>
+        <Header user={derivedUser} />
+        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+          <View style={styles.headerBlock}>
+            <View
+              style={{
+                flexDirection: 'row',
               alignItems: 'center',
               gap: SPACING.SM,
               position: 'relative',
@@ -228,6 +222,7 @@ const CorrectScreen = () => {
         )}
       </View>
     </View>
+    </ContestRouter>
   );
 };
 

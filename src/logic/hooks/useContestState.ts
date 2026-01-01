@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { RealtimePostgresChangesPayload } from '../../db/realtime';
 import {
   getAnswerForQuestion,
@@ -38,10 +39,15 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   const [participant, setParticipant] = useState<ParticipantRow | null>(null);
   const [question, setQuestion] = useState<QuestionRow | null>(null);
   const [answer, setAnswer] = useState<AnswerRow | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
+  const hasInitializedRef = useRef(false);
+  const hasFocusEffectRunRef = useRef(false);
+  const contestRoundRef = useRef<number>(0);
+  const questionRoundRef = useRef<number>(0);
 
   const fetchContestState = useCallback(async () => {
+    console.log('[DEBUG] fetchContestState called');
     if (!contestId) {
+      console.log('[DEBUG] fetchContestState: No contestId, clearing state');
       setContest(null);
       setParticipant(null);
       setQuestion(null);
@@ -50,6 +56,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
       setLoading(false);
       return;
     }
+    console.log('[DEBUG] fetchContestState: Starting fetch for contestId:', contestId);
     setLoading(true);
     setError(null);
 
@@ -114,26 +121,32 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
         setAnswer(null);
       }
     }
-    setIsInitialized(true);
+    console.log('[DEBUG] fetchContestState: completed successfully');
     setLoading(false);
   }, [contestId, userId]);
 
   useEffect(() => {
-    void fetchContestState();
-  }, [fetchContestState]);
+    if (!hasInitializedRef.current && contestId) {
+      console.log('[DEBUG] Initial fetch effect triggered');
+      hasInitializedRef.current = true;
+      void fetchContestState();
+    }
+  }, [contestId, fetchContestState]);
 
   useEffect(() => {
-    if (!contestId || !isInitialized) return undefined;
+    if (!contestId || !hasInitializedRef.current) return undefined;
 
     const unsubscribes: Array<() => void> = [];
 
     const contestUnsub = subscribeToContest(contestId, (updatedContest: ContestRow) => {
+      console.log('[DEBUG] Realtime contest update:', { state: updatedContest.state, current_round: updatedContest.current_round });
       setContest(updatedContest);
     });
     unsubscribes.push(contestUnsub);
 
     if (participant?.id) {
       const participantUnsub = subscribeToParticipant(participant.id, (updated) => {
+        console.log('[DEBUG] Realtime participant update:', { id: updated.id, eliminated: updated.elimination_round });
         setParticipant(updated);
       });
       unsubscribes.push(participantUnsub);
@@ -142,6 +155,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
         participant.id,
         (payload: RealtimePostgresChangesPayload<AnswerRow>) => {
           if (payload.new && typeof payload.new === 'object') {
+            console.log('[DEBUG] Realtime answer update:', { question_id: (payload.new as AnswerRow).question_id });
             setAnswer(payload.new as AnswerRow);
           }
         },
@@ -151,7 +165,9 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
 
     const questionsUnsub = subscribeToQuestions(contestId, (payload) => {
       const nextQuestion = payload.new as QuestionRow | null;
-      if (nextQuestion) {
+      const currentRound = contestRoundRef.current || questionRoundRef.current;
+      if (nextQuestion && nextQuestion.round <= currentRound) {
+        console.log('[DEBUG] Realtime question update:', { round: nextQuestion.round });
         setQuestion((current) =>
           nextQuestion.round >= (current?.round ?? 0) ? nextQuestion : current,
         );
@@ -162,19 +178,44 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-  }, [contestId, participant?.id, isInitialized]);
+  }, [contestId, participant?.id]);
+
+  useEffect(() => {
+    contestRoundRef.current = contest?.current_round ?? 0;
+  }, [contest?.current_round]);
+
+  useEffect(() => {
+    if (!contest?.current_round) {
+      return;
+    }
+
+    const currentRound = contest.current_round;
+    setQuestion((prev) => (prev && prev.round !== currentRound ? null : prev));
+    setAnswer((prev) => (prev && prev.round !== currentRound ? null : prev));
+  }, [contest?.current_round]);
+
+  useEffect(() => {
+    questionRoundRef.current = question?.round ?? 0;
+  }, [question?.round]);
 
   useEffect(() => {
     const loadCurrentQuestion = async () => {
-      if (!contestId || !contest?.current_round || !isInitialized) return;
+      console.log('[DEBUG] loadCurrentQuestion effect triggered, current_round:', contest?.current_round);
+      if (!contestId || !contest?.current_round || !hasInitializedRef.current) {
+        console.log('[DEBUG] loadCurrentQuestion skipped - missing deps');
+        return;
+      }
 
+      console.log('[DEBUG] loadCurrentQuestion: fetching question for round:', contest.current_round);
       const questionResult = await getQuestionForRound(contestId, contest.current_round);
       if (!questionResult.ok) {
+        console.log('[DEBUG] loadCurrentQuestion: failed to fetch question');
         setError(getErrorMessage(questionResult.error));
         return;
       }
 
       const roundQuestion = questionResult.value;
+      console.log('[DEBUG] loadCurrentQuestion: got question:', roundQuestion?.id);
       setQuestion((prev) => {
         if (!roundQuestion) return prev;
         if (prev?.id === roundQuestion.id) return prev;
@@ -187,6 +228,7 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
           setError(getErrorMessage(answerResult.error));
           return;
         }
+        console.log('[DEBUG] loadCurrentQuestion: got answer for question:', roundQuestion.id);
         setAnswer((prev) => {
           if (prev?.question_id === roundQuestion.id) return prev;
           return answerResult.value;
@@ -195,7 +237,25 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     };
 
     void loadCurrentQuestion();
-  }, [contest?.current_round, contestId, participant?.id, isInitialized]);
+  }, [contest?.current_round, contestId, participant?.id]);
+
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[DEBUG] useFocusEffect fired, contestId:', contestId, 'hasInitialized:', hasInitializedRef.current);
+
+      // Skip the first run (initial mount is handled by useEffect)
+      if (!hasFocusEffectRunRef.current) {
+        hasFocusEffectRunRef.current = true;
+        console.log('[DEBUG] useFocusEffect skipping first run');
+        return;
+      }
+
+      if (contestId && hasInitializedRef.current) {
+        console.log('[DEBUG] → Triggering fetchContestState from focus');
+        void fetchContestState();
+      }
+    }, [contestId, fetchContestState]),
+  );
 
   const playerState = useMemo(
     () => derivePlayerState(contest, participant, question, answer),
@@ -208,6 +268,15 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
       setError(getErrorMessage(result.error));
     }
   }, []);
+
+  console.log('[DEBUG] useContestState returning state:', {
+    loading,
+    playerState,
+    contestState: contest?.state,
+    currentRound: contest?.current_round,
+    hasParticipant: !!participant,
+    hasQuestion: !!question,
+  });
 
   return useMemo(
     () => ({

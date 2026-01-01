@@ -3,7 +3,8 @@
     "allow": [
       "Bash(dir:*)",
       "Bash(powershell:*)",
-      "Bash(npm run format:*)"
+      "Bash(npm run format:*)",
+      "mcp__supabase__execute_sql"
     ]
   },
   "outputStyle": "Explanatory"

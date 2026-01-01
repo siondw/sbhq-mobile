@@ -2,9 +2,10 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, StyleSheet, View } from 'react-native';
 
-import { buildContestRoute, ROUTES } from '../configs/routes';
+import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
 import { celebrationHaptic } from '../utils/haptics';
 import { PLAYER_STATE } from '../logic/constants';
+import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
@@ -51,21 +52,6 @@ const WinnerScreen = () => {
     return () => animation.stop();
   }, [pulse]);
 
-  useEffect(() => {
-    if (!contestId || loading) return;
-    if (playerState === PLAYER_STATE.ANSWERING) {
-      router.replace(buildContestRoute(contestId));
-    } else if (playerState === PLAYER_STATE.SUBMITTED_WAITING) {
-      router.replace({ pathname: ROUTES.SUBMITTED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.CORRECT_WAITING_NEXT) {
-      router.replace({ pathname: ROUTES.CORRECT, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.ELIMINATED) {
-      router.replace({ pathname: ROUTES.ELIMINATED, params: { contestId } });
-    } else if (playerState === PLAYER_STATE.LOBBY) {
-      router.replace({ pathname: ROUTES.LOBBY, params: { contestId } });
-    }
-  }, [playerState, router, contestId, loading]);
-
   if (loading) {
     return <LoadingView />;
   }
@@ -82,29 +68,36 @@ const WinnerScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <Header user={derivedUser} />
-      <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-        <Animated.View style={[styles.badge, { transform: [{ scale: pulse }] }]}>
-          <Text weight="bold" style={styles.badgeText}>
-            WINNER
+    <ContestRouter
+      contestId={contestId}
+      playerState={playerState}
+      loading={loading}
+      validState={PLAYER_STATE.WINNER}
+    >
+      <View style={styles.container}>
+        <Header user={derivedUser} />
+        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+          <Animated.View style={[styles.badge, { transform: [{ scale: pulse }] }]}>
+            <Text weight="bold" style={styles.badgeText}>
+              WINNER
+            </Text>
+          </Animated.View>
+          <Text weight="bold" style={styles.title}>
+            You won!
           </Text>
-        </Animated.View>
-        <Text weight="bold" style={styles.title}>
-          You won!
-        </Text>
-        <Text style={styles.body}>Congratulations on being the last player standing.</Text>
+          <Text style={styles.body}>Congratulations on being the last player standing.</Text>
 
-        <ContestStatsCard
-          numberOfRemainingPlayers={remainingPlayers}
-          roundNumber={contest?.current_round ?? 1}
-        />
+          <ContestStatsCard
+            numberOfRemainingPlayers={remainingPlayers}
+            roundNumber={contest?.current_round ?? 1}
+          />
 
-        <View style={styles.footer}>
-          <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
+          <View style={styles.footer}>
+            <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
+          </View>
         </View>
       </View>
-    </View>
+    </ContestRouter>
   );
 };
 

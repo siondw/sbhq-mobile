@@ -15,11 +15,8 @@ export interface NotificationContextValue {
 const NotificationContext = createContext<NotificationContextValue | null>(null);
 
 export const NotificationProvider = ({ children }: { children: React.ReactNode }) => {
-  const notifications = usePushNotifications();
-
-  return (
-    <NotificationContext.Provider value={notifications}>{children}</NotificationContext.Provider>
-  );
+  const value = usePushNotifications();
+  return <NotificationContext.Provider value={value}>{children}</NotificationContext.Provider>;
 };
 
 export const useNotifications = (): NotificationContextValue => {

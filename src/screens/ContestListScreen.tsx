@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 
 import { Feather } from '@expo/vector-icons';
-import { ROUTES } from '../configs/routes';
+import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import type { ContestRow } from '../db/types';
 import { CONTEST_STATE } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
@@ -117,9 +117,10 @@ const ContestListScreen = () => {
       return;
     }
     if (contest.state === CONTEST_STATE.LOBBY_OPEN) {
+      const lobbyRoute = buildLobbyRoute(contest.id);
       router.push({
-        pathname: ROUTES.LOBBY,
-        params: { contestId: contest.id, startTime: contest.start_time },
+        ...lobbyRoute,
+        params: { ...lobbyRoute.params, startTime: contest.start_time },
       });
       return;
     }
