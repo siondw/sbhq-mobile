@@ -63,11 +63,19 @@ const mockQuestionsUnsub = jest.fn();
 const mockParticipantUnsub = jest.fn();
 const mockAnswersUnsub = jest.fn();
 
-const mockGetContestById = jest.fn(async () => mockOk(mockContestRow));
-const mockGetParticipantForUser = jest.fn(async () => mockOk(mockParticipantRow));
-const mockGetOrCreateParticipant = jest.fn(async () => mockOk(mockParticipantRow as ParticipantRow));
-const mockGetQuestionForRound = jest.fn(async () => mockOk(mockQuestionRow));
-const mockGetAnswerForQuestion = jest.fn(async () => mockOk(mockAnswerRow));
+const mockGetContestById = jest.fn(async (_contestId: string) => mockOk(mockContestRow));
+const mockGetParticipantForUser = jest.fn(async (_contestId: string, _userId: string) =>
+  mockOk(mockParticipantRow),
+);
+const mockGetOrCreateParticipant = jest.fn(async (_contestId: string, _userId: string) =>
+  mockOk(mockParticipantRow as ParticipantRow),
+);
+const mockGetQuestionForRound = jest.fn(async (_contestId: string, _round: number) =>
+  mockOk(mockQuestionRow),
+);
+const mockGetAnswerForQuestion = jest.fn(async (_participantId: string, _questionId: string) =>
+  mockOk(mockAnswerRow),
+);
 
 jest.mock('../../src/logic/contexts', () => ({
   useNotificationRouting: () => ({
@@ -86,7 +94,7 @@ jest.mock('../../src/ui/components/LoadingView', () => {
 });
 
 jest.mock('../../src/db/contests', () => ({
-  getContestById: (...args: unknown[]) => mockGetContestById(...args),
+  getContestById: (contestId: string) => mockGetContestById(contestId),
   subscribeToContest: (contestId: string, onChange: (updated: ContestRow) => void) => {
     mockSubscribeToContestCallCount += 1;
     mockSubscribedContestIds.push(contestId);
@@ -96,8 +104,10 @@ jest.mock('../../src/db/contests', () => ({
 }));
 
 jest.mock('../../src/db/participants', () => ({
-  getParticipantForUser: (...args: unknown[]) => mockGetParticipantForUser(...args),
-  getOrCreateParticipant: (...args: unknown[]) => mockGetOrCreateParticipant(...args),
+  getParticipantForUser: (contestId: string, userId: string) =>
+    mockGetParticipantForUser(contestId, userId),
+  getOrCreateParticipant: (contestId: string, userId: string) =>
+    mockGetOrCreateParticipant(contestId, userId),
   subscribeToParticipant: (participantId: string, onChange: (updated: ParticipantRow) => void) => {
     mockSubscribeToParticipantCallCount += 1;
     mockSubscribedParticipantIds.push(participantId);
@@ -107,7 +117,7 @@ jest.mock('../../src/db/participants', () => ({
 }));
 
 jest.mock('../../src/db/questions', () => ({
-  getQuestionForRound: (...args: unknown[]) => mockGetQuestionForRound(...args),
+  getQuestionForRound: (contestId: string, round: number) => mockGetQuestionForRound(contestId, round),
   subscribeToQuestions: (contestId: string, onChange: (payload: { new: unknown }) => void) => {
     mockSubscribeToQuestionsCallCount += 1;
     mockSubscribedQuestionsContestIds.push(contestId);
@@ -117,7 +127,8 @@ jest.mock('../../src/db/questions', () => ({
 }));
 
 jest.mock('../../src/db/answers', () => ({
-  getAnswerForQuestion: (...args: unknown[]) => mockGetAnswerForQuestion(...args),
+  getAnswerForQuestion: (participantId: string, questionId: string) =>
+    mockGetAnswerForQuestion(participantId, questionId),
   submitAnswer: async () => ({ ok: true, value: null }),
   subscribeToAnswersForParticipant: (
     participantId: string,

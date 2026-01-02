@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { render, waitFor } from '@testing-library/react-native';
 
 import { ROUTES } from '../../src/configs/routes';
+import type { ParticipantRow } from '../../src/db/types';
 import { useNotificationObserver } from '../../src/logic/hooks/useNotificationObserver';
 import { __notifications } from '../mocks/expo-notifications';
 import { __router } from '../mocks/expo-router';
@@ -16,7 +17,9 @@ const mockAuthState: { user: null | { id: string }; loading: boolean } = {
   loading: false,
 };
 
-const mockGetParticipantForUser = jest.fn(async () => mockOk(null));
+const mockGetParticipantForUser = jest.fn<Promise<OkResult<ParticipantRow | null>>, [string, string]>(
+  async () => mockOk(null),
+);
 const mockSetPendingResultIntent = jest.fn();
 const mockClearPendingResultIntent = jest.fn();
 
@@ -25,7 +28,8 @@ jest.mock('../../src/logic/hooks/useAuth', () => ({
 }));
 
 jest.mock('../../src/db/participants', () => ({
-  getParticipantForUser: (...args: unknown[]) => mockGetParticipantForUser(...args),
+  getParticipantForUser: (contestId: string, userId: string) =>
+    mockGetParticipantForUser(contestId, userId),
 }));
 
 jest.mock('../../src/logic/contexts', () => ({
