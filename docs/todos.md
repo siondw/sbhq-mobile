@@ -19,7 +19,7 @@ UI Nits:
 - Submitted Screen
   -- [x] Removed full white container; only summary card uses surface background.
   -- [x] Added question + selected answer summary via reusable AnswerSummaryCard.
-  -- [ ] Add football animation moving left-to-right underneath the question/answer card as waiting indicator.
+  -- [x] Add football animation moving left-to-right underneath the question/answer card as waiting indicator.
 
 - Eliminated Screen
   -- [x] Updated styling, show eliminated round and answer comparison.
@@ -35,7 +35,7 @@ P1
 - [x] Apple Auth setup
 - [x] Notifications
   - [x] Finish testing
-  - [ ] Make notifications auto-trigger based off time and contes tstate
+  - [ ] Make notifications auto-trigger based off time and contest tstate
 - [ ] Allow elimnated users to continue watching the contest as spectators
 
 P2
@@ -72,3 +72,8 @@ P4 (Polish / Nice-to-haves)
   - Improvement: Have `useNotificationObserver` check participant state and route directly to correct destination
   - Routes: CORRECT → `/correct?contestId={id}`, ELIMINATED → `/eliminated?contestId={id}`, else `/game/{contestId}`
   - Low priority - current behavior is functional, just not as smooth
+- [ ] Lobby screen tips:
+  - [ ] Pull to refresh
+  - [ ] Question can sometims have multiple correct answers
+  - [ ] Submissions will close when play resumes
+  - [ ] etc
