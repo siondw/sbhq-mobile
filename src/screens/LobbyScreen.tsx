@@ -1,8 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
+import { LOBBY_TIPS } from '../configs/constants';
 import { buildContestRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
@@ -29,12 +30,23 @@ const LobbyScreen = () => {
   const { count: participantCount } = useParticipantCount(contestId, 15000); // Poll every 15s
 
   const { refreshing, onRefresh } = useRefresh([refresh]);
+  const [tipIndex, setTipIndex] = useState(0);
+  const tipCount = LOBBY_TIPS.length;
 
   const targetTime = startTime
     ? new Date(startTime).getTime()
     : contest?.start_time
       ? new Date(contest.start_time).getTime()
       : Date.now();
+
+  useEffect(() => {
+    if (tipCount <= 1) return undefined;
+    const intervalId = setInterval(() => {
+      setTipIndex((prev) => (prev + 1) % tipCount);
+    }, 6000);
+
+    return () => clearInterval(intervalId);
+  }, [tipCount]);
 
   return (
     <ContestRouter
@@ -95,9 +107,9 @@ const LobbyScreen = () => {
 
               {/* Reassurance Footer */}
               <View style={styles.bottomSection}>
-                <StatusBadge label="GAME TIME" icon="checkmark-circle" />
+                <StatusBadge label="GAME TIME" icon="time-outline" />
                 <Text style={styles.waitingText}>
-                  Stay on this screen. The game will start automatically.
+                  {`Tip: ${LOBBY_TIPS[tipIndex] ?? 'Stay here. The game will start automatically.'}`}
                 </Text>
               </View>
             </View>
