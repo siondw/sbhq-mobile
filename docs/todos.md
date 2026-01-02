@@ -42,6 +42,7 @@ P2
 
 - [x] Audit listneers and hooks, optimize where needed
 - [ ] Add first time login tutorial walk throguh for apple review team
+- [ ] Allow place for users to delete their account
 - [x] Pull to refresh on contest list screeen
 - [x] IOS haptic feedback
 - [x] Pull to refresh on more screens to prevent stuckness
@@ -56,6 +57,7 @@ P2
 P3
 
 - [x] Create an icon for the app
+- [ ] Offline error toast?
 - [ ] Add error logging for auto-send notifications
   - Issue: pg_net trigger calls edge function, but if it fails there's no visibility
   - Improvement: Create `notification_call_log` table to track pg_net responses
