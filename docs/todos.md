@@ -43,8 +43,8 @@ P2
 - [x] Audit listneers and hooks, optimize where needed
 - [x] Pull to refresh on contest list screeen
 - [x] IOS haptic feedback
-- [ ] Pull to refresh on more screens to prevent stuckness
-- [ ] Settings bar to logout and change user settings
+- [x] Pull to refresh on more screens to prevent stuckness
+- [x] Settings bar to logout and change user settings
 - [x] Supbase fixes:
   - [x] RLS policies?
   - [x] Cascade behvior for tables

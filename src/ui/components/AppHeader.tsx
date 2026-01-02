@@ -1,12 +1,14 @@
-import React, { memo, useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
 import { APP_NAME } from '../../configs/constants';
 import type { DerivedUser } from '../../logic/hooks/AuthProvider';
+import { lightImpact } from '../../utils/haptics';
 import { HEADER_CONTENT_HEIGHT, SPACING, TYPOGRAPHY, useTheme } from '../theme';
 import Text from './Text';
+import UserMenu from './UserMenu';
 
 interface HeaderProps {
   user?: DerivedUser | null;
@@ -15,20 +17,35 @@ interface HeaderProps {
 const Header = memo(({ user }: HeaderProps) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [menuVisible, setMenuVisible] = useState(false);
+
+  const toggleMenu = useCallback(() => {
+    lightImpact();
+    setMenuVisible((prev) => !prev);
+  }, []);
+
+  const closeMenu = useCallback(() => {
+    setMenuVisible(false);
+  }, []);
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top']} pointerEvents="box-none">
-      <View style={styles.container} pointerEvents="box-none">
+    <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <View style={styles.container}>
         <View style={styles.brandRow}>
           <Ionicons name="trophy" size={14} color={colors.energy} />
           <Text weight="medium" style={styles.brand}>
             {APP_NAME}
           </Text>
         </View>
-        <Text weight="medium" style={styles.user}>
-          {user?.username || user?.email || 'Guest'}
-        </Text>
+        <Pressable style={styles.userButton} onPress={toggleMenu}>
+          <Text weight="medium" style={styles.user}>
+            {user?.username || user?.email || 'Guest'}
+          </Text>
+          <Ionicons name="chevron-down" size={14} color={colors.ink} />
+        </Pressable>
       </View>
+
+      <UserMenu visible={menuVisible} onClose={closeMenu} user={user ?? null} />
     </SafeAreaView>
   );
 });
@@ -63,6 +80,11 @@ function createStyles(colors: { surface: string; ink: string; energy: string }) 
     brand: {
       fontSize: TYPOGRAPHY.SMALL,
       color: colors.ink,
+    },
+    userButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 4,
     },
     user: {
       fontSize: TYPOGRAPHY.SMALL,
