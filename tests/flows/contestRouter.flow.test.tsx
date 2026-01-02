@@ -3,14 +3,13 @@
  * Start: /submitted/{contestId} but playerState === ANSWERING.
  * Expect: Submitted content never renders; redirect to /game/{contestId}.
  */
-import React, { useEffect } from 'react';
-import { View } from 'react-native';
+import React from 'react';
 import { render, waitFor } from '@testing-library/react-native';
 
 import { PLAYER_STATE } from '../../src/logic/constants';
-import { ContestRouter } from '../../src/logic/routing/ContestRouter';
 import { __router } from '../mocks/expo-router';
 import { DEFAULT_CONTEST_ID } from '../support/builders';
+import { createContestRouteApp } from '../support/contestRouteHarness';
 
 jest.mock('../../src/logic/contexts', () => ({
   useNotificationRouting: () => ({
@@ -30,56 +29,6 @@ jest.mock('../../src/ui/components/LoadingView', () => {
 
 const mountLog: string[] = [];
 
-const ScreenMarker = ({ name }: { name: string }) => {
-  useEffect(() => {
-    mountLog.push(name);
-  }, [name]);
-  return <View testID={`screen.${name}`} />;
-};
-
-type RouteShellProps = { contestId: string; playerState: string; loading: boolean };
-
-const LobbyShell = (props: RouteShellProps) => (
-  <ContestRouter
-    contestId={props.contestId}
-    playerState={props.playerState}
-    loading={props.loading}
-    validState={PLAYER_STATE.LOBBY}
-  >
-    <ScreenMarker name="lobby" />
-  </ContestRouter>
-);
-
-const GameShell = (props: RouteShellProps) => (
-  <ContestRouter
-    contestId={props.contestId}
-    playerState={props.playerState}
-    loading={props.loading}
-    validState={PLAYER_STATE.ANSWERING}
-  >
-    <ScreenMarker name="game" />
-  </ContestRouter>
-);
-
-const SubmittedShell = (props: RouteShellProps) => (
-  <ContestRouter
-    contestId={props.contestId}
-    playerState={props.playerState}
-    loading={props.loading}
-    validState={PLAYER_STATE.SUBMITTED_WAITING}
-  >
-    <ScreenMarker name="submitted" />
-  </ContestRouter>
-);
-
-const RouteApp = (props: RouteShellProps) => {
-  const path = __router.getPathname();
-  if (path.startsWith('/lobby/')) return <LobbyShell {...props} />;
-  if (path.startsWith('/game/')) return <GameShell {...props} />;
-  if (path.startsWith('/submitted/')) return <SubmittedShell {...props} />;
-  return <View testID="screen.unknown" />;
-};
-
 describe('Flow: ContestRouter redirect guard', () => {
   beforeEach(() => {
     __router.reset();
@@ -89,6 +38,7 @@ describe('Flow: ContestRouter redirect guard', () => {
   test('does not render the wrong screen before redirect', async () => {
     __router.setPathname(`/submitted/${DEFAULT_CONTEST_ID}`);
 
+    const { RouteApp } = createContestRouteApp(mountLog);
     const view = render(
       <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.ANSWERING} loading={false} />,
     );

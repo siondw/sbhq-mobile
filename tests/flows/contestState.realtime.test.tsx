@@ -53,6 +53,11 @@ let mockSubscribeToQuestionsCallCount = 0;
 let mockSubscribeToParticipantCallCount = 0;
 let mockSubscribeToAnswersCallCount = 0;
 
+let mockSubscribedContestIds: string[] = [];
+let mockSubscribedQuestionsContestIds: string[] = [];
+let mockSubscribedParticipantIds: string[] = [];
+let mockSubscribedAnswersParticipantIds: string[] = [];
+
 const mockContestUnsub = jest.fn();
 const mockQuestionsUnsub = jest.fn();
 const mockParticipantUnsub = jest.fn();
@@ -82,8 +87,9 @@ jest.mock('../../src/ui/components/LoadingView', () => {
 
 jest.mock('../../src/db/contests', () => ({
   getContestById: (...args: unknown[]) => mockGetContestById(...args),
-  subscribeToContest: (_contestId: string, onChange: (updated: ContestRow) => void) => {
+  subscribeToContest: (contestId: string, onChange: (updated: ContestRow) => void) => {
     mockSubscribeToContestCallCount += 1;
+    mockSubscribedContestIds.push(contestId);
     mockContestSubscriptionCallback = onChange;
     return mockContestUnsub;
   },
@@ -92,8 +98,9 @@ jest.mock('../../src/db/contests', () => ({
 jest.mock('../../src/db/participants', () => ({
   getParticipantForUser: (...args: unknown[]) => mockGetParticipantForUser(...args),
   getOrCreateParticipant: (...args: unknown[]) => mockGetOrCreateParticipant(...args),
-  subscribeToParticipant: (_participantId: string, onChange: (updated: ParticipantRow) => void) => {
+  subscribeToParticipant: (participantId: string, onChange: (updated: ParticipantRow) => void) => {
     mockSubscribeToParticipantCallCount += 1;
+    mockSubscribedParticipantIds.push(participantId);
     mockParticipantSubscriptionCallback = onChange;
     return mockParticipantUnsub;
   },
@@ -101,8 +108,9 @@ jest.mock('../../src/db/participants', () => ({
 
 jest.mock('../../src/db/questions', () => ({
   getQuestionForRound: (...args: unknown[]) => mockGetQuestionForRound(...args),
-  subscribeToQuestions: (_contestId: string, onChange: (payload: { new: unknown }) => void) => {
+  subscribeToQuestions: (contestId: string, onChange: (payload: { new: unknown }) => void) => {
     mockSubscribeToQuestionsCallCount += 1;
+    mockSubscribedQuestionsContestIds.push(contestId);
     mockQuestionsSubscriptionCallback = onChange;
     return mockQuestionsUnsub;
   },
@@ -112,10 +120,11 @@ jest.mock('../../src/db/answers', () => ({
   getAnswerForQuestion: (...args: unknown[]) => mockGetAnswerForQuestion(...args),
   submitAnswer: async () => ({ ok: true, value: null }),
   subscribeToAnswersForParticipant: (
-    _participantId: string,
+    participantId: string,
     onChange: (payload: { new: unknown; old?: unknown }) => void,
   ) => {
     mockSubscribeToAnswersCallCount += 1;
+    mockSubscribedAnswersParticipantIds.push(participantId);
     mockAnswerSubscriptionCallback = onChange;
     return mockAnswersUnsub;
   },
@@ -226,6 +235,11 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
     mockSubscribeToParticipantCallCount = 0;
     mockSubscribeToAnswersCallCount = 0;
 
+    mockSubscribedContestIds = [];
+    mockSubscribedQuestionsContestIds = [];
+    mockSubscribedParticipantIds = [];
+    mockSubscribedAnswersParticipantIds = [];
+
     mockContestUnsub.mockClear();
     mockQuestionsUnsub.mockClear();
     mockParticipantUnsub.mockClear();
@@ -252,6 +266,13 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
 
     expect(mockContestSubscriptionCallback).not.toBeNull();
     expect(mockQuestionsSubscriptionCallback).not.toBeNull();
+
+    await waitFor(() => {
+      expect(mockSubscribedContestIds).toContain(DEFAULT_CONTEST_ID);
+      expect(mockSubscribedQuestionsContestIds).toContain(DEFAULT_CONTEST_ID);
+      expect(mockSubscribedParticipantIds).toContain(DEFAULT_PARTICIPANT_ID);
+      expect(mockSubscribedAnswersParticipantIds).toContain(DEFAULT_PARTICIPANT_ID);
+    });
 
     // Contest goes live
     mockContestRow = makeContest({

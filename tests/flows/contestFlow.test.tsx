@@ -6,10 +6,11 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 import { render, waitFor } from '@testing-library/react-native';
 
-import { PLAYER_STATE } from '../../src/logic/constants';
+import { PLAYER_STATE, type PlayerState } from '../../src/logic/constants';
 import { ContestRouter } from '../../src/logic/routing/ContestRouter';
 import { __router } from '../mocks/expo-router';
 import { DEFAULT_CONTEST_ID } from '../support/builders';
+import { transitionTo as transitionToShared } from '../support/contestRouteHarness';
 
 jest.mock('../../src/logic/contexts', () => ({
   useNotificationRouting: () => ({
@@ -27,7 +28,7 @@ jest.mock('../../src/ui/components/LoadingView', () => {
   };
 });
 
-type RouteShellProps = { contestId: string; playerState: string; loading: boolean };
+type RouteShellProps = { contestId: string; playerState: PlayerState; loading: boolean };
 
 const mountLog: string[] = [];
 
@@ -130,65 +131,25 @@ describe('Flow: contest (non-notification)', () => {
     expect(view.getByTestId('screen.lobby')).toBeTruthy();
     await waitFor(() => expect(mountLog).toEqual(['lobby']));
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ANSWERING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/game/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ANSWERING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.game')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.ANSWERING,
+    });
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/submitted/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.submitted')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.SUBMITTED_WAITING,
+    });
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/correct/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.correct')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.CORRECT_WAITING_NEXT,
+    });
 
-    view.rerender(
-      <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.WINNER} loading={false} />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/winner/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.WINNER} loading={false} />,
-    );
-    expect(view.getByTestId('screen.winner')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.WINNER,
+    });
 
     await waitFor(() =>
       expect(mountLog).toEqual(['lobby', 'game', 'submitted', 'correct', 'winner']),
@@ -211,39 +172,15 @@ describe('Flow: contest (non-notification)', () => {
     );
     expect(view.getByTestId('screen.game')).toBeTruthy();
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/submitted/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.submitted')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.SUBMITTED_WAITING,
+    });
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ELIMINATED}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/eliminated/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ELIMINATED}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.eliminated')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.ELIMINATED,
+    });
 
     await waitFor(() => expect(mountLog).toEqual(['game', 'submitted', 'eliminated']));
 
@@ -264,22 +201,10 @@ describe('Flow: contest (non-notification)', () => {
     );
     expect(view.getByTestId('screen.game')).toBeTruthy();
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ELIMINATED}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/eliminated/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ELIMINATED}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.eliminated')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.ELIMINATED,
+    });
 
     await waitFor(() => expect(mountLog).toEqual(['game', 'eliminated']));
 
@@ -296,119 +221,25 @@ describe('Flow: contest (non-notification)', () => {
     );
     expect(view.getByTestId('screen.lobby')).toBeTruthy();
 
-    // Round 1
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ANSWERING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/game/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ANSWERING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.game')).toBeTruthy();
+    for (let round = 0; round < 2; round += 1) {
+      await transitionToShared(view, RouteApp, {
+        contestId: DEFAULT_CONTEST_ID,
+        nextState: PLAYER_STATE.ANSWERING,
+      });
+      await transitionToShared(view, RouteApp, {
+        contestId: DEFAULT_CONTEST_ID,
+        nextState: PLAYER_STATE.SUBMITTED_WAITING,
+      });
+      await transitionToShared(view, RouteApp, {
+        contestId: DEFAULT_CONTEST_ID,
+        nextState: PLAYER_STATE.CORRECT_WAITING_NEXT,
+      });
+    }
 
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/submitted/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.submitted')).toBeTruthy();
-
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/correct/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.correct')).toBeTruthy();
-
-    // Round 2
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ANSWERING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/game/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.ANSWERING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.game')).toBeTruthy();
-
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/submitted/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.SUBMITTED_WAITING}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.submitted')).toBeTruthy();
-
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        loading={false}
-      />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/correct/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp
-        contestId={DEFAULT_CONTEST_ID}
-        playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        loading={false}
-      />,
-    );
-    expect(view.getByTestId('screen.correct')).toBeTruthy();
-
-    // Win
-    view.rerender(
-      <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.WINNER} loading={false} />,
-    );
-    await waitFor(() => expect(__router.getPathname()).toBe(`/winner/${DEFAULT_CONTEST_ID}`));
-    view.rerender(
-      <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.WINNER} loading={false} />,
-    );
-    expect(view.getByTestId('screen.winner')).toBeTruthy();
+    await transitionToShared(view, RouteApp, {
+      contestId: DEFAULT_CONTEST_ID,
+      nextState: PLAYER_STATE.WINNER,
+    });
 
     await waitFor(() =>
       expect(mountLog).toEqual([

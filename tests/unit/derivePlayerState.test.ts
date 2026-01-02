@@ -8,6 +8,12 @@ describe('derivePlayerState', () => {
     expect(derivePlayerState(makeContest(), null, null, null)).toBe(PLAYER_STATE.UNKNOWN);
   });
 
+  test('UPCOMING -> UNKNOWN', () => {
+    const contest = makeContest({ state: CONTEST_STATE.UPCOMING });
+    const participant = makeParticipant();
+    expect(derivePlayerState(contest, participant, null, null)).toBe(PLAYER_STATE.UNKNOWN);
+  });
+
   test('ELIMINATED when participant has elimination_round', () => {
     const contest = makeContest({ state: CONTEST_STATE.LOBBY_OPEN });
     const participant = makeParticipant({ elimination_round: 1 });
@@ -45,10 +51,33 @@ describe('derivePlayerState', () => {
     expect(derivePlayerState(contest, participant, question, null)).toBe(PLAYER_STATE.ELIMINATED);
   });
 
+  test('ROUND_CLOSED: missing current question -> SUBMITTED_WAITING', () => {
+    const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 2 });
+    const participant = makeParticipant();
+
+    // Question exists, but it doesn't match the current round.
+    const staleQuestion = makeQuestion({ round: 1, correct_option: ['A'] });
+    const currentAnswer = makeAnswer({ round: 2, answer: 'A' });
+
+    expect(derivePlayerState(contest, participant, staleQuestion, currentAnswer)).toBe(
+      PLAYER_STATE.SUBMITTED_WAITING,
+    );
+  });
+
   test('ROUND_CLOSED: correct option unset → SUBMITTED_WAITING (waiting for admin)', () => {
     const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
     const participant = makeParticipant();
     const question = makeQuestion({ round: 1, correct_option: null });
+
+    expect(derivePlayerState(contest, participant, question, makeAnswer({ round: 1 }))).toBe(
+      PLAYER_STATE.SUBMITTED_WAITING,
+    );
+  });
+
+  test('ROUND_CLOSED: correct option empty -> SUBMITTED_WAITING (waiting for admin)', () => {
+    const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
+    const participant = makeParticipant();
+    const question = makeQuestion({ round: 1, correct_option: [] });
 
     expect(derivePlayerState(contest, participant, question, makeAnswer({ round: 1 }))).toBe(
       PLAYER_STATE.SUBMITTED_WAITING,
