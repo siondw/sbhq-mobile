@@ -12,9 +12,9 @@ describe('notifications/deepLinks', () => {
       `/lobby/${DEFAULT_CONTEST_ID}`,
     );
 
-    expect(getDeepLinkForNotification(NOTIFICATION_TYPES.QUESTION_OPEN, DEFAULT_CONTEST_ID, 2)).toBe(
-      `/game/${DEFAULT_CONTEST_ID}?round=2`,
-    );
+    expect(
+      getDeepLinkForNotification(NOTIFICATION_TYPES.QUESTION_OPEN, DEFAULT_CONTEST_ID, 2),
+    ).toBe(`/game/${DEFAULT_CONTEST_ID}?round=2`);
 
     expect(getDeepLinkForNotification(NOTIFICATION_TYPES.RESULT_CORRECT, DEFAULT_CONTEST_ID)).toBe(
       `/correct/${DEFAULT_CONTEST_ID}`,
@@ -47,4 +47,3 @@ describe('notifications/deepLinks', () => {
     expect(isValidNotificationUrl(`/lobby/${DEFAULT_CONTEST_ID}/extra`)).toBe(false);
   });
 });
-

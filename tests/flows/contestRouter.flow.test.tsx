@@ -40,7 +40,11 @@ describe('Flow: ContestRouter redirect guard', () => {
 
     const { RouteApp } = createContestRouteApp(mountLog);
     const view = render(
-      <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.ANSWERING} loading={false} />,
+      <RouteApp
+        contestId={DEFAULT_CONTEST_ID}
+        playerState={PLAYER_STATE.ANSWERING}
+        loading={false}
+      />,
     );
 
     expect(view.getByTestId('loading')).toBeTruthy();
@@ -51,7 +55,11 @@ describe('Flow: ContestRouter redirect guard', () => {
     });
 
     view.rerender(
-      <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.ANSWERING} loading={false} />,
+      <RouteApp
+        contestId={DEFAULT_CONTEST_ID}
+        playerState={PLAYER_STATE.ANSWERING}
+        loading={false}
+      />,
     );
 
     expect(view.getByTestId('screen.game')).toBeTruthy();

@@ -50,4 +50,3 @@ export const makeAnswer = (overrides: DeepPartial<AnswerRow> = {}): AnswerRow =>
   timestamp: null,
   ...overrides,
 });
-

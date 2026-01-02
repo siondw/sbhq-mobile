@@ -55,7 +55,6 @@ export const ContestRouter = ({
   }, [isPendingResultForPath, playerState, validState, clearPendingResultIntent]);
 
   useEffect(() => {
-
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) {
       return;
     }
@@ -66,7 +65,6 @@ export const ContestRouter = ({
 
     // If playerState doesn't match this screen's valid state, redirect
     if (playerState !== validState) {
-
       switch (playerState) {
         case PLAYER_STATE.LOBBY:
           router.replace({
@@ -91,15 +89,7 @@ export const ContestRouter = ({
           break;
       }
     }
-  }, [
-    contestId,
-    playerState,
-    validState,
-    loading,
-    router,
-    startTime,
-    shouldHoldResultRedirect,
-  ]);
+  }, [contestId, playerState, validState, loading, router, startTime, shouldHoldResultRedirect]);
 
   // If wrong state, show loading during redirect
   if (!loading && contestId && playerState !== validState && playerState !== PLAYER_STATE.UNKNOWN) {

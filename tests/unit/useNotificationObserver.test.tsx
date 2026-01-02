@@ -17,9 +17,10 @@ const mockAuthState: { user: null | { id: string }; loading: boolean } = {
   loading: false,
 };
 
-const mockGetParticipantForUser = jest.fn<Promise<OkResult<ParticipantRow | null>>, [string, string]>(
-  async () => mockOk(null),
-);
+const mockGetParticipantForUser = jest.fn<
+  Promise<OkResult<ParticipantRow | null>>,
+  [string, string]
+>(async () => mockOk(null));
 const mockSetPendingResultIntent = jest.fn();
 const mockClearPendingResultIntent = jest.fn();
 
@@ -61,7 +62,9 @@ describe('useNotificationObserver', () => {
 
   test('routes to login when not authenticated', async () => {
     mockAuthState.user = null;
-    __notifications.setLastResponse(__notifications.makeResponseWithUrl(`/lobby/${DEFAULT_CONTEST_ID}`));
+    __notifications.setLastResponse(
+      __notifications.makeResponseWithUrl(`/lobby/${DEFAULT_CONTEST_ID}`),
+    );
 
     render(<Harness />);
 
@@ -77,7 +80,9 @@ describe('useNotificationObserver', () => {
 
   test('routes to contests list when user is not a participant', async () => {
     mockGetParticipantForUser.mockResolvedValue(mockOk(null));
-    __notifications.setLastResponse(__notifications.makeResponseWithUrl(`/game/${DEFAULT_CONTEST_ID}`));
+    __notifications.setLastResponse(
+      __notifications.makeResponseWithUrl(`/game/${DEFAULT_CONTEST_ID}`),
+    );
 
     render(<Harness />);
 
@@ -91,10 +96,10 @@ describe('useNotificationObserver', () => {
   });
 
   test('routes eliminated users to eliminated screen', async () => {
-    mockGetParticipantForUser.mockResolvedValue(
-      mockOk(makeParticipant({ elimination_round: 1 })),
+    mockGetParticipantForUser.mockResolvedValue(mockOk(makeParticipant({ elimination_round: 1 })));
+    __notifications.setLastResponse(
+      __notifications.makeResponseWithUrl(`/game/${DEFAULT_CONTEST_ID}`),
     );
-    __notifications.setLastResponse(__notifications.makeResponseWithUrl(`/game/${DEFAULT_CONTEST_ID}`));
 
     render(<Harness />);
 
@@ -107,10 +112,14 @@ describe('useNotificationObserver', () => {
 
   test('result notifications set pending intent and replace to target', async () => {
     const dateNowSpy = jest.spyOn(Date, 'now').mockReturnValue(123);
-    mockGetParticipantForUser.mockResolvedValue(mockOk(makeParticipant({ elimination_round: null })));
+    mockGetParticipantForUser.mockResolvedValue(
+      mockOk(makeParticipant({ elimination_round: null })),
+    );
 
     __router.setPathname(`/submitted/${DEFAULT_CONTEST_ID}`);
-    __notifications.setLastResponse(__notifications.makeResponseWithUrl(`/correct/${DEFAULT_CONTEST_ID}`));
+    __notifications.setLastResponse(
+      __notifications.makeResponseWithUrl(`/correct/${DEFAULT_CONTEST_ID}`),
+    );
 
     render(<Harness />);
 
@@ -130,8 +139,12 @@ describe('useNotificationObserver', () => {
   });
 
   test('does not drop notification while auth is loading', async () => {
-    mockGetParticipantForUser.mockResolvedValue(mockOk(makeParticipant({ elimination_round: null })));
-    __notifications.setLastResponse(__notifications.makeResponseWithUrl(`/lobby/${DEFAULT_CONTEST_ID}`));
+    mockGetParticipantForUser.mockResolvedValue(
+      mockOk(makeParticipant({ elimination_round: null })),
+    );
+    __notifications.setLastResponse(
+      __notifications.makeResponseWithUrl(`/lobby/${DEFAULT_CONTEST_ID}`),
+    );
 
     mockAuthState.loading = true;
     const view = render(<Harness />);
@@ -148,4 +161,3 @@ describe('useNotificationObserver', () => {
     });
   });
 });
-

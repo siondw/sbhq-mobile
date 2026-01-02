@@ -1,13 +1,13 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
 import { successHaptic } from '../utils/haptics';
 
-import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
+import { buildContestRoute, buildLobbyRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
@@ -15,6 +15,7 @@ import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import { useRefresh } from '../logic/hooks/utils';
 import { useShineAnimation } from '../ui/animations';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
@@ -28,12 +29,13 @@ import { normalizeQuestionOptions } from '../utils/questionOptions';
 const CorrectScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
   const { contestId, loading, error, playerState, refresh, contest, question, answer } =
     useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
+
+  const { refreshing, onRefresh } = useRefresh([refresh]);
 
   const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
 
@@ -136,91 +138,98 @@ const CorrectScreen = () => {
     >
       <View style={styles.container}>
         <Header user={derivedUser} />
-        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-          <View style={styles.headerBlock}>
-            <View
-              style={{
-                flexDirection: 'row',
-              alignItems: 'center',
-              gap: SPACING.SM,
-              position: 'relative',
-              overflow: 'hidden',
-            }}
-          >
-            <Animated.View
-              style={{
-                opacity: textOpacity,
-                transform: [{ scale: textScale }],
-              }}
-            >
-              <Text weight="bold" style={styles.title}>
-                Correct!
-              </Text>
-            </Animated.View>
-            <Animated.View
-              style={{
-                opacity: checkmarkOpacity,
-                transform: [{ scale: checkmarkScale }],
-              }}
-            >
-              <Ionicons name="checkmark" size={64} color={colors.success} />
-            </Animated.View>
-            <Animated.View
-              style={[
-                styles.shineContainer,
-                {
-                  opacity: shineOpacity,
-                  transform: [{ translateX: shineTranslateX }, { rotate: '-15deg' }],
-                },
-              ]}
-              pointerEvents="none"
-            >
-              <LinearGradient
-                colors={[
-                  'rgba(255, 255, 255, 0)',
-                  'rgba(255, 255, 255, 0.15)',
-                  'rgba(255, 255, 255, 0.25)',
-                  'rgba(255, 255, 255, 0.12)',
-                  'rgba(255, 255, 255, 0.3)',
-                  'rgba(255, 255, 255, 0.4)',
-                  'rgba(255, 255, 255, 0.25)',
-                  'rgba(255, 255, 255, 0.12)',
-                  'rgba(255, 255, 255, 0)',
-                ]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-                style={styles.shine}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
+        >
+          <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+            <View style={styles.headerBlock}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: SPACING.SM,
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}
+              >
+                <Animated.View
+                  style={{
+                    opacity: textOpacity,
+                    transform: [{ scale: textScale }],
+                  }}
+                >
+                  <Text weight="bold" style={styles.title}>
+                    Correct!
+                  </Text>
+                </Animated.View>
+                <Animated.View
+                  style={{
+                    opacity: checkmarkOpacity,
+                    transform: [{ scale: checkmarkScale }],
+                  }}
+                >
+                  <Ionicons name="checkmark" size={64} color={colors.success} />
+                </Animated.View>
+                <Animated.View
+                  style={[
+                    styles.shineContainer,
+                    {
+                      opacity: shineOpacity,
+                      transform: [{ translateX: shineTranslateX }, { rotate: '-15deg' }],
+                    },
+                  ]}
+                  pointerEvents="none"
+                >
+                  <LinearGradient
+                    colors={[
+                      'rgba(255, 255, 255, 0)',
+                      'rgba(255, 255, 255, 0.15)',
+                      'rgba(255, 255, 255, 0.25)',
+                      'rgba(255, 255, 255, 0.12)',
+                      'rgba(255, 255, 255, 0.3)',
+                      'rgba(255, 255, 255, 0.4)',
+                      'rgba(255, 255, 255, 0.25)',
+                      'rgba(255, 255, 255, 0.12)',
+                      'rgba(255, 255, 255, 0)',
+                    ]}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.shine}
+                  />
+                </Animated.View>
+              </View>
+            </View>
+
+            <Animated.View style={[styles.statsSection, { opacity: contentAnim }]}>
+              <ContestStatsCard
+                numberOfRemainingPlayers={remainingPlayers}
+                roundNumber={contest?.current_round ?? 1}
+                variant="success"
               />
             </Animated.View>
+
+            {distribution.length > 0 && question?.correct_option && showChart && (
+              <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
+                <AnswerDistributionChart
+                  distribution={distribution.map((d) => {
+                    const options = normalizeQuestionOptions(question?.options);
+                    return {
+                      option: d.answer,
+                      label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
+                      count: d.count,
+                    };
+                  })}
+                  correctAnswer={question.correct_option?.[0] ?? null}
+                  userAnswer={answer?.answer ?? null}
+                />
+              </Animated.View>
+            )}
           </View>
-        </View>
-
-        <Animated.View style={[styles.statsSection, { opacity: contentAnim }]}>
-          <ContestStatsCard
-            numberOfRemainingPlayers={remainingPlayers}
-            roundNumber={contest?.current_round ?? 1}
-            variant="success"
-          />
-        </Animated.View>
-
-        {distribution.length > 0 && question?.correct_option && showChart && (
-          <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
-            <AnswerDistributionChart
-              distribution={distribution.map((d) => {
-                const options = normalizeQuestionOptions(question?.options);
-                return {
-                  option: d.answer,
-                  label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
-                  count: d.count,
-                };
-              })}
-              correctAnswer={question.correct_option?.[0] ?? null}
-              userAnswer={answer?.answer ?? null}
-            />
-          </Animated.View>
-        )}
+        </ScrollView>
       </View>
-    </View>
     </ContestRouter>
   );
 };

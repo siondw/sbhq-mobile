@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
-import { Animated, Easing, StyleSheet, View } from 'react-native';
+import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
 import { celebrationHaptic } from '../utils/haptics';
@@ -10,6 +10,7 @@ import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import { useRefresh } from '../logic/hooks/utils';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
@@ -26,6 +27,8 @@ const WinnerScreen = () => {
   const { contestId, loading, error, playerState, refresh, contest } = useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
   const pulse = useRef(new Animated.Value(1)).current;
+
+  const { refreshing, onRefresh } = useRefresh([refresh]);
 
   useEffect(() => {
     // Trigger celebration haptic pattern on mount
@@ -76,26 +79,33 @@ const WinnerScreen = () => {
     >
       <View style={styles.container}>
         <Header user={derivedUser} />
-        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-          <Animated.View style={[styles.badge, { transform: [{ scale: pulse }] }]}>
-            <Text weight="bold" style={styles.badgeText}>
-              WINNER
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
+        >
+          <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+            <Animated.View style={[styles.badge, { transform: [{ scale: pulse }] }]}>
+              <Text weight="bold" style={styles.badgeText}>
+                WINNER
+              </Text>
+            </Animated.View>
+            <Text weight="bold" style={styles.title}>
+              You won!
             </Text>
-          </Animated.View>
-          <Text weight="bold" style={styles.title}>
-            You won!
-          </Text>
-          <Text style={styles.body}>Congratulations on being the last player standing.</Text>
+            <Text style={styles.body}>Congratulations on being the last player standing.</Text>
 
-          <ContestStatsCard
-            numberOfRemainingPlayers={remainingPlayers}
-            roundNumber={contest?.current_round ?? 1}
-          />
+            <ContestStatsCard
+              numberOfRemainingPlayers={remainingPlayers}
+              roundNumber={contest?.current_round ?? 1}
+            />
 
-          <View style={styles.footer}>
-            <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
+            <View style={styles.footer}>
+              <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ContestRouter>
   );

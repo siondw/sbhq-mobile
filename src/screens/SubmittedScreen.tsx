@@ -1,7 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
 import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
@@ -11,6 +11,7 @@ import { useAnswerDistribution } from '../logic/hooks/useAnswerDistribution';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import { useRefresh } from '../logic/hooks/utils';
 import RollingFootball from '../ui/animations/RollingFootball';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
@@ -33,6 +34,7 @@ const SubmittedScreen = () => {
 
   const { count: participantCount } = useParticipantCount(contestId);
 
+  const { refreshing, onRefresh } = useRefresh([refresh]);
 
   const roundToFetch =
     contest?.state === CONTEST_STATE.ROUND_CLOSED && contest.current_round !== null
@@ -76,42 +78,49 @@ const SubmittedScreen = () => {
 
         <Header user={derivedUser} />
 
-        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-          <View style={[styles.scorebugContainer, { top: headerHeight + SPACING.MD }]}>
-            <Scorebug playerCount={participantCount} />
-          </View>
-
-          <View style={styles.centerStack}>
-            {/* Football positioned above the card */}
-            <View style={styles.footballContainer}>
-              <RollingFootball />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
+        >
+          <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+            <View style={[styles.scorebugContainer, { top: headerHeight + SPACING.MD }]}>
+              <Scorebug playerCount={participantCount} />
             </View>
 
-            <View style={styles.cardContainer}>
-              <SubmittedQuestionCard
-                round={contest?.current_round ?? 1}
-                question={question?.question ?? 'Waiting for update...'}
-                options={options}
-                selectedOptionKey={answer?.answer}
-              />
+            <View style={styles.centerStack}>
+              {/* Football positioned above the card */}
+              <View style={styles.footballContainer}>
+                <RollingFootball />
+              </View>
 
-              {/* Distribution Chart */}
-              {contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0 && (
-                <View style={styles.chartSection}>
-                  <AnswerDistributionChart
-                    distribution={distribution.map((d) => ({
-                      option: options.find((o) => o.label === d.answer)?.key ?? d.answer,
-                      label: d.answer,
-                      count: d.count,
-                    }))}
-                    correctAnswer={null}
-                    userAnswer={answer?.answer ?? null}
-                  />
-                </View>
-              )}
+              <View style={styles.cardContainer}>
+                <SubmittedQuestionCard
+                  round={contest?.current_round ?? 1}
+                  question={question?.question ?? 'Waiting for update...'}
+                  options={options}
+                  selectedOptionKey={answer?.answer}
+                />
+
+                {/* Distribution Chart */}
+                {contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0 && (
+                  <View style={styles.chartSection}>
+                    <AnswerDistributionChart
+                      distribution={distribution.map((d) => ({
+                        option: options.find((o) => o.label === d.answer)?.key ?? d.answer,
+                        label: d.answer,
+                        count: d.count,
+                      }))}
+                      correctAnswer={null}
+                      userAnswer={answer?.answer ?? null}
+                    />
+                  </View>
+                )}
+              </View>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ContestRouter>
   );

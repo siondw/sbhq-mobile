@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
 import { heavyImpact } from '../utils/haptics';
@@ -11,6 +11,7 @@ import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import { useRefresh } from '../logic/hooks/utils';
 import AnswerOption from '../ui/components/AnswerOption';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
@@ -39,6 +40,8 @@ const GameScreen = () => {
     refresh,
   } = useContestData();
   const { count: participantCount } = useParticipantCount(contestId);
+
+  const { refreshing, onRefresh } = useRefresh([refresh]);
 
   const [selectedOption, setSelectedOption] = useState<AnswerOptionValue | null>(null);
 
@@ -91,49 +94,56 @@ const GameScreen = () => {
     >
       <View style={styles.container}>
         <Header user={derivedUser} />
-        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-          <View style={styles.scorebugSection}>
-            <Scorebug playerCount={participantCount} />
-          </View>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
+        >
+          <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+            <View style={styles.scorebugSection}>
+              <Scorebug playerCount={participantCount} />
+            </View>
 
-          <View style={styles.roundHeader}>
-            <Text weight="medium" style={styles.roundLabel}>
-              Round
-            </Text>
-            <Text weight="bold" style={styles.roundNumber}>
-              {contest?.current_round ?? '?'}
-            </Text>
-            <Text weight="medium" style={styles.roundSubtitle}>
-              Choose Wisely!
-            </Text>
-          </View>
+            <View style={styles.roundHeader}>
+              <Text weight="medium" style={styles.roundLabel}>
+                Round
+              </Text>
+              <Text weight="bold" style={styles.roundNumber}>
+                {contest?.current_round ?? '?'}
+              </Text>
+              <Text weight="medium" style={styles.roundSubtitle}>
+                Choose Wisely!
+              </Text>
+            </View>
 
-          <View style={styles.questionSection}>
-            <Text weight="bold" style={styles.question}>
-              {question?.question ?? 'Waiting for question...'}
-            </Text>
-          </View>
+            <View style={styles.questionSection}>
+              <Text weight="bold" style={styles.question}>
+                {question?.question ?? 'Waiting for question...'}
+              </Text>
+            </View>
 
-          <View style={styles.optionsSection}>
-            {options.map((option) => (
-              <AnswerOption
-                key={option.key}
-                label={option.label}
-                selected={selectedOption === option.key}
-                disabled={isAnswerLocked}
-                onPress={() => setSelectedOption(option.key)}
+            <View style={styles.optionsSection}>
+              {options.map((option) => (
+                <AnswerOption
+                  key={option.key}
+                  label={option.label}
+                  selected={selectedOption === option.key}
+                  disabled={isAnswerLocked}
+                  onPress={() => setSelectedOption(option.key)}
+                />
+              ))}
+            </View>
+
+            <View style={styles.submitRow}>
+              <Button
+                label="Submit"
+                onPress={handleSubmit}
+                disabled={isAnswerLocked || !selectedOption}
               />
-            ))}
+            </View>
           </View>
-
-          <View style={styles.submitRow}>
-            <Button
-              label="Submit"
-              onPress={handleSubmit}
-              disabled={isAnswerLocked || !selectedOption}
-            />
-          </View>
-        </View>
+        </ScrollView>
       </View>
     </ContestRouter>
   );

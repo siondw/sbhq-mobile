@@ -17,13 +17,11 @@ import { __notifications } from '../mocks/expo-notifications';
 import { __router } from '../mocks/expo-router';
 import { DEFAULT_CONTEST_ID, DEFAULT_USER_ID } from '../support/builders';
 
-type PendingIntent =
-  | null
-  | {
-      contestId: string;
-      path: string;
-      receivedAt: number;
-    };
+type PendingIntent = null | {
+  contestId: string;
+  path: string;
+  receivedAt: number;
+};
 
 let mockPendingResultIntent: PendingIntent = null;
 const mockSetPendingResultIntent = jest.fn((intent: PendingIntent) => {
@@ -226,10 +224,7 @@ describe('Flow: notifications (after tap)', () => {
     const view = render(
       <View>
         <ObserverHarness />
-        <RouteApp
-          contestId={DEFAULT_CONTEST_ID}
-          playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        />
+        <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.CORRECT_WAITING_NEXT} />
       </View>,
     );
 
@@ -245,10 +240,7 @@ describe('Flow: notifications (after tap)', () => {
     view.rerender(
       <View>
         <ObserverHarness />
-        <RouteApp
-          contestId={DEFAULT_CONTEST_ID}
-          playerState={PLAYER_STATE.CORRECT_WAITING_NEXT}
-        />
+        <RouteApp contestId={DEFAULT_CONTEST_ID} playerState={PLAYER_STATE.CORRECT_WAITING_NEXT} />
       </View>,
     );
 

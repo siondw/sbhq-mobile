@@ -52,4 +52,3 @@ export const __notifications = {
       },
     }) satisfies NotificationResponse,
 };
-

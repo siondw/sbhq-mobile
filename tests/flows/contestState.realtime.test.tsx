@@ -44,9 +44,8 @@ let mockAnswerRow: AnswerRow | null = null;
 let mockContestSubscriptionCallback: ((updated: ContestRow) => void) | null = null;
 let mockQuestionsSubscriptionCallback: ((payload: { new: unknown }) => void) | null = null;
 let mockParticipantSubscriptionCallback: ((updated: ParticipantRow) => void) | null = null;
-let mockAnswerSubscriptionCallback:
-  | ((payload: { new: unknown; old?: unknown }) => void)
-  | null = null;
+let mockAnswerSubscriptionCallback: ((payload: { new: unknown; old?: unknown }) => void) | null =
+  null;
 
 let mockSubscribeToContestCallCount = 0;
 let mockSubscribeToQuestionsCallCount = 0;
@@ -117,7 +116,8 @@ jest.mock('../../src/db/participants', () => ({
 }));
 
 jest.mock('../../src/db/questions', () => ({
-  getQuestionForRound: (contestId: string, round: number) => mockGetQuestionForRound(contestId, round),
+  getQuestionForRound: (contestId: string, round: number) =>
+    mockGetQuestionForRound(contestId, round),
   subscribeToQuestions: (contestId: string, onChange: (payload: { new: unknown }) => void) => {
     mockSubscribeToQuestionsCallCount += 1;
     mockSubscribedQuestionsContestIds.push(contestId);
@@ -172,7 +172,9 @@ const Harness = ({ contestId, userId }: { contestId: string; userId: string }) =
       <Text testID="loading">{String(summary.loading)}</Text>
       <Text testID="playerState">{summary.playerState}</Text>
       <Text testID="contestState">{summary.contestState ?? 'null'}</Text>
-      <Text testID="currentRound">{summary.currentRound === null ? 'null' : String(summary.currentRound)}</Text>
+      <Text testID="currentRound">
+        {summary.currentRound === null ? 'null' : String(summary.currentRound)}
+      </Text>
       <Text testID="questionId">{summary.questionId ?? 'null'}</Text>
       <Text testID="answerId">{summary.answerId ?? 'null'}</Text>
     </View>
@@ -291,7 +293,11 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
       state: CONTEST_STATE.ROUND_IN_PROGRESS,
       current_round: 1,
     });
-    mockQuestionRow = makeQuestion({ id: DEFAULT_QUESTION_ID, contest_id: DEFAULT_CONTEST_ID, round: 1 });
+    mockQuestionRow = makeQuestion({
+      id: DEFAULT_QUESTION_ID,
+      contest_id: DEFAULT_CONTEST_ID,
+      round: 1,
+    });
     mockAnswerRow = null;
 
     act(() => {

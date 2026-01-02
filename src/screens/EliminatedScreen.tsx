@@ -1,12 +1,12 @@
 import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Animated, StyleSheet, View } from 'react-native';
+import { Animated, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { Ionicons } from '@expo/vector-icons';
 
 import { eliminationHaptic } from '../utils/haptics';
 
-import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
+import { ROUTES } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
@@ -15,6 +15,7 @@ import { useAuth } from '../logic/hooks/useAuth';
 import { useEliminationQuestion } from '../logic/hooks/useEliminationQuestion';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import { useRefresh } from '../logic/hooks/utils';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
@@ -33,6 +34,7 @@ const EliminatedScreen = () => {
   const { contestId, loading, error, playerState, refresh, participant, answer } = useContestData();
   const { count: remainingPlayers } = useParticipantCount(contestId);
 
+  const { refreshing, onRefresh } = useRefresh([refresh]);
 
   const { distribution } = useAnswerDistribution(
     contestId,
@@ -120,59 +122,66 @@ const EliminatedScreen = () => {
     >
       <View style={styles.container}>
         <Header user={derivedUser} />
-        <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-          <View style={styles.headerBlock}>
-          <Animated.View
-            style={{
-              transform: [{ translateY: textAnim }],
-            }}
-          >
-            <Text weight="bold" style={styles.title}>
-              Eliminated
-            </Text>
-          </Animated.View>
-          <Animated.View
-            style={[
-              styles.iconContainer,
-              {
-                transform: [{ translateY: skullAnim }],
-              },
-            ]}
-          >
-            <Ionicons name="skull" size={80} color={colors.danger} />
-          </Animated.View>
-        </View>
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
+        >
+          <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+            <View style={styles.headerBlock}>
+              <Animated.View
+                style={{
+                  transform: [{ translateY: textAnim }],
+                }}
+              >
+                <Text weight="bold" style={styles.title}>
+                  Eliminated
+                </Text>
+              </Animated.View>
+              <Animated.View
+                style={[
+                  styles.iconContainer,
+                  {
+                    transform: [{ translateY: skullAnim }],
+                  },
+                ]}
+              >
+                <Ionicons name="skull" size={80} color={colors.danger} />
+              </Animated.View>
+            </View>
 
-        <Animated.View style={[styles.statsSection, { opacity: contentAnim }]}>
-          <ContestStatsCard
-            numberOfRemainingPlayers={remainingPlayers}
-            roundNumber={participant?.elimination_round ?? 1}
-            variant="eliminated"
-          />
-        </Animated.View>
+            <Animated.View style={[styles.statsSection, { opacity: contentAnim }]}>
+              <ContestStatsCard
+                numberOfRemainingPlayers={remainingPlayers}
+                roundNumber={participant?.elimination_round ?? 1}
+                variant="eliminated"
+              />
+            </Animated.View>
 
-        {distribution.length > 0 && eliminationQuestion?.correct_option && showChart && (
-          <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
-            <AnswerDistributionChart
-              distribution={distribution.map((d) => {
-                const options = normalizeQuestionOptions(eliminationQuestion?.options);
-                return {
-                  option: d.answer,
-                  label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
-                  count: d.count,
-                };
-              })}
-              correctAnswer={eliminationQuestion.correct_option?.[0] ?? null}
-              userAnswer={answer?.answer ?? null}
-            />
-          </Animated.View>
-        )}
+            {distribution.length > 0 && eliminationQuestion?.correct_option && showChart && (
+              <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
+                <AnswerDistributionChart
+                  distribution={distribution.map((d) => {
+                    const options = normalizeQuestionOptions(eliminationQuestion?.options);
+                    return {
+                      option: d.answer,
+                      label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
+                      count: d.count,
+                    };
+                  })}
+                  correctAnswer={eliminationQuestion.correct_option?.[0] ?? null}
+                  userAnswer={answer?.answer ?? null}
+                />
+              </Animated.View>
+            )}
 
-        <Animated.View style={[styles.footer, { opacity: contentAnim }]}>
-          <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
-        </Animated.View>
+            <Animated.View style={[styles.footer, { opacity: contentAnim }]}>
+              <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
+            </Animated.View>
+          </View>
+        </ScrollView>
       </View>
-    </View>
     </ContestRouter>
   );
 };

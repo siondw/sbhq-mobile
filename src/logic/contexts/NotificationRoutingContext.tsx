@@ -15,8 +15,9 @@ export interface NotificationRoutingContextValue {
 const NotificationRoutingContext = createContext<NotificationRoutingContextValue | null>(null);
 
 export const NotificationRoutingProvider = ({ children }: { children: React.ReactNode }) => {
-  const [pendingResultIntent, setPendingResultIntent] =
-    useState<NotificationRouteIntent | null>(null);
+  const [pendingResultIntent, setPendingResultIntent] = useState<NotificationRouteIntent | null>(
+    null,
+  );
 
   const clearPendingResultIntent = useCallback(() => {
     setPendingResultIntent(null);

@@ -49,9 +49,8 @@ export const useNotificationObserver = () => {
     (typeof searchParams.contestId === 'string'
       ? searchParams.contestId
       : Array.isArray(searchParams.contestId)
-        ? searchParams.contestId[0] ?? null
+        ? (searchParams.contestId[0] ?? null)
         : null);
-
 
   const validateAndRoute = useCallback(
     async (contestId: string, url: string) => {
@@ -124,7 +123,6 @@ export const useNotificationObserver = () => {
     let isMounted = true;
 
     const handleResponse = (response: Notifications.NotificationResponse | null) => {
-
       if (!response) {
         return;
       }

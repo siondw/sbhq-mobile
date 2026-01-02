@@ -1,15 +1,16 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { buildContestRoute, ROUTES } from '../configs/routes';
+import { buildContestRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
+import { useRefresh } from '../logic/hooks/utils';
 import Header from '../ui/components/AppHeader';
 import HeroCountdown from '../ui/components/HeroCountdown';
 import StatusBadge from '../ui/components/StatusBadge';
@@ -22,12 +23,12 @@ const LobbyScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { startTime } = useLocalSearchParams<{ startTime?: string }>();
-  const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
-  const { playerState, contest, loading, contestId } = useContestData();
+  const { playerState, contest, loading, contestId, refresh } = useContestData();
   const { count: participantCount } = useParticipantCount(contestId, 15000); // Poll every 15s
 
+  const { refreshing, onRefresh } = useRefresh([refresh]);
 
   const targetTime = startTime
     ? new Date(startTime).getTime()
@@ -60,41 +61,48 @@ const LobbyScreen = () => {
 
         <Header user={derivedUser} />
 
-        <View style={[styles.mainContainer, { paddingTop: headerHeight }]}>
-          <View style={styles.content}>
-            {/* Top Stats */}
-            <GlassyTexture colors={colors} showShine={false} style={styles.statsPill}>
-              <View style={styles.statsDot} />
-              <Text weight="medium" style={styles.statsText}>
-                {participantCount.toLocaleString()} PLAYERS
-              </Text>
-            </GlassyTexture>
-
-            {/* Hero Countdown - Centered in available space */}
-            <View style={styles.centerSection}>
-              <View style={styles.sonarWrapper}>
-                <SonarTexture colors={colors} />
-              </View>
-              <View style={styles.labelContainer}>
-                <Text weight="bold" style={styles.contestNameLabel}>
-                  {contest?.name ? `${contest.name.toUpperCase()} CONTEST` : 'CONTEST'}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
+          }
+        >
+          <View style={[styles.mainContainer, { paddingTop: headerHeight }]}>
+            <View style={styles.content}>
+              {/* Top Stats */}
+              <GlassyTexture colors={colors} showShine={false} style={styles.statsPill}>
+                <View style={styles.statsDot} />
+                <Text weight="medium" style={styles.statsText}>
+                  {participantCount.toLocaleString()} PLAYERS
                 </Text>
-                <Text weight="medium" style={styles.startingLabel}>
-                  STARTS IN
+              </GlassyTexture>
+
+              {/* Hero Countdown - Centered in available space */}
+              <View style={styles.centerSection}>
+                <View style={styles.sonarWrapper}>
+                  <SonarTexture colors={colors} />
+                </View>
+                <View style={styles.labelContainer}>
+                  <Text weight="bold" style={styles.contestNameLabel}>
+                    {contest?.name ? `${contest.name.toUpperCase()} CONTEST` : 'CONTEST'}
+                  </Text>
+                  <Text weight="medium" style={styles.startingLabel}>
+                    STARTS IN
+                  </Text>
+                </View>
+                <HeroCountdown targetTime={targetTime} />
+              </View>
+
+              {/* Reassurance Footer */}
+              <View style={styles.bottomSection}>
+                <StatusBadge label="GAME TIME" icon="checkmark-circle" />
+                <Text style={styles.waitingText}>
+                  Stay on this screen. The game will start automatically.
                 </Text>
               </View>
-              <HeroCountdown targetTime={targetTime} />
-            </View>
-
-            {/* Reassurance Footer */}
-            <View style={styles.bottomSection}>
-              <StatusBadge label="GAME TIME" icon="checkmark-circle" />
-              <Text style={styles.waitingText}>
-                Stay on this screen. The game will start automatically.
-              </Text>
             </View>
           </View>
-        </View>
+        </ScrollView>
       </View>
     </ContestRouter>
   );

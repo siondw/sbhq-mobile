@@ -226,7 +226,6 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
 
   useFocusEffect(
     useCallback(() => {
-
       // Skip the first run (initial mount is handled by useEffect)
       if (!hasFocusEffectRunRef.current) {
         hasFocusEffectRunRef.current = true;

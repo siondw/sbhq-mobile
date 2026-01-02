@@ -79,7 +79,15 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
     if (!success) {
       setIsSubmitting(false);
     }
-  }, [isFormValid, isSubmitting, onComplete, username, phoneDigits, enableNotifications, requestPermissions]);
+  }, [
+    isFormValid,
+    isSubmitting,
+    onComplete,
+    username,
+    phoneDigits,
+    enableNotifications,
+    requestPermissions,
+  ]);
 
   const toggleNotifications = useCallback(() => {
     setEnableNotifications((prev) => !prev);
@@ -174,12 +182,7 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
 
                   {/* Notification opt-in */}
                   <Pressable style={styles.checkboxRow} onPress={toggleNotifications}>
-                    <View
-                      style={[
-                        styles.checkbox,
-                        enableNotifications && styles.checkboxChecked,
-                      ]}
-                    >
+                    <View style={[styles.checkbox, enableNotifications && styles.checkboxChecked]}>
                       {enableNotifications && (
                         <Ionicons name="checkmark" size={14} color={colors.surface} />
                       )}
