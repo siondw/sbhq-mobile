@@ -1,5 +1,5 @@
-const profile = process.env.EAS_BUILD_PROFILE; // set by EAS during builds
-const isDev = profile === "development";
+const variant = process.env.APP_VARIANT; // "dev" | "prod"
+const isDev = variant === "dev";
 
 export default {
   expo: {
