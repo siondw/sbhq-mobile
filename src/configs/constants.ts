@@ -23,3 +23,5 @@ export const ANSWER_OPTION = {
 } as const;
 
 export type AnswerOptionValue = (typeof ANSWER_OPTION)[keyof typeof ANSWER_OPTION];
+
+export const DEMO_CONTEST_ID = 'DEMO_CONTEST';

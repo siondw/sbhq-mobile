@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { View } from 'react-native';
 
 import { ROUTES } from '../configs/routes';
+import { useDemoMode } from '../logic/contexts/DemoModeContext';
 import { useAuth } from '../logic/hooks/useAuth';
 import LoadingView from '../ui/components/LoadingView';
 import OnboardingModal from '../ui/components/OnboardingModal';
@@ -11,14 +12,19 @@ import LoginScreen from './LoginScreen';
 
 const IndexScreen = () => {
   const { session, loading, needsOnboarding, completeOnboarding, error } = useAuth();
+  const { shouldShowDemo, startDemo } = useDemoMode();
   const router = useRouter();
   const isDev = __DEV__;
 
   useEffect(() => {
     if (!isDev && session && !needsOnboarding) {
-      router.replace(ROUTES.CONTESTS);
+      if (shouldShowDemo) {
+        startDemo();
+      } else {
+        router.replace(ROUTES.CONTESTS);
+      }
     }
-  }, [isDev, session, needsOnboarding, router]);
+  }, [isDev, session, needsOnboarding, shouldShowDemo, startDemo, router]);
 
   if (loading) {
     return <LoadingView />;

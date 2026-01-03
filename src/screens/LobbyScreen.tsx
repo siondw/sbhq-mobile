@@ -1,10 +1,9 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { LOBBY_TIPS } from '../configs/constants';
-import { buildContestRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';

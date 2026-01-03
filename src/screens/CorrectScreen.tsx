@@ -1,5 +1,4 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
@@ -7,7 +6,6 @@ import { Ionicons } from '@expo/vector-icons';
 
 import { successHaptic } from '../utils/haptics';
 
-import { buildContestRoute, buildLobbyRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';

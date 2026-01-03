@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DEMO_CONTEST_ID } from '../../configs/constants';
 import type { AnswerDistribution } from '../../db/answers';
 import { getAnswerDistribution } from '../../db/answers';
 import { getErrorMessage } from '../../db/errors';
@@ -9,6 +10,13 @@ export interface UseAnswerDistributionResult {
   error: string | null;
 }
 
+const DEMO_DISTRIBUTION: AnswerDistribution[] = [
+  { answer: 'A', count: 456 },
+  { answer: 'B', count: 312 },
+  { answer: 'C', count: 289 },
+  { answer: 'D', count: 190 },
+];
+
 export const useAnswerDistribution = (
   contestId?: string,
   round?: number,
@@ -16,11 +24,13 @@ export const useAnswerDistribution = (
   const [distribution, setDistribution] = useState<AnswerDistribution[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDemo = contestId === DEMO_CONTEST_ID;
 
   useEffect(() => {
-    if (!contestId || round === undefined || round === null) {
+    if (!contestId || round === undefined || round === null || isDemo) {
       setDistribution([]);
       setLoading(false);
+      setError(null);
       return undefined;
     }
 
@@ -47,11 +57,11 @@ export const useAnswerDistribution = (
     return () => {
       isMounted = false;
     };
-  }, [contestId, round]);
+  }, [contestId, round, isDemo]);
 
   return {
-    distribution,
-    loading,
-    error,
+    distribution: isDemo ? DEMO_DISTRIBUTION : distribution,
+    loading: isDemo ? false : loading,
+    error: isDemo ? null : error,
   };
 };

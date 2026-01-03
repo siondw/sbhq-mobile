@@ -32,21 +32,26 @@ export const checkUsernameAvailable = async (username: string): AsyncResult<bool
 };
 
 export interface OnboardingData {
-  username: string;
-  phone_number: string;
+  username?: string;
+  phone_number?: string;
+  has_seen_demo?: boolean;
 }
 
 export const updateUserProfile = async (
   userId: string,
   data: OnboardingData,
 ): AsyncResult<void, DbError> => {
+  const upsertPayload: Record<string, unknown> = {
+    id: userId,
+    updated_at: new Date().toISOString(),
+  };
+
+  if (data.username !== undefined) upsertPayload.username = data.username;
+  if (data.phone_number !== undefined) upsertPayload.phone_number = data.phone_number;
+  if (data.has_seen_demo !== undefined) upsertPayload.has_seen_demo = data.has_seen_demo;
+
   const { error } = await SUPABASE_CLIENT.from(DB_TABLES.USERS)
-    .update({
-      username: data.username,
-      phone_number: data.phone_number,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', userId);
+    .upsert(upsertPayload, { onConflict: 'id' });
 
   if (error) {
     if (error.code === '23505') {

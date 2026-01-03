@@ -2,7 +2,7 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, Easing, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
+import { ROUTES } from '../configs/routes';
 import { celebrationHaptic } from '../utils/haptics';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';

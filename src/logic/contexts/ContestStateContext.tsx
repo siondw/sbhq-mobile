@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo } from 'react';
 
 import { useContestState, type UseContestStateResult } from '../hooks/useContestState';
+import { useDemoContestState } from '../hooks/useDemoContestState';
+import { useDemoMode } from './DemoModeContext';
 
 export type ContestStateContextValue = UseContestStateResult & {
   contestId?: string;
@@ -18,7 +20,29 @@ export const ContestStateProvider = ({
   userId?: string;
   children: React.ReactNode;
 }) => {
-  const contestState = useContestState(contestId, userId);
+  const { isDemoActive, setDemoTip } = useDemoMode();
+
+  // Call both hooks unconditionally (Rules of Hooks)
+  // Pass undefined to the unused hook based on demo mode
+  const realState = useContestState(
+    isDemoActive ? undefined : contestId,
+    isDemoActive ? undefined : userId,
+  );
+  const demoState = useDemoContestState(
+    isDemoActive ? contestId : undefined,
+    isDemoActive ? userId : undefined,
+  );
+
+  // Select which state to use based on mode
+  const contestState = isDemoActive ? demoState : realState;
+
+  useEffect(() => {
+    if (!isDemoActive) {
+      setDemoTip(null);
+      return;
+    }
+    setDemoTip(demoState.demoTip);
+  }, [demoState.demoTip, isDemoActive, setDemoTip]);
 
   const value = useMemo(
     () => ({

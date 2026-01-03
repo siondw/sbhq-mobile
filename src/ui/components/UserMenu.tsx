@@ -4,7 +4,6 @@ import React, { memo, useCallback, useMemo } from 'react';
 import { Modal, Platform, Pressable, StyleSheet, View } from 'react-native';
 
 import { ROUTES } from '../../configs/routes';
-import type { DerivedUser } from '../../logic/hooks/AuthProvider';
 import { useAuth } from '../../logic/hooks/useAuth';
 import { lightImpact } from '../../utils/haptics';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
@@ -14,10 +13,9 @@ import Text from './Text';
 interface UserMenuProps {
   visible: boolean;
   onClose: () => void;
-  user: DerivedUser | null;
 }
 
-const UserMenu = memo(({ visible, onClose, user }: UserMenuProps) => {
+const UserMenu = memo(({ visible, onClose }: UserMenuProps) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
@@ -33,11 +31,12 @@ const UserMenu = memo(({ visible, onClose, user }: UserMenuProps) => {
     router.push(ROUTES.CONTESTS);
   }, [onClose, router]);
 
-  const handleLogout = useCallback(async () => {
+  const handleLogout = useCallback(() => {
     lightImpact();
     onClose();
-    await logout();
-    router.replace(ROUTES.INDEX);
+    void logout().then(() => {
+      router.replace(ROUTES.INDEX);
+    });
   }, [logout, onClose, router]);
 
   return (

@@ -1,10 +1,8 @@
-import { useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
 import { heavyImpact } from '../utils/haptics';
-import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
@@ -25,7 +23,6 @@ const GameScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { derivedUser } = useAuth();
-  const router = useRouter();
   const headerHeight = useHeaderHeight();
   const {
     contestId,

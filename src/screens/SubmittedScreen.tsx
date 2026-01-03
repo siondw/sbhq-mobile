@@ -1,9 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { useRouter } from 'expo-router';
 import React, { useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { buildContestRoute, buildLobbyRoute, ROUTES } from '../configs/routes';
 import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
@@ -26,7 +24,6 @@ import { normalizeQuestionOptions } from '../utils/questionOptions';
 const SubmittedScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const router = useRouter();
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
   const { contestId, loading, error, playerState, refresh, question, answer, contest } =

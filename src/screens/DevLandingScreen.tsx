@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 
 import { ROUTES, buildLobbyRoute } from '../configs/routes';
+import { useDemoMode } from '../logic/contexts/DemoModeContext';
 import { useAuth } from '../logic/hooks/useAuth';
 import LoginScreen from './LoginScreen';
 
 const DevLandingScreen = () => {
   const { session, logout } = useAuth();
+  const { startDemo } = useDemoMode();
   const router = useRouter();
   const [previewScreen, setPreviewScreen] = useState<'picker' | 'login'>('picker');
   const contestId = '00000000-0000-0000-0000-0000000000aa';
@@ -23,6 +25,12 @@ const DevLandingScreen = () => {
         <Text style={styles.subtitle}>Select a screen to preview:</Text>
 
         <View style={styles.buttonGroup}>
+          <Pressable style={[styles.button, styles.demoButton]} onPress={startDemo}>
+            <Text style={styles.buttonText}>Start Demo</Text>
+          </Pressable>
+
+          <View style={styles.divider} />
+
           <Pressable style={styles.button} onPress={() => setPreviewScreen('login')}>
             <Text style={styles.buttonText}>Login Screen</Text>
           </Pressable>
@@ -135,6 +143,9 @@ const styles = StyleSheet.create({
   },
   logoutButton: {
     backgroundColor: '#9F2430',
+  },
+  demoButton: {
+    backgroundColor: '#34C759',
   },
   divider: {
     height: 20,

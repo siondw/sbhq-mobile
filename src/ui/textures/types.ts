@@ -1,4 +1,4 @@
-import type { ViewStyle } from 'react-native';
+import type { ViewProps, ViewStyle } from 'react-native';
 
 export type GlassyTextureProps = {
   colors: {
@@ -9,5 +9,6 @@ export type GlassyTextureProps = {
   shinePreset?: 'SUBTLE' | 'NORMAL' | 'DRAMATIC';
   showShine?: boolean;
   style?: ViewStyle;
+  pointerEvents?: ViewProps['pointerEvents'];
   children?: React.ReactNode;
 };

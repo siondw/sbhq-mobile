@@ -25,13 +25,10 @@ interface OnboardingModalProps {
 }
 
 const formatPhoneNumber = (text: string): string => {
-  // Strip all non-digits
   const digits = text.replace(/\D/g, '');
 
-  // Limit to 10 digits
   const limited = digits.slice(0, 10);
 
-  // Format as (XXX) XXX-XXXX
   if (limited.length === 0) return '';
   if (limited.length <= 3) return `(${limited}`;
   if (limited.length <= 6) return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
@@ -70,15 +67,12 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
     Keyboard.dismiss();
     setIsSubmitting(true);
 
-    // Request notification permissions if user opted in
     if (enableNotifications) {
       await requestPermissions();
     }
 
-    const success = await onComplete(username.trim(), phoneDigits);
-    if (!success) {
-      setIsSubmitting(false);
-    }
+    await onComplete(username.trim(), phoneDigits);
+    setIsSubmitting(false);
   }, [
     isFormValid,
     isSubmitting,

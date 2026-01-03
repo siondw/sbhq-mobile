@@ -11,8 +11,8 @@
     "web": "expo start --web",
     "test": "jest --runInBand",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint \"**/*.{ts,tsx}\"",
-    "lint:fix": "eslint \"**/*.{ts,tsx}\" --fix",
+    "lint": "eslint \"**/*.{ts,tsx}\" --ignore-pattern \"tests/**\" --ignore-pattern \"jest.setup.ts\"",
+    "lint:fix": "eslint \"**/*.{ts,tsx}\" --fix --ignore-pattern \"tests/**\" --ignore-pattern \"jest.setup.ts\"",
     "format": "prettier \"**/*.{ts,tsx}\" --write",
     "format:check": "prettier \"**/*.{ts,tsx}\" --check"
   },

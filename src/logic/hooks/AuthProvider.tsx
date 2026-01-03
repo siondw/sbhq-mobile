@@ -288,6 +288,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
 
       setError(null);
+
       const result = await updateUserProfile(user.id, {
         username,
         phone_number: phoneNumber,

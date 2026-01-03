@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { DEMO_CONTEST_ID } from '../../configs/constants';
 import { getErrorMessage } from '../../db/errors';
 import { getActiveParticipantCount } from '../../db/participants';
 
@@ -8,6 +9,8 @@ export interface UseParticipantCountResult {
   error: string | null;
 }
 
+const DEMO_PARTICIPANT_COUNT = 1247;
+
 export const useParticipantCount = (
   contestId?: string,
   pollIntervalMs: number = 0,
@@ -15,11 +18,13 @@ export const useParticipantCount = (
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isDemo = contestId === DEMO_CONTEST_ID;
 
   useEffect(() => {
-    if (!contestId) {
-      setCount(0);
+    if (!contestId || isDemo) {
+      setCount(isDemo ? DEMO_PARTICIPANT_COUNT : 0);
       setLoading(false);
+      setError(null);
       return undefined;
     }
 
@@ -60,11 +65,11 @@ export const useParticipantCount = (
       isMounted = false;
       if (intervalId) clearInterval(intervalId);
     };
-  }, [contestId, pollIntervalMs]);
+  }, [contestId, pollIntervalMs, isDemo]);
 
   return {
-    count,
-    loading,
-    error,
+    count: isDemo ? DEMO_PARTICIPANT_COUNT : count,
+    loading: isDemo ? false : loading,
+    error: isDemo ? null : error,
   };
 };

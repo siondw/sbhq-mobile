@@ -45,7 +45,7 @@ const Header = memo(({ user }: HeaderProps) => {
         </Pressable>
       </View>
 
-      <UserMenu visible={menuVisible} onClose={closeMenu} user={user ?? null} />
+      <UserMenu visible={menuVisible} onClose={closeMenu} />
     </SafeAreaView>
   );
 });

@@ -11,12 +11,13 @@ const GlassyTexture = ({
   shinePreset = 'SUBTLE',
   showShine = true,
   style,
+  pointerEvents,
   children,
 }: GlassyTextureProps) => {
   const { translateX: shineTranslateX, config } = useShineAnimation({ preset: shinePreset });
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={[styles.container, style]} pointerEvents={pointerEvents}>
       {children}
       <LinearGradient
         colors={[withAlpha(colors.ink, 0.08), 'rgba(0,0,0,0.04)']}

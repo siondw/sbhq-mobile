@@ -1,6 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import LottieView from 'lottie-react-native';
+import LottieView, { type AnimationObject } from 'lottie-react-native';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
@@ -18,16 +18,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Vibration } from 'react-native';
-import { usePulseAnimation, useShineAnimation } from '../ui/animations';
+import { useShineAnimation } from '../ui/animations';
 import RollingFootball from '../ui/animations/RollingFootball';
 import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from '../ui/animations/constants';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import AnswerOption from '../ui/components/AnswerOption';
-import Button from '../ui/components/Button';
 import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
-import Countdown from '../ui/components/Countdown';
 import OnboardingModal from '../ui/components/OnboardingModal';
 import Scorebug from '../ui/components/Scorebug';
 import Text from '../ui/components/Text';
@@ -44,6 +42,10 @@ import {
   darken,
   type PlaygroundPalette,
 } from '../ui/theme';
+import ballGif from '../../assets/gifs/ball.gif';
+import catchGif from '../../assets/gifs/catch_nobg.gif';
+import footballAnimationJson from '../../assets/gifs/football.json';
+import noiseTexture from '../../assets/noise.png';
 
 // Use DEFAULT_PALETTE for static styles in playground (not a production screen)
 const COLORS = {
@@ -53,12 +55,12 @@ const COLORS = {
   SURFACE: DEFAULT_PALETTE.surface,
 } as const;
 
-const footballGifs: Array<{ label: string; source: ImageSourcePropType }> = [
-  { label: 'ball.gif', source: require('../../assets/gifs/ball.gif') },
-  { label: 'catch_nobg.gif', source: require('../../assets/gifs/catch_nobg.gif') },
-];
+const footballAnimation = footballAnimationJson as AnimationObject;
 
-const noiseTexture = require('../../assets/noise.png');
+const footballGifs: Array<{ label: string; source: ImageSourcePropType }> = [
+  { label: 'ball.gif', source: ballGif },
+  { label: 'catch_nobg.gif', source: catchGif },
+];
 
 // Correct screen animation component for playground
 const CorrectAnimation = ({ color }: { color: string }) => {
@@ -74,7 +76,6 @@ const CorrectAnimation = ({ color }: { color: string }) => {
   const {
     translateX: shineTranslateX,
     opacity: shineOpacity,
-    config: shineConfig,
   } = useShineAnimation({
     preset: 'NORMAL',
     delay: 400,
@@ -225,7 +226,7 @@ const PlaygroundScreen = () => {
   const router = useRouter();
   const [selectedRealOption, setSelectedRealOption] = useState<string | null>('A');
   const [playersRemaining, setPlayersRemaining] = useState(1482);
-  const [gifIndex, setGifIndex] = useState(0);
+  const [gifIndex] = useState(0);
   const [paletteKey, setPaletteKey] = useState<string>(PLAYGROUND_PALETTES[0]?.key ?? 'current');
   const [chartKey, setChartKey] = useState(0);
   const [chartState, setChartState] = useState<'submitted' | 'correct' | 'eliminated'>('submitted');
@@ -263,8 +264,6 @@ const PlaygroundScreen = () => {
   const noiseBlur = darkTheme ? 0 : 1;
   const noiseResizeMode = Platform.OS === 'ios' ? 'repeat' : 'cover';
 
-  const countdownTargetRef = useRef<number>(Date.now() + 24_000);
-
   const theme = useMemo(() => themeFromPlaygroundPalette(palette), [palette]);
 
   return (
@@ -289,34 +288,34 @@ const PlaygroundScreen = () => {
               <Row>
                 <Chip
                   label="Selection"
-                  onPress={() => Haptics.selectionAsync()}
+                  onPress={() => void Haptics.selectionAsync()}
                   palette={palette}
                 />
                 <Chip
                   label="Light"
-                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
                   palette={palette}
                 />
                 <Chip
                   label="Medium"
-                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
                   palette={palette}
                 />
                 <Chip
                   label="Heavy"
-                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)}
+                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)}
                   palette={palette}
                 />
               </Row>
               <Row>
                 <Chip
                   label="Rigid"
-                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)}
+                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)}
                   palette={palette}
                 />
                 <Chip
                   label="Soft"
-                  onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)}
+                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)}
                   palette={palette}
                 />
               </Row>
@@ -324,20 +323,22 @@ const PlaygroundScreen = () => {
                 <Chip
                   label="Success"
                   onPress={() =>
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
                   }
                   palette={palette}
                 />
                 <Chip
                   label="Warning"
                   onPress={() =>
-                    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
                   }
                   palette={palette}
                 />
                 <Chip
                   label="Error"
-                  onPress={() => Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)}
+                  onPress={() =>
+                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
+                  }
                   palette={palette}
                 />
               </Row>
@@ -413,7 +414,7 @@ const PlaygroundScreen = () => {
                 <View style={{ height: SPACING.MD }} />
                 <View style={{ alignItems: 'center' }}>
                   <LottieView
-                    source={require('../../assets/gifs/football.json')}
+                    source={footballAnimation}
                     autoPlay
                     loop
                     style={{ width: 120, height: 120 }}
@@ -595,10 +596,9 @@ const PlaygroundScreen = () => {
 
           <OnboardingModal
             visible={showOnboarding}
-            onComplete={async (u, p) => {
-              console.log('Complete:', u, p);
+            onComplete={() => {
               setShowOnboarding(false);
-              return true;
+              return Promise.resolve(true);
             }}
             onDismiss={() => setShowOnboarding(false)}
           />

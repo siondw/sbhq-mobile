@@ -15,7 +15,7 @@ import { useEffect, useMemo } from 'react';
 import 'react-native-reanimated';
 
 import { THEME_CONFIG } from '../src/configs/constants';
-import { NotificationProvider, NotificationRoutingProvider } from '../src/logic/contexts';
+import { DemoModeProvider, NotificationProvider, NotificationRoutingProvider } from '../src/logic/contexts';
 import { AuthProvider } from '../src/logic/hooks/AuthProvider';
 import { useNotificationObserver } from '../src/logic/hooks/useNotificationObserver';
 import CustomSplashScreen from '../src/screens/SplashScreen';
@@ -108,16 +108,18 @@ function RootLayoutNav() {
 
   return (
     <AuthProvider>
-      <NotificationProvider>
-        <NotificationRoutingProvider>
-          <CustomThemeProvider theme={selectedTheme}>
-            <NavigationThemeProvider value={DefaultTheme}>
-              <StatusBar style={statusBarStyle} />
-              <AppNavigator />
-            </NavigationThemeProvider>
-          </CustomThemeProvider>
-        </NotificationRoutingProvider>
-      </NotificationProvider>
+      <DemoModeProvider>
+        <NotificationProvider>
+          <NotificationRoutingProvider>
+            <CustomThemeProvider theme={selectedTheme}>
+              <NavigationThemeProvider value={DefaultTheme}>
+                <StatusBar style={statusBarStyle} />
+                <AppNavigator />
+              </NavigationThemeProvider>
+            </CustomThemeProvider>
+          </NotificationRoutingProvider>
+        </NotificationProvider>
+      </DemoModeProvider>
     </AuthProvider>
   );
 }
