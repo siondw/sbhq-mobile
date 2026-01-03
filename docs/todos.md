@@ -41,7 +41,7 @@ P1
 P2
 
 - [x] Audit listneers and hooks, optimize where needed
-- [ ] Add first time login tutorial walk throguh for apple review team
+- [x] Add first time login tutorial walk throguh for apple review team
 - [ ] Allow place for users to delete their account
 - [x] Pull to refresh on contest list screeen
 - [x] IOS haptic feedback
