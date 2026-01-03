@@ -131,7 +131,7 @@ export const DEMO_PHASES: DemoPhase[] = [
   {
     name: 'ROUND_1_CORRECT',
     durationMs: 5000,
-    tip: 'You got it right! You advance to the next round. Get it wrong and you\'re eliminated.',
+    tip: "You got it right! You advance to the next round. Get it wrong and you're eliminated.",
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',

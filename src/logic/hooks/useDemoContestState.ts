@@ -47,9 +47,9 @@ export const useDemoContestState = (
   const [demoStartTime] = useState(Date.now());
   const [forceRender, setForceRender] = useState(0);
   const [manualPhaseIndex, setManualPhaseIndex] = useState(0);
-  const [manualAnswers, setManualAnswers] = useState<
-    Record<number, SubmitAnswerParams['answer']>
-  >({});
+  const [manualAnswers, setManualAnswers] = useState<Record<number, SubmitAnswerParams['answer']>>(
+    {},
+  );
 
   // Calculate current phase based on elapsed time
   const { currentPhase, currentPhaseIndex } = useMemo((): {

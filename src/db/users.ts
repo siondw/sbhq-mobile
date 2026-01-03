@@ -1,7 +1,7 @@
 import type { AsyncResult } from '../utils/result';
 import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
-import { DB_TABLES } from './constants';
+import { DB_TABLES, EDGE_FUNCTIONS } from './constants';
 import { networkError, validationError } from './errors';
 import type { DbError } from './errors';
 import type { UserRow } from './types';
@@ -37,6 +37,11 @@ export interface OnboardingData {
   has_seen_demo?: boolean;
 }
 
+interface DeleteAccountResponse {
+  success: boolean;
+  error?: string;
+}
+
 export const updateUserProfile = async (
   userId: string,
   data: OnboardingData,
@@ -50,14 +55,32 @@ export const updateUserProfile = async (
   if (data.phone_number !== undefined) upsertPayload.phone_number = data.phone_number;
   if (data.has_seen_demo !== undefined) upsertPayload.has_seen_demo = data.has_seen_demo;
 
-  const { error } = await SUPABASE_CLIENT.from(DB_TABLES.USERS)
-    .upsert(upsertPayload, { onConflict: 'id' });
+  const { error } = await SUPABASE_CLIENT.from(DB_TABLES.USERS).upsert(upsertPayload, {
+    onConflict: 'id',
+  });
 
   if (error) {
     if (error.code === '23505') {
       return Err(validationError('username', 'Username is already taken'));
     }
     return Err(networkError(`Failed to update profile: ${error.message}`));
+  }
+
+  return Ok(undefined);
+};
+
+export const deleteAccount = async (): AsyncResult<void, DbError> => {
+  const result = await SUPABASE_CLIENT.functions.invoke<DeleteAccountResponse>(
+    EDGE_FUNCTIONS.DELETE_ACCOUNT,
+  );
+
+  if (result.error) {
+    return Err(networkError(`Failed to delete account: ${String(result.error)}`));
+  }
+
+  const response = result.data;
+  if (!response?.success) {
+    return Err(networkError(response?.error ?? 'Failed to delete account'));
   }
 
   return Ok(undefined);

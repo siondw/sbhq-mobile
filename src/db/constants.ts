@@ -5,3 +5,7 @@ export const DB_TABLES = {
   QUESTIONS: 'questions',
   ANSWERS: 'answers',
 } as const;
+
+export const EDGE_FUNCTIONS = {
+  DELETE_ACCOUNT: 'delete-account',
+} as const;

@@ -65,7 +65,10 @@ const DemoOverlay = ({ tip }: DemoOverlayProps) => {
   );
 };
 
-const createStyles = (colors: { surface: string; ink: string; primary: string }, topInset: number) =>
+const createStyles = (
+  colors: { surface: string; ink: string; primary: string },
+  topInset: number,
+) =>
   StyleSheet.create({
     container: {
       ...StyleSheet.absoluteFillObject,

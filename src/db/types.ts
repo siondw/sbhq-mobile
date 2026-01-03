@@ -210,42 +210,42 @@ export type Database = {
         ];
       };
       users: {
-          Row: {
-            created_at: string | null;
-            email: string | null;
-            expo_push_token: string | null;
-            has_seen_demo: boolean | null;
-            id: string;
-            phone_number: string | null;
-            push_token_updated_at: string | null;
-            role: string | null;
-            updated_at: string | null;
-            username: string | null;
-          };
-          Insert: {
-            created_at?: string | null;
-            email?: string | null;
-            expo_push_token?: string | null;
-            has_seen_demo?: boolean | null;
-            id?: string;
-            phone_number?: string | null;
-            push_token_updated_at?: string | null;
-            role?: string | null;
-            updated_at?: string | null;
-            username?: string | null;
-          };
-          Update: {
-            created_at?: string | null;
-            email?: string | null;
-            expo_push_token?: string | null;
-            has_seen_demo?: boolean | null;
-            id?: string;
-            phone_number?: string | null;
-            push_token_updated_at?: string | null;
-            role?: string | null;
-            updated_at?: string | null;
-            username?: string | null;
-          };
+        Row: {
+          created_at: string | null;
+          email: string | null;
+          expo_push_token: string | null;
+          has_seen_demo: boolean | null;
+          id: string;
+          phone_number: string | null;
+          push_token_updated_at: string | null;
+          role: string | null;
+          updated_at: string | null;
+          username: string | null;
+        };
+        Insert: {
+          created_at?: string | null;
+          email?: string | null;
+          expo_push_token?: string | null;
+          has_seen_demo?: boolean | null;
+          id?: string;
+          phone_number?: string | null;
+          push_token_updated_at?: string | null;
+          role?: string | null;
+          updated_at?: string | null;
+          username?: string | null;
+        };
+        Update: {
+          created_at?: string | null;
+          email?: string | null;
+          expo_push_token?: string | null;
+          has_seen_demo?: boolean | null;
+          id?: string;
+          phone_number?: string | null;
+          push_token_updated_at?: string | null;
+          role?: string | null;
+          updated_at?: string | null;
+          username?: string | null;
+        };
         Relationships: [];
       };
     };

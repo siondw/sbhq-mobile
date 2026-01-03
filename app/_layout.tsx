@@ -15,7 +15,11 @@ import { useEffect, useMemo } from 'react';
 import 'react-native-reanimated';
 
 import { THEME_CONFIG } from '../src/configs/constants';
-import { DemoModeProvider, NotificationProvider, NotificationRoutingProvider } from '../src/logic/contexts';
+import {
+  DemoModeProvider,
+  NotificationProvider,
+  NotificationRoutingProvider,
+} from '../src/logic/contexts';
 import { AuthProvider } from '../src/logic/hooks/AuthProvider';
 import { useNotificationObserver } from '../src/logic/hooks/useNotificationObserver';
 import CustomSplashScreen from '../src/screens/SplashScreen';

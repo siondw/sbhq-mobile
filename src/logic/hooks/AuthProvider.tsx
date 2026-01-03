@@ -19,7 +19,7 @@ import {
 } from '../../db/auth';
 import { getErrorMessage } from '../../db/errors';
 import type { UserRow } from '../../db/types';
-import { getUserById, updateUserProfile } from '../../db/users';
+import { deleteAccount, getUserById, updateUserProfile } from '../../db/users';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -42,6 +42,7 @@ export interface AuthContextValue extends AuthState {
   loginWithGoogle: () => Promise<void>;
   loginWithApple: () => Promise<void>;
   logout: () => Promise<void>;
+  deleteAccount: () => Promise<{ ok: boolean; error?: string }>;
   derivedUser: DerivedUser | null;
   isOnboardingComplete: boolean;
   needsOnboarding: boolean;
@@ -252,6 +253,24 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
+  const handleDeleteAccount = useCallback(async (): Promise<{ ok: boolean; error?: string }> => {
+    if (!user) {
+      return { ok: false, error: 'No user logged in' };
+    }
+
+    const result = await deleteAccount();
+    if (!result.ok) {
+      return { ok: false, error: getErrorMessage(result.error) };
+    }
+
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    await signOut();
+
+    return { ok: true };
+  }, [user]);
+
   const derivedUser = useMemo(() => {
     if (!user) return null;
     return {
@@ -315,6 +334,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loginWithGoogle,
       loginWithApple,
       logout,
+      deleteAccount: handleDeleteAccount,
       derivedUser,
       isOnboardingComplete,
       needsOnboarding,
@@ -330,6 +350,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       loginWithGoogle,
       loginWithApple,
       logout,
+      handleDeleteAccount,
       derivedUser,
       isOnboardingComplete,
       needsOnboarding,

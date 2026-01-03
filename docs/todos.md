@@ -42,7 +42,7 @@ P2
 
 - [x] Audit listneers and hooks, optimize where needed
 - [x] Add first time login tutorial walk throguh for apple review team
-- [ ] Allow place for users to delete their account
+- [x] Allow place for users to delete their account
 - [x] Pull to refresh on contest list screeen
 - [x] IOS haptic feedback
 - [x] Pull to refresh on more screens to prevent stuckness
@@ -50,9 +50,7 @@ P2
 - [x] Supbase fixes:
   - [x] RLS policies?
   - [x] Cascade behvior for tables
-- [ ] Question to solve:
-  - [ ] What if we get to a state where the final 2 users both get the wrong answer. How do we prevent against them both being eliminated?
-    - [x] Or should we add capabilities to reinstate an entire round from the admin side
+- [ ] Debug the answer summary container
 
 P3
 
