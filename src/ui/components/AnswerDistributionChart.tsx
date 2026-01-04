@@ -4,6 +4,7 @@ import { Animated, Easing, StyleSheet, View } from 'react-native';
 import { GlassyTexture } from '../textures';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import Text from './Text';
+import WordSafeText from './WordSafeText';
 
 interface AnswerDistribution {
   option: string;
@@ -15,12 +16,14 @@ interface AnswerDistributionChartProps {
   distribution: AnswerDistribution[];
   correctAnswer?: string | null;
   userAnswer?: string | null;
+  layoutVariant?: 'vertical' | 'horizontal';
 }
 
 const AnswerDistributionChart = ({
   distribution,
   correctAnswer,
   userAnswer,
+  layoutVariant = 'vertical',
 }: AnswerDistributionChartProps) => {
   const { colors } = useTheme();
 
@@ -51,10 +54,98 @@ const AnswerDistributionChart = ({
     Animated.stagger(300, animations).start();
   }, [animatedValues]);
 
+  const showLegend = correctAnswer && userAnswer && userAnswer !== correctAnswer;
+
+  if (layoutVariant === 'horizontal') {
+    return (
+      <View style={styles.container}>
+        {showLegend && (
+          <View style={styles.legendRow}>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
+              <Text style={[styles.legendText, { color: colors.muted }]}>Correct</Text>
+            </View>
+            <View style={styles.legendItem}>
+              <View style={[styles.legendDot, { backgroundColor: colors.danger }]} />
+              <Text style={[styles.legendText, { color: colors.muted }]}>Your Answer</Text>
+            </View>
+          </View>
+        )}
+        <View style={styles.horizontalList}>
+          {sortedDistribution.map((item, index) => {
+            const percentage = totalCount > 0 ? (item.count / totalCount) * 100 : 0;
+            const isCorrect = correctAnswer && item.option === correctAnswer;
+            const isUserAnswer = userAnswer && item.option === userAnswer;
+
+            const baseColor = isCorrect
+              ? colors.success
+              : isUserAnswer && correctAnswer
+                ? colors.danger
+                : isUserAnswer
+                  ? colors.primary
+                  : colors.ink;
+
+            const bgOpacity = isCorrect ? 0.8 : isUserAnswer ? 0.5 : 0.2;
+            const borderOpacity = isCorrect ? 1 : isUserAnswer ? 0.8 : 0.4;
+
+            const animatedWidth = animatedValues[index]?.interpolate({
+              inputRange: [0, 1],
+              outputRange: ['0%', `${percentage}%`],
+            });
+
+            const labelLength = item.label.length;
+            const baseFontSize = labelLength > 12 ? TYPOGRAPHY.SMALL - 2 : TYPOGRAPHY.SMALL;
+
+            return (
+              <View key={item.option} style={styles.horizontalRow}>
+                <View style={styles.horizontalLabel}>
+                  <WordSafeText
+                    text={item.label}
+                    weight="bold"
+                    minFontSize={9}
+                    style={[styles.optionLabel, { color: colors.ink, fontSize: baseFontSize }]}
+                  />
+                </View>
+                <View
+                  style={[
+                    styles.horizontalBarTrack,
+                    {
+                      borderColor: withAlpha(colors.ink, 0.12),
+                      backgroundColor: withAlpha(colors.ink, 0.05),
+                    },
+                  ]}
+                >
+                  <Animated.View
+                    style={[
+                      styles.horizontalBarFill,
+                      {
+                        width: animatedWidth,
+                        backgroundColor: withAlpha(baseColor, bgOpacity),
+                        borderColor: withAlpha(baseColor, borderOpacity),
+                      },
+                    ]}
+                  />
+                </View>
+                <View style={styles.horizontalMeta}>
+                  <Text weight="bold" style={[styles.horizontalCount, { color: baseColor }]}>
+                    {item.count.toLocaleString()}
+                  </Text>
+                  <Text weight="medium" style={[styles.horizontalPercent, { color: baseColor }]}>
+                    {percentage.toFixed(0)}%
+                  </Text>
+                </View>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <View style={styles.chartContainer}>
-        {correctAnswer && userAnswer && userAnswer !== correctAnswer && (
+        {showLegend && (
           <View style={styles.legend}>
             <View style={styles.legendItem}>
               <View style={[styles.legendDot, { backgroundColor: colors.success }]} />
@@ -88,9 +179,6 @@ const AnswerDistributionChart = ({
             outputRange: ['0%', `${barHeight}%`],
           });
 
-          const labelLength = item.label.length;
-          const fontSize = labelLength > 12 ? TYPOGRAPHY.SMALL : TYPOGRAPHY.BODY;
-
           return (
             <View key={item.option} style={styles.barWrapper}>
               <View style={styles.barContainer}>
@@ -123,9 +211,23 @@ const AnswerDistributionChart = ({
                   </GlassyTexture>
                 </Animated.View>
               </View>
-              <Text weight="bold" style={[styles.optionLabel, { color: colors.ink, fontSize }]}>
-                {item.label}
-              </Text>
+            </View>
+          );
+        })}
+      </View>
+      <View style={styles.labelsRow}>
+        {sortedDistribution.map((item) => {
+          const labelLength = item.label.length;
+          const baseFontSize = labelLength > 12 ? TYPOGRAPHY.SMALL - 2 : TYPOGRAPHY.SMALL;
+
+          return (
+            <View key={item.option} style={styles.labelWrapper}>
+              <WordSafeText
+                text={item.label}
+                weight="bold"
+                minFontSize={9}
+                style={[styles.optionLabel, { color: colors.ink, fontSize: baseFontSize }]}
+              />
             </View>
           );
         })}
@@ -136,7 +238,7 @@ const AnswerDistributionChart = ({
 
 const styles = StyleSheet.create({
   container: {
-    gap: SPACING.MD,
+    gap: SPACING.SM,
   },
   header: {
     fontSize: TYPOGRAPHY.BODY,
@@ -158,7 +260,6 @@ const styles = StyleSheet.create({
     height: 140,
     width: '100%',
     justifyContent: 'flex-end',
-    marginBottom: SPACING.XS,
   },
   barOuter: {
     width: '100%',
@@ -185,8 +286,56 @@ const styles = StyleSheet.create({
   },
   optionLabel: {
     textAlign: 'center',
-    height: 36,
-    lineHeight: 18,
+    width: '100%',
+  },
+  labelsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  labelWrapper: {
+    flex: 1,
+    alignItems: 'center',
+    paddingHorizontal: SPACING.XS,
+  },
+  horizontalList: {
+    gap: SPACING.SM,
+  },
+  horizontalRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: SPACING.SM,
+  },
+  horizontalLabel: {
+    flex: 1,
+    minWidth: 120,
+  },
+  horizontalBarTrack: {
+    flex: 2,
+    height: 12,
+    borderRadius: 999,
+    overflow: 'hidden',
+    borderWidth: 1,
+    alignSelf: 'center',
+  },
+  horizontalBarFill: {
+    height: '100%',
+    borderWidth: 1,
+    borderRadius: 999,
+  },
+  horizontalMeta: {
+    minWidth: 54,
+    alignItems: 'flex-end',
+  },
+  horizontalCount: {
+    fontSize: TYPOGRAPHY.SMALL,
+  },
+  horizontalPercent: {
+    fontSize: TYPOGRAPHY.SMALL - 2,
+  },
+  legendRow: {
+    flexDirection: 'row',
+    gap: SPACING.SM,
+    alignItems: 'center',
   },
   legend: {
     position: 'absolute',

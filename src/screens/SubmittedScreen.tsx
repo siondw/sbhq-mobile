@@ -98,6 +98,7 @@ const SubmittedScreen = () => {
                   question={question?.question ?? 'Waiting for update...'}
                   options={options}
                   selectedOptionKey={answer?.answer}
+                  layoutVariant="wrap"
                 />
 
                 {/* Distribution Chart */}

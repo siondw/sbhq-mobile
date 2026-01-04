@@ -966,18 +966,6 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     backgroundColor: 'rgba(255,255,255,0.20)',
   },
-  chartVariant: {
-    marginTop: SPACING.MD,
-    padding: SPACING.SM,
-    borderRadius: RADIUS.MD,
-    backgroundColor: withAlpha(COLORS.PRIMARY_DARK, 0.03),
-    gap: SPACING.SM,
-  },
-  variantTitle: {
-    fontSize: TYPOGRAPHY.SMALL,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
   eliminatedPreview: {
     padding: SPACING.LG,
     alignItems: 'center',
