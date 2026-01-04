@@ -86,7 +86,7 @@ export const DEMO_PHASES: DemoPhase[] = [
   // Phase 2: ROUND 1 - SUBMITTED (8-10s)
   {
     name: 'ROUND_1_SUBMITTED',
-    durationMs: 2000,
+    durationMs: 5000,
     tip: 'Answer locked in! Now wait for the play to happen and see if you got it right.',
     contest: {
       id: DEMO_CONTEST_ID,
@@ -210,7 +210,7 @@ export const DEMO_PHASES: DemoPhase[] = [
   // Phase 5: ROUND 2 - SUBMITTED (18-20s)
   {
     name: 'ROUND_2_SUBMITTED',
-    durationMs: 2000,
+    durationMs: 5000,
     tip: 'Answer submitted! Fingers crossed...',
     contest: {
       id: DEMO_CONTEST_ID,
