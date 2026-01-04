@@ -5,12 +5,14 @@ import { StyleSheet, View } from 'react-native';
 import { GlassyTexture } from '../textures';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import Text from './Text';
+import WordSafeText from './WordSafeText';
 
 interface SubmittedQuestionCardProps {
   round: number;
   question: string;
   options: Array<{ key: string; label: string }>;
   selectedOptionKey?: string;
+  layoutVariant?: 'columns' | 'wrap' | 'stacked';
 }
 
 const SubmittedQuestionCard = ({
@@ -18,9 +20,13 @@ const SubmittedQuestionCard = ({
   question,
   options,
   selectedOptionKey,
+  layoutVariant = 'columns',
 }: SubmittedQuestionCardProps) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const showDividers = layoutVariant === 'columns';
+  const isWrap = layoutVariant === 'wrap';
+  const isStacked = layoutVariant === 'stacked';
 
   return (
     <GlassyTexture colors={colors} style={styles.card} showShine={false}>
@@ -49,25 +55,72 @@ const SubmittedQuestionCard = ({
       <View style={styles.divider} />
 
       {/* Options List */}
-      <View style={styles.optionsContainer}>
+      <View
+        style={[
+          styles.optionsContainer,
+          isWrap && styles.optionsContainerWrap,
+          isStacked && styles.optionsContainerStacked,
+        ]}
+      >
         {options.map((option, index) => {
           const isSelected = option.key === selectedOptionKey;
+          if (isStacked) {
+            return (
+              <View
+                key={option.key}
+                style={[styles.optionItemStacked, isSelected && styles.optionSelectedStacked]}
+              >
+                <View
+                  style={[
+                    styles.optionKeyBadge,
+                    isSelected && { borderColor: withAlpha(colors.primary, 0.35) },
+                  ]}
+                >
+                  <Text
+                    weight="bold"
+                    style={[
+                      styles.optionKeyBadgeText,
+                      { color: isSelected ? colors.primary : colors.muted },
+                    ]}
+                  >
+                    {option.key}
+                  </Text>
+                </View>
+                <WordSafeText
+                  text={option.label}
+                  weight="medium"
+                  minFontSize={9}
+                  style={[
+                    styles.optionLabelStacked,
+                    { color: isSelected ? colors.ink : colors.muted },
+                  ]}
+                />
+              </View>
+            );
+          }
+
           return (
             <React.Fragment key={option.key}>
-              {index > 0 && <View style={styles.verticalDivider} />}
-              <View style={[styles.optionItem, isSelected && styles.optionSelected]}>
+              {showDividers && index > 0 && <View style={styles.verticalDivider} />}
+              <View
+                style={[
+                  styles.optionItem,
+                  isWrap && styles.optionItemWrap,
+                  isSelected && styles.optionSelected,
+                ]}
+              >
                 <Text
                   weight="bold"
                   style={[styles.optionKey, { color: isSelected ? colors.primary : colors.muted }]}
                 >
                   {option.key}
                 </Text>
-                <Text
+                <WordSafeText
+                  text={option.label}
                   weight="medium"
+                  minFontSize={9}
                   style={[styles.optionLabel, { color: isSelected ? colors.ink : colors.muted }]}
-                >
-                  {option.label}
-                </Text>
+                />
               </View>
             </React.Fragment>
           );
@@ -135,6 +188,14 @@ const createStyles = (colors: { surface: string; ink: string; muted: string; pri
       flexDirection: 'row',
       alignItems: 'stretch',
     },
+    optionsContainerWrap: {
+      flexWrap: 'wrap',
+      gap: SPACING.XS,
+    },
+    optionsContainerStacked: {
+      flexDirection: 'column',
+      gap: SPACING.SM,
+    },
     verticalDivider: {
       width: 1,
       backgroundColor: withAlpha(colors.ink, 0.1),
@@ -147,15 +208,55 @@ const createStyles = (colors: { surface: string; ink: string; muted: string; pri
       borderRadius: RADIUS.MD,
       gap: 4,
     },
+    optionItemWrap: {
+      flexBasis: '48%',
+      flexGrow: 1,
+      minWidth: 140,
+    },
     optionSelected: {
       backgroundColor: withAlpha(colors.primary, 0.1),
+    },
+    optionItemStacked: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      gap: SPACING.SM,
+      padding: SPACING.SM,
+      borderRadius: RADIUS.MD,
+      borderWidth: 1,
+      borderColor: withAlpha(colors.ink, 0.08),
+    },
+    optionSelectedStacked: {
+      backgroundColor: withAlpha(colors.primary, 0.08),
+      borderColor: withAlpha(colors.primary, 0.25),
     },
     optionKey: {
       fontSize: TYPOGRAPHY.SUBTITLE,
     },
+    optionKeyBadge: {
+      minWidth: 32,
+      paddingVertical: 4,
+      paddingHorizontal: 10,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: withAlpha(colors.ink, 0.12),
+      backgroundColor: withAlpha(colors.ink, 0.04),
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    optionKeyBadgeText: {
+      fontSize: TYPOGRAPHY.SMALL,
+      letterSpacing: 0.6,
+    },
     optionLabel: {
       fontSize: TYPOGRAPHY.SMALL - 2,
       textAlign: 'center',
+      width: '100%',
+    },
+    optionLabelStacked: {
+      fontSize: TYPOGRAPHY.BODY,
+      textAlign: 'left',
+      flex: 1,
+      lineHeight: 22,
     },
   });
 

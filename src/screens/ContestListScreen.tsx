@@ -181,7 +181,7 @@ const ContestListScreen = () => {
           const isLocked = item.state === CONTEST_STATE.ROUND_IN_PROGRESS && !isRegistered;
 
           const startLabel = formatStart(item.start_time);
-          const priceLabel = typeof item.price === 'number' ? `$${item.price.toFixed(2)}` : 'Free';
+          const priceLabel = item.price ? `$${item.price.toFixed(2)}` : 'Free';
 
           let buttonLabel = 'Register';
           let buttonVariant: 'primary' | 'success' = 'primary';
