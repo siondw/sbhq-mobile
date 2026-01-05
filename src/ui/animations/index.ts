@@ -15,3 +15,4 @@ export type {
   UseShineAnimationOptions,
 } from './types';
 export { Ripple } from './Ripple';
+export { default as Fireworks } from './Fireworks';
