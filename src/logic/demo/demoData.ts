@@ -51,7 +51,7 @@ export const DEMO_PHASES: DemoPhase[] = [
   {
     name: 'ROUND_1_ANSWERING',
     durationMs: 5000,
-    tip: 'A question appeared! Choose an answer, quick!. You only get one chance per round.',
+    tip: 'A question appeared! Answer quick! Submissions lock when the live NFL broadcast returns to play. One answer only',
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',

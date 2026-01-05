@@ -23,6 +23,7 @@ import ContestStatsCard from '../ui/components/ContestStatsCard';
 import LoadingView from '../ui/components/LoadingView';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
+import { buildAnswerDistribution } from '../utils/answerDistribution';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const EliminatedScreen = () => {
@@ -44,6 +45,10 @@ const EliminatedScreen = () => {
   const { question: eliminationQuestion } = useEliminationQuestion(
     contestId,
     participant?.elimination_round,
+  );
+  const options = useMemo(
+    () => normalizeQuestionOptions(eliminationQuestion?.options),
+    [eliminationQuestion?.options],
   );
 
   // Staggered slam animations
@@ -162,14 +167,7 @@ const EliminatedScreen = () => {
             {distribution.length > 0 && eliminationQuestion?.correct_option && showChart && (
               <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
                 <AnswerDistributionChart
-                  distribution={distribution.map((d) => {
-                    const options = normalizeQuestionOptions(eliminationQuestion?.options);
-                    return {
-                      option: d.answer,
-                      label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
-                      count: d.count,
-                    };
-                  })}
+                  distribution={buildAnswerDistribution(options, distribution)}
                   correctAnswer={eliminationQuestion.correct_option?.[0] ?? null}
                   userAnswer={answer?.answer ?? null}
                 />

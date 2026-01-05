@@ -28,6 +28,7 @@ import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import OnboardingModal from '../ui/components/OnboardingModal';
 import Scorebug from '../ui/components/Scorebug';
+import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
 import Text from '../ui/components/Text';
 import {
   DEFAULT_PALETTE,
@@ -227,6 +228,9 @@ const PlaygroundScreen = () => {
   const [paletteKey, setPaletteKey] = useState<string>(PLAYGROUND_PALETTES[0]?.key ?? 'current');
   const [chartKey, setChartKey] = useState(0);
   const [chartState, setChartState] = useState<'submitted' | 'correct' | 'eliminated'>('submitted');
+  const [submittedPreviewState, setSubmittedPreviewState] = useState<'waiting' | 'results'>(
+    'waiting',
+  );
   const [statsVariant, setStatsVariant] = useState<'success' | 'eliminated'>('success');
   const [checkmarkKey, setCheckmarkKey] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -485,6 +489,92 @@ const PlaygroundScreen = () => {
                 />
               </Row>
               <CorrectAnimation key={checkmarkKey} color={theme.colors.success} />
+            </Section>
+
+            <Section title="Submitted Screen" titleColor={palette.ink}>
+              <Row>
+                <Chip
+                  label="Waiting"
+                  onPress={() => setSubmittedPreviewState('waiting')}
+                  palette={palette}
+                  selected={submittedPreviewState === 'waiting'}
+                />
+                <Chip
+                  label="Results"
+                  onPress={() => setSubmittedPreviewState('results')}
+                  palette={palette}
+                  selected={submittedPreviewState === 'results'}
+                />
+              </Row>
+
+              <View
+                style={[
+                  styles.submittedPreview,
+                  {
+                    backgroundColor: palette.bg,
+                    borderColor: withAlpha(palette.ink, 0.12),
+                  },
+                ]}
+              >
+                <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+                  <LinearGradient
+                    colors={[withAlpha(palette.bg, 0), withAlpha(palette.ink, 0.06)]}
+                    style={StyleSheet.absoluteFill}
+                    locations={[0.4, 1]}
+                  />
+                </View>
+
+                <View style={styles.submittedScorebug}>
+                  <Scorebug playerCount={playersRemaining} />
+                </View>
+
+                <View style={styles.submittedPreviewContent}>
+                  <View style={styles.submittedCenterStack}>
+                    <View style={styles.submittedFootball}>
+                      <RollingFootball />
+                    </View>
+
+                    <View style={styles.submittedCardStack}>
+                      <SubmittedQuestionCard
+                        round={3}
+                        question="4th & Goal at the 2. What's the call?"
+                        options={[
+                          { key: 'A', label: 'QB sneak' },
+                          { key: 'B', label: 'Play action fade' },
+                          { key: 'C', label: 'Jet sweep' },
+                          { key: 'D', label: 'Field goal' },
+                        ]}
+                        selectedOptionKey="B"
+                        layoutVariant="wrap"
+                      />
+
+                      {submittedPreviewState === 'waiting' ? (
+                        <Text
+                          style={[
+                            styles.submittedWaitingText,
+                            { color: withAlpha(palette.ink, 0.6) },
+                          ]}
+                        >
+                          Play in progress - results post after the whistle.
+                        </Text>
+                      ) : (
+                        <View style={styles.submittedChart}>
+                          <AnswerDistributionChart
+                            distribution={[
+                              { option: 'A', label: 'QB sneak', count: 523 },
+                              { option: 'B', label: 'Play action fade', count: 312 },
+                              { option: 'C', label: 'Jet sweep', count: 487 },
+                              { option: 'D', label: 'Field goal', count: 160 },
+                            ]}
+                            correctAnswer={null}
+                            userAnswer="B"
+                          />
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                </View>
+              </View>
             </Section>
 
             <Section title="Answer Distribution" titleColor={palette.ink}>
@@ -970,6 +1060,54 @@ const styles = StyleSheet.create({
     padding: SPACING.LG,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+
+  submittedPreview: {
+    borderRadius: RADIUS.XL,
+    overflow: 'hidden',
+    borderWidth: 1,
+    minHeight: 560,
+  },
+  submittedPreviewContent: {
+    flex: 1,
+    paddingHorizontal: SPACING.MD,
+    paddingTop: SPACING.XL,
+    paddingBottom: SPACING.XXL,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  submittedScorebug: {
+    position: 'absolute',
+    top: SPACING.MD,
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+    zIndex: 5,
+  },
+  submittedCenterStack: {
+    width: '100%',
+    alignItems: 'center',
+    gap: SPACING.MD,
+  },
+  submittedFootball: {
+    width: '100%',
+    height: 90,
+    marginBottom: -30,
+  },
+  submittedCardStack: {
+    width: '100%',
+    maxWidth: 520,
+    gap: SPACING.MD,
+  },
+  submittedWaitingText: {
+    fontSize: TYPOGRAPHY.SMALL,
+    textAlign: 'center',
+    maxWidth: '80%',
+    alignSelf: 'center',
+    lineHeight: 18,
+  },
+  submittedChart: {
+    marginTop: SPACING.SM,
   },
 
   // Lobby Preview Styles

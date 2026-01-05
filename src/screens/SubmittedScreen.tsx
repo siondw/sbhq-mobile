@@ -18,7 +18,8 @@ import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
 import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
 import Text from '../ui/components/Text';
-import { SPACING, useTheme, withAlpha } from '../ui/theme';
+import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
+import { buildAnswerDistribution } from '../utils/answerDistribution';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const SubmittedScreen = () => {
@@ -41,6 +42,8 @@ const SubmittedScreen = () => {
   const { distribution } = useAnswerDistribution(contestId, roundToFetch);
 
   const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
+  const showDistribution =
+    contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0;
 
   if (loading) {
     return <LoadingView />;
@@ -101,15 +104,17 @@ const SubmittedScreen = () => {
                   layoutVariant="wrap"
                 />
 
+                {!showDistribution && (
+                  <Text style={styles.waitingText}>
+                    Play in progress - results post after the whistle.
+                  </Text>
+                )}
+
                 {/* Distribution Chart */}
-                {contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0 && (
+                {showDistribution && (
                   <View style={styles.chartSection}>
                     <AnswerDistributionChart
-                      distribution={distribution.map((d) => ({
-                        option: options.find((o) => o.label === d.answer)?.key ?? d.answer,
-                        label: d.answer,
-                        count: d.count,
-                      }))}
+                      distribution={buildAnswerDistribution(options, distribution)}
                       correctAnswer={null}
                       userAnswer={answer?.answer ?? null}
                     />
@@ -160,6 +165,15 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
     cardContainer: {
       width: '100%',
       maxWidth: 500,
+      gap: SPACING.MD,
+    },
+    waitingText: {
+      fontSize: TYPOGRAPHY.SMALL,
+      color: colors.muted,
+      textAlign: 'center',
+      alignSelf: 'center',
+      maxWidth: '80%',
+      lineHeight: 18,
     },
     chartSection: {
       marginTop: SPACING.XL,

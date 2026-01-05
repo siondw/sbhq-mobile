@@ -22,6 +22,7 @@ import ContestStatsCard from '../ui/components/ContestStatsCard';
 import LoadingView from '../ui/components/LoadingView';
 import Text from '../ui/components/Text';
 import { SPACING, useTheme } from '../ui/theme';
+import { buildAnswerDistribution } from '../utils/answerDistribution';
 import { normalizeQuestionOptions } from '../utils/questionOptions';
 
 const CorrectScreen = () => {
@@ -35,7 +36,11 @@ const CorrectScreen = () => {
 
   const { refreshing, onRefresh } = useRefresh([refresh]);
 
-  const { distribution } = useAnswerDistribution(contestId, contest?.current_round ?? undefined);
+  const { distribution } = useAnswerDistribution(
+    contestId,
+    answer?.round ?? contest?.current_round ?? undefined,
+  );
+  const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
 
   // Staggered scale/fade animations
   const checkmarkScale = useRef(new Animated.Value(0)).current;
@@ -212,14 +217,7 @@ const CorrectScreen = () => {
             {distribution.length > 0 && question?.correct_option && showChart && (
               <Animated.View style={[styles.chartSection, { opacity: chartAnim }]}>
                 <AnswerDistributionChart
-                  distribution={distribution.map((d) => {
-                    const options = normalizeQuestionOptions(question?.options);
-                    return {
-                      option: d.answer,
-                      label: options.find((o) => o.key === d.answer)?.label ?? d.answer,
-                      count: d.count,
-                    };
-                  })}
+                  distribution={buildAnswerDistribution(options, distribution)}
                   correctAnswer={question.correct_option?.[0] ?? null}
                   userAnswer={answer?.answer ?? null}
                 />

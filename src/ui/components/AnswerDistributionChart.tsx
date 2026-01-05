@@ -96,8 +96,10 @@ const AnswerDistributionChart = ({
             const labelLength = item.label.length;
             const baseFontSize = labelLength > 12 ? TYPOGRAPHY.SMALL - 2 : TYPOGRAPHY.SMALL;
 
+            const testIdSuffix = isCorrect ? '-correct' : isUserAnswer ? '-user-wrong' : '';
+
             return (
-              <View key={item.option} style={styles.horizontalRow}>
+              <View key={item.option} style={styles.horizontalRow} testID={`bar-${item.option}${testIdSuffix}`}>
                 <View style={styles.horizontalLabel}>
                   <WordSafeText
                     text={item.label}
@@ -179,8 +181,10 @@ const AnswerDistributionChart = ({
             outputRange: ['0%', `${barHeight}%`],
           });
 
+          const testIdSuffix = isCorrect ? '-correct' : isUserAnswer ? '-user-wrong' : '';
+
           return (
-            <View key={item.option} style={styles.barWrapper}>
+            <View key={item.option} style={styles.barWrapper} testID={`bar-${item.option}${testIdSuffix}`}>
               <View style={styles.barContainer}>
                 <Animated.View
                   style={[
