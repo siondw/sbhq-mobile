@@ -30,6 +30,7 @@ import OnboardingModal from '../ui/components/OnboardingModal';
 import Scorebug from '../ui/components/Scorebug';
 import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
 import Text from '../ui/components/Text';
+import ForceUpdateScreen from './ForceUpdateScreen';
 import {
   DEFAULT_PALETTE,
   PLAYGROUND_PALETTES,
@@ -679,6 +680,20 @@ const PlaygroundScreen = () => {
                 </Text>
               </Card>
             </Section>
+
+            <Section title="Force Update Screen" titleColor={palette.ink}>
+              <View
+                style={[
+                  styles.forceUpdatePreview,
+                  {
+                    backgroundColor: palette.bg,
+                    borderColor: withAlpha(palette.ink, 0.12),
+                  },
+                ]}
+              >
+                <ForceUpdateScreen message="A newer version is required to continue using SBHQ." />
+              </View>
+            </Section>
           </ScrollView>
 
           <OnboardingModal
@@ -1140,6 +1155,12 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
+  },
+  forceUpdatePreview: {
+    height: 400,
+    borderRadius: RADIUS.XL,
+    overflow: 'hidden',
+    borderWidth: 1,
   },
   lockedInBadge: {
     flexDirection: 'row',

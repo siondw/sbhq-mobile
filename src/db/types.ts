@@ -66,6 +66,39 @@ export type Database = {
           },
         ]
       }
+      app_version_policy: {
+        Row: {
+          created_at: string | null
+          environment: string
+          id: string
+          message: string | null
+          min_build: number
+          platform: string
+          should_force: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          environment?: string
+          id?: string
+          message?: string | null
+          min_build?: number
+          platform: string
+          should_force?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          environment?: string
+          id?: string
+          message?: string | null
+          min_build?: number
+          platform?: string
+          should_force?: boolean
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       contests: {
         Row: {
           created_at: string | null

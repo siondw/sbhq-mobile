@@ -4,6 +4,7 @@ export const DB_TABLES = {
   PARTICIPANTS: 'participants',
   QUESTIONS: 'questions',
   ANSWERS: 'answers',
+  APP_VERSION_POLICY: 'app_version_policy',
 } as const;
 
 export const EDGE_FUNCTIONS = {

@@ -21,7 +21,9 @@ import {
   NotificationRoutingProvider,
 } from '../src/logic/contexts';
 import { AuthProvider } from '../src/logic/hooks/AuthProvider';
+import { useAppVersionPolicy } from '../src/logic/hooks/useAppVersionPolicy';
 import { useNotificationObserver } from '../src/logic/hooks/useNotificationObserver';
+import ForceUpdateScreen from '../src/screens/ForceUpdateScreen';
 import CustomSplashScreen from '../src/screens/SplashScreen';
 import {
   ThemeProvider as CustomThemeProvider,
@@ -128,16 +130,33 @@ function RootLayoutNav() {
   );
 }
 
+/** Gate that blocks app access when a force update is required */
+function AppVersionGate({ children }: { children: React.ReactNode }) {
+  const { needsUpdate, shouldForce, message, loading } = useAppVersionPolicy();
+
+  if (loading) {
+    return null;
+  }
+
+  if (needsUpdate && shouldForce) {
+    return <ForceUpdateScreen message={message} />;
+  }
+
+  return <>{children}</>;
+}
+
 /** Inner component that can safely use hooks requiring AuthProvider */
 function AppNavigator() {
   useNotificationObserver();
 
   return (
-    <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
-      <Stack.Screen name="index" />
-      {__DEV__ ? <Stack.Screen name="playground" /> : null}
-      <Stack.Screen name="contests/index" />
-      <Stack.Screen name="(contest)" />
-    </Stack>
+    <AppVersionGate>
+      <Stack screenOptions={{ headerShown: false, gestureEnabled: false }}>
+        <Stack.Screen name="index" />
+        {__DEV__ ? <Stack.Screen name="playground" /> : null}
+        <Stack.Screen name="contests/index" />
+        <Stack.Screen name="(contest)" />
+      </Stack>
+    </AppVersionGate>
   );
 }
