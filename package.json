@@ -4,7 +4,8 @@
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
-    "start:dev": "cross-env APP_VARIANT=dev expo start --dev-client --clear",
+    "start:dev": "cross-env APP_VARIANT=dev expo start --dev-client --scheme sbhqmobile-dev --clear",
+    "start:dev:tunnel": "cross-env APP_VARIANT=dev expo start --dev-client --scheme sbhqmobile-dev --tunnel",
     "start:tunnel": "expo start --tunnel --go",
     "android": "expo run:android",
     "ios": "expo run:ios",

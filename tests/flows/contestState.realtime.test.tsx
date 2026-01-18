@@ -41,26 +41,11 @@ let mockParticipantRow: ParticipantRow | null = makeParticipant({
 let mockQuestionRow: QuestionRow | null = null;
 let mockAnswerRow: AnswerRow | null = null;
 
-let mockContestSubscriptionCallback: ((updated: ContestRow) => void) | null = null;
-let mockQuestionsSubscriptionCallback: ((payload: { new: unknown }) => void) | null = null;
-let mockParticipantSubscriptionCallback: ((updated: ParticipantRow) => void) | null = null;
-let mockAnswerSubscriptionCallback: ((payload: { new: unknown; old?: unknown }) => void) | null =
-  null;
-
-let mockSubscribeToContestCallCount = 0;
-let mockSubscribeToQuestionsCallCount = 0;
-let mockSubscribeToParticipantCallCount = 0;
-let mockSubscribeToAnswersCallCount = 0;
-
-let mockSubscribedContestIds: string[] = [];
-let mockSubscribedQuestionsContestIds: string[] = [];
-let mockSubscribedParticipantIds: string[] = [];
-let mockSubscribedAnswersParticipantIds: string[] = [];
-
-const mockContestUnsub = jest.fn();
-const mockQuestionsUnsub = jest.fn();
-const mockParticipantUnsub = jest.fn();
-const mockAnswersUnsub = jest.fn();
+let mockBroadcastUpdateCallback: ((updated: ContestRow | QuestionRow) => void) | null = null;
+let mockBroadcastInsertCallback: ((updated: ContestRow | QuestionRow) => void) | null = null;
+let mockSubscribeToBroadcastCallCount = 0;
+let mockSubscribedBroadcastChannels: string[] = [];
+const mockBroadcastUnsub = jest.fn();
 
 const mockGetContestById = jest.fn(async (_contestId: string) => mockOk(mockContestRow));
 const mockGetParticipantForUser = jest.fn(async (_contestId: string, _userId: string) =>
@@ -94,12 +79,6 @@ jest.mock('../../src/ui/components/LoadingView', () => {
 
 jest.mock('../../src/db/contests', () => ({
   getContestById: (contestId: string) => mockGetContestById(contestId),
-  subscribeToContest: (contestId: string, onChange: (updated: ContestRow) => void) => {
-    mockSubscribeToContestCallCount += 1;
-    mockSubscribedContestIds.push(contestId);
-    mockContestSubscriptionCallback = onChange;
-    return mockContestUnsub;
-  },
 }));
 
 jest.mock('../../src/db/participants', () => ({
@@ -107,42 +86,40 @@ jest.mock('../../src/db/participants', () => ({
     mockGetParticipantForUser(contestId, userId),
   getOrCreateParticipant: (contestId: string, userId: string) =>
     mockGetOrCreateParticipant(contestId, userId),
-  subscribeToParticipant: (participantId: string, onChange: (updated: ParticipantRow) => void) => {
-    mockSubscribeToParticipantCallCount += 1;
-    mockSubscribedParticipantIds.push(participantId);
-    mockParticipantSubscriptionCallback = onChange;
-    return mockParticipantUnsub;
-  },
 }));
 
 jest.mock('../../src/db/questions', () => ({
   getQuestionForRound: (contestId: string, round: number) =>
     mockGetQuestionForRound(contestId, round),
-  subscribeToQuestions: (contestId: string, onChange: (payload: { new: unknown }) => void) => {
-    mockSubscribeToQuestionsCallCount += 1;
-    mockSubscribedQuestionsContestIds.push(contestId);
-    mockQuestionsSubscriptionCallback = onChange;
-    return mockQuestionsUnsub;
-  },
 }));
 
 jest.mock('../../src/db/answers', () => ({
   getAnswerForQuestion: (participantId: string, questionId: string) =>
     mockGetAnswerForQuestion(participantId, questionId),
   submitAnswer: async () => ({ ok: true, value: null }),
-  subscribeToAnswersForParticipant: (
-    participantId: string,
-    onChange: (payload: { new: unknown; old?: unknown }) => void,
-  ) => {
-    mockSubscribeToAnswersCallCount += 1;
-    mockSubscribedAnswersParticipantIds.push(participantId);
-    mockAnswerSubscriptionCallback = onChange;
-    return mockAnswersUnsub;
-  },
 }));
 
 jest.mock('../../src/db/errors', () => ({
   getErrorMessage: (e: unknown) => String(e),
+}));
+
+jest.mock('../../src/db/realtime', () => ({
+  subscribeToBroadcast: (
+    channel: string,
+    events: Array<{ event: string; callback: (payload: ContestRow | QuestionRow) => void }>,
+  ) => {
+    mockSubscribeToBroadcastCallCount += 1;
+    mockSubscribedBroadcastChannels.push(channel);
+    events.forEach(({ event, callback }) => {
+      if (event === 'UPDATE') {
+        mockBroadcastUpdateCallback = callback;
+      }
+      if (event === 'INSERT') {
+        mockBroadcastInsertCallback = callback;
+      }
+    });
+    return mockBroadcastUnsub;
+  },
 }));
 
 const Harness = ({ contestId, userId }: { contestId: string; userId: string }) => {
@@ -238,25 +215,11 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
     mockQuestionRow = null;
     mockAnswerRow = null;
 
-    mockContestSubscriptionCallback = null;
-    mockQuestionsSubscriptionCallback = null;
-    mockParticipantSubscriptionCallback = null;
-    mockAnswerSubscriptionCallback = null;
-
-    mockSubscribeToContestCallCount = 0;
-    mockSubscribeToQuestionsCallCount = 0;
-    mockSubscribeToParticipantCallCount = 0;
-    mockSubscribeToAnswersCallCount = 0;
-
-    mockSubscribedContestIds = [];
-    mockSubscribedQuestionsContestIds = [];
-    mockSubscribedParticipantIds = [];
-    mockSubscribedAnswersParticipantIds = [];
-
-    mockContestUnsub.mockClear();
-    mockQuestionsUnsub.mockClear();
-    mockParticipantUnsub.mockClear();
-    mockAnswersUnsub.mockClear();
+    mockBroadcastUpdateCallback = null;
+    mockBroadcastInsertCallback = null;
+    mockSubscribeToBroadcastCallCount = 0;
+    mockSubscribedBroadcastChannels = [];
+    mockBroadcastUnsub.mockClear();
 
     mockGetContestById.mockClear();
     mockGetParticipantForUser.mockClear();
@@ -265,7 +228,7 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
     mockGetAnswerForQuestion.mockClear();
   });
 
-  test('realtime contest update drives state: LOBBY_OPEN → ROUND_IN_PROGRESS (ANSWERING) → answer arrives (SUBMITTED_WAITING)', async () => {
+  test('realtime contest update drives state: LOBBY_OPEN → ROUND_IN_PROGRESS (ANSWERING) → answer fetched (SUBMITTED_WAITING)', async () => {
     /**
      * Scenario:
      * - Start in lobby (LOBBY_OPEN).
@@ -277,17 +240,22 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
     await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
     expect(view.getByTestId('playerState').props.children).toBe(PLAYER_STATE.LOBBY);
 
-    expect(mockContestSubscriptionCallback).not.toBeNull();
-    expect(mockQuestionsSubscriptionCallback).not.toBeNull();
+    expect(mockBroadcastUpdateCallback).not.toBeNull();
+    expect(mockBroadcastInsertCallback).not.toBeNull();
 
     await waitFor(() => {
-      expect(mockSubscribedContestIds).toContain(DEFAULT_CONTEST_ID);
-      expect(mockSubscribedQuestionsContestIds).toContain(DEFAULT_CONTEST_ID);
-      expect(mockSubscribedParticipantIds).toContain(DEFAULT_PARTICIPANT_ID);
-      expect(mockSubscribedAnswersParticipantIds).toContain(DEFAULT_PARTICIPANT_ID);
+      expect(mockSubscribedBroadcastChannels).toContain(`contest:${DEFAULT_CONTEST_ID}`);
     });
 
     // Contest goes live
+    const answer = makeAnswer({
+      id: '00000000-0000-0000-0000-0000000000ef',
+      contest_id: DEFAULT_CONTEST_ID,
+      participant_id: DEFAULT_PARTICIPANT_ID,
+      question_id: DEFAULT_QUESTION_ID,
+      round: 1,
+      answer: 'A',
+    });
     mockContestRow = makeContest({
       id: DEFAULT_CONTEST_ID,
       state: CONTEST_STATE.ROUND_IN_PROGRESS,
@@ -298,10 +266,10 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
       contest_id: DEFAULT_CONTEST_ID,
       round: 1,
     });
-    mockAnswerRow = null;
+    mockAnswerRow = answer;
 
     act(() => {
-      mockContestSubscriptionCallback?.(mockContestRow);
+      mockBroadcastUpdateCallback?.(mockContestRow);
     });
 
     await waitFor(() => {
@@ -311,24 +279,6 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
 
     await waitFor(() => {
       expect(view.getByTestId('questionId').props.children).toBe(DEFAULT_QUESTION_ID);
-      expect(view.getByTestId('playerState').props.children).toBe(PLAYER_STATE.ANSWERING);
-    });
-
-    // Answer arrives via realtime subscription payload
-    const answer = makeAnswer({
-      id: '00000000-0000-0000-0000-0000000000ef',
-      contest_id: DEFAULT_CONTEST_ID,
-      participant_id: DEFAULT_PARTICIPANT_ID,
-      question_id: DEFAULT_QUESTION_ID,
-      round: 1,
-      answer: 'A',
-    });
-    mockAnswerRow = answer;
-    act(() => {
-      mockAnswerSubscriptionCallback?.({ new: answer });
-    });
-
-    await waitFor(() => {
       expect(view.getByTestId('answerId').props.children).toBe(answer.id);
       expect(view.getByTestId('playerState').props.children).toBe(PLAYER_STATE.SUBMITTED_WAITING);
     });
@@ -362,15 +312,8 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
 
     view.unmount();
 
-    expect(mockSubscribeToContestCallCount).toBeGreaterThan(0);
-    expect(mockSubscribeToQuestionsCallCount).toBeGreaterThan(0);
-    expect(mockSubscribeToParticipantCallCount).toBeGreaterThan(0);
-    expect(mockSubscribeToAnswersCallCount).toBeGreaterThan(0);
-
-    expect(mockContestUnsub).toHaveBeenCalledTimes(mockSubscribeToContestCallCount);
-    expect(mockQuestionsUnsub).toHaveBeenCalledTimes(mockSubscribeToQuestionsCallCount);
-    expect(mockParticipantUnsub).toHaveBeenCalledTimes(mockSubscribeToParticipantCallCount);
-    expect(mockAnswersUnsub).toHaveBeenCalledTimes(mockSubscribeToAnswersCallCount);
+    expect(mockSubscribeToBroadcastCallCount).toBeGreaterThan(0);
+    expect(mockBroadcastUnsub).toHaveBeenCalledTimes(mockSubscribeToBroadcastCallCount);
   });
 
   test('regression: Correct → Game without visiting Submitted when next round opens', async () => {
@@ -396,6 +339,7 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
       contest_id: DEFAULT_CONTEST_ID,
       round: 1,
       correct_option: ['A'],
+      processing_status: 'COMPLETE',
     });
     mockAnswerRow = makeAnswer({
       id: '00000000-0000-0000-0000-0000000000ef',
@@ -418,7 +362,7 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
     });
 
     act(() => {
-      mockContestSubscriptionCallback?.(mockContestRow);
+      mockBroadcastUpdateCallback?.(mockContestRow);
     });
 
     await waitFor(() => expect(__router.getPathname()).toBe(`/game/${DEFAULT_CONTEST_ID}`));

@@ -1,6 +1,6 @@
 import { DEMO_CONTEST_ID } from '../../configs/constants';
 import type { AnswerRow, ContestRow, ParticipantRow, QuestionRow } from '../../db/types';
-import { CONTEST_STATE } from '../constants';
+import { CONTEST_STATE, REGISTRATION_STATUS } from '../constants';
 
 export const DEMO_PARTICIPANT_ID = 'demo-participant';
 export const DEMO_USER_ID = 'demo-user';
@@ -40,6 +40,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: null,
       created_at: now,
     },
@@ -64,6 +65,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: null,
       created_at: now,
     },
@@ -78,6 +80,7 @@ export const DEMO_PHASES: DemoPhase[] = [
         C: 'Mark Andrews + Isiah Likely',
         D: 'Everyone else combined',
       },
+      processing_status: 'PENDING',
       correct_option: null,
     },
     answer: null,
@@ -100,6 +103,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: null,
       created_at: now,
     },
@@ -114,6 +118,7 @@ export const DEMO_PHASES: DemoPhase[] = [
         C: 'Mark Andrews + Isiah Likely',
         D: 'Everyone else combined',
       },
+      processing_status: 'PENDING',
       correct_option: null,
     },
     answer: {
@@ -144,6 +149,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: null,
       created_at: now,
     },
@@ -158,6 +164,7 @@ export const DEMO_PHASES: DemoPhase[] = [
         C: 'Mark Andrews + Isiah Likely',
         D: 'Everyone else combined',
       },
+      processing_status: 'COMPLETE',
       correct_option: ['A'],
     },
     answer: {
@@ -188,6 +195,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: null,
       created_at: now,
     },
@@ -202,6 +210,7 @@ export const DEMO_PHASES: DemoPhase[] = [
         C: 'Incomplete',
         D: 'Interception',
       },
+      processing_status: 'PENDING',
       correct_option: null,
     },
     answer: null,
@@ -224,6 +233,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: null,
       created_at: now,
     },
@@ -238,6 +248,7 @@ export const DEMO_PHASES: DemoPhase[] = [
         C: 'Incomplete',
         D: 'Interception',
       },
+      processing_status: 'PENDING',
       correct_option: null,
     },
     answer: {
@@ -268,6 +279,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: 2,
       created_at: now,
     },
@@ -282,6 +294,7 @@ export const DEMO_PHASES: DemoPhase[] = [
         C: 'Incomplete',
         D: 'Interception',
       },
+      processing_status: 'COMPLETE',
       correct_option: ['C'],
     },
     answer: {
@@ -312,6 +325,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: DEMO_PARTICIPANT_ID,
       contest_id: DEMO_CONTEST_ID,
       user_id: DEMO_USER_ID,
+      registration_status: REGISTRATION_STATUS.APPROVED,
       elimination_round: 2,
       created_at: now,
     },

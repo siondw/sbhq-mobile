@@ -43,14 +43,6 @@ describe('derivePlayerState', () => {
     );
   });
 
-  test('ROUND_CLOSED: missed answer → ELIMINATED', () => {
-    const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
-    const participant = makeParticipant();
-    const question = makeQuestion({ round: 1 });
-
-    expect(derivePlayerState(contest, participant, question, null)).toBe(PLAYER_STATE.ELIMINATED);
-  });
-
   test('ROUND_CLOSED: missing current question -> SUBMITTED_WAITING', () => {
     const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 2 });
     const participant = makeParticipant();
@@ -64,36 +56,40 @@ describe('derivePlayerState', () => {
     );
   });
 
-  test('ROUND_CLOSED: correct option unset → SUBMITTED_WAITING (waiting for admin)', () => {
+  test('ROUND_CLOSED: processing pending → SUBMITTED_WAITING', () => {
     const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
     const participant = makeParticipant();
-    const question = makeQuestion({ round: 1, correct_option: null });
+    const question = makeQuestion({ round: 1, correct_option: ['A'], processing_status: 'PENDING' });
 
     expect(derivePlayerState(contest, participant, question, makeAnswer({ round: 1 }))).toBe(
       PLAYER_STATE.SUBMITTED_WAITING,
     );
   });
 
-  test('ROUND_CLOSED: correct option empty -> SUBMITTED_WAITING (waiting for admin)', () => {
+  test('ROUND_CLOSED: processing complete → CORRECT_WAITING_NEXT', () => {
     const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
     const participant = makeParticipant();
-    const question = makeQuestion({ round: 1, correct_option: [] });
+    const question = makeQuestion({
+      round: 1,
+      correct_option: ['A'],
+      processing_status: 'COMPLETE',
+    });
 
     expect(derivePlayerState(contest, participant, question, makeAnswer({ round: 1 }))).toBe(
-      PLAYER_STATE.SUBMITTED_WAITING,
-    );
-  });
-
-  test('ROUND_CLOSED: correct answer → CORRECT_WAITING_NEXT; wrong → ELIMINATED', () => {
-    const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
-    const participant = makeParticipant();
-    const question = makeQuestion({ round: 1, correct_option: ['A'] });
-
-    expect(derivePlayerState(contest, participant, question, makeAnswer({ answer: 'A' }))).toBe(
       PLAYER_STATE.CORRECT_WAITING_NEXT,
     );
+  });
 
-    expect(derivePlayerState(contest, participant, question, makeAnswer({ answer: 'B' }))).toBe(
+  test('ROUND_CLOSED: processing complete + eliminated participant → ELIMINATED', () => {
+    const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
+    const participant = makeParticipant({ elimination_round: 1 });
+    const question = makeQuestion({
+      round: 1,
+      correct_option: ['A'],
+      processing_status: 'COMPLETE',
+    });
+
+    expect(derivePlayerState(contest, participant, question, makeAnswer({ round: 1 }))).toBe(
       PLAYER_STATE.ELIMINATED,
     );
   });

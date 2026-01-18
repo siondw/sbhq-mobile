@@ -19,3 +19,11 @@ export const CONTEST_STATE = {
 } as const;
 
 export type ContestStateValue = (typeof CONTEST_STATE)[keyof typeof CONTEST_STATE];
+
+export const REGISTRATION_STATUS = {
+  PENDING: 'PENDING',
+  APPROVED: 'APPROVED',
+  REJECTED: 'REJECTED',
+} as const;
+
+export type RegistrationStatus = (typeof REGISTRATION_STATUS)[keyof typeof REGISTRATION_STATUS];

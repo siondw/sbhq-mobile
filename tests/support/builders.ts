@@ -1,4 +1,5 @@
 import type { AnswerRow, ContestRow, ParticipantRow, QuestionRow } from '../../src/db/types';
+import { REGISTRATION_STATUS } from '../../src/logic/constants';
 
 type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K];
@@ -25,6 +26,7 @@ export const makeParticipant = (overrides: DeepPartial<ParticipantRow> = {}): Pa
   id: DEFAULT_PARTICIPANT_ID,
   contest_id: DEFAULT_CONTEST_ID,
   user_id: DEFAULT_USER_ID,
+  registration_status: REGISTRATION_STATUS.APPROVED,
   created_at: new Date('2020-01-01T00:00:00.000Z').toISOString(),
   elimination_round: null,
   ...overrides,
@@ -36,6 +38,7 @@ export const makeQuestion = (overrides: DeepPartial<QuestionRow> = {}): Question
   round: 1,
   question: 'Test question?',
   options: ['Run', 'Pass'],
+  processing_status: 'PENDING',
   correct_option: null,
   ...overrides,
 });

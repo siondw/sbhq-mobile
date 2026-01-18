@@ -1,11 +1,9 @@
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { AsyncResult } from '../utils/result';
 import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
 import { networkError } from './errors';
 import type { DbError } from './errors';
-import { subscribeToTable } from './realtime';
 import type { QuestionRow } from './types';
 
 export const getQuestionsForContest = async (
@@ -45,15 +43,3 @@ export const getQuestionForRound = async (
 
   return Ok((data as QuestionRow | null) ?? null);
 };
-
-export const subscribeToQuestions = (
-  contestId: string,
-  onChange: (payload: RealtimePostgresChangesPayload<QuestionRow>) => void,
-): (() => void) =>
-  subscribeToTable<QuestionRow>({
-    channel: `questions-${contestId}`,
-    event: '*',
-    table: DB_TABLES.QUESTIONS,
-    filter: `contest_id=eq.${contestId}`,
-    callback: onChange,
-  });

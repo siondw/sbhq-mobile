@@ -1,4 +1,3 @@
-import type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 import type { AnswerOptionValue } from '../configs/constants';
 import type { AsyncResult } from '../utils/result';
 import { Err, Ok } from '../utils/result';
@@ -6,7 +5,6 @@ import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
 import type { DbError } from './errors';
 import { networkError } from './errors';
-import { subscribeToTable } from './realtime';
 import type { AnswerInsert, AnswerRow } from './types';
 
 export interface SubmitAnswerParams {
@@ -16,6 +14,8 @@ export interface SubmitAnswerParams {
   round: number;
   answer: AnswerOptionValue;
 }
+
+type AnswerInsertInput = Omit<AnswerInsert, 'id'>;
 
 export const submitAnswer = async ({
   participantId,
@@ -30,7 +30,7 @@ export const submitAnswer = async ({
     return existingResult;
   }
 
-  const payload: AnswerInsert = {
+  const payload: AnswerInsertInput = {
     participant_id: participantId,
     contest_id: contestId,
     question_id: questionId,
@@ -56,7 +56,10 @@ export const submitAnswer = async ({
     return Ok(data as AnswerRow);
   }
 
-  const { data, error } = await SUPABASE_CLIENT.from('answers').insert(payload).select().single();
+  const { data, error } = await SUPABASE_CLIENT.from('answers')
+    .insert(payload as AnswerInsert)
+    .select()
+    .single();
 
   if (error) {
     return Err(networkError(`Failed to submit answer: ${error.message}`));
@@ -104,18 +107,6 @@ export const getAnswerForRound = async (
 
   return Ok((data as AnswerRow | null) ?? null);
 };
-
-export const subscribeToAnswersForParticipant = (
-  participantId: string,
-  onChange: (payload: RealtimePostgresChangesPayload<AnswerRow>) => void,
-): (() => void) =>
-  subscribeToTable<AnswerRow>({
-    channel: `answers-${participantId}`,
-    event: '*',
-    table: DB_TABLES.ANSWERS,
-    filter: `participant_id=eq.${participantId}`,
-    callback: onChange,
-  });
 
 export interface AnswerDistribution {
   answer: string;

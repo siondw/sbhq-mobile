@@ -37,6 +37,10 @@ P1
   - [x] Finish testing
   - [ ] Make notifications auto-trigger based off time and contest tstate
 - [ ] Allow elimnated users to continue watching the contest as spectators
+- [ ] Add participant count to contest card
+- [ ] Use the active flag in the db to also make sure they were approved by the admin
+  - [ ] Update in app registration to show pending approval status and et to false by default
+  - [ ] Redirect user to www.sbhq.live to see rules (and potentially pay for the contest)
 
 P2
 
@@ -50,13 +54,14 @@ P2
 - [x] Supbase fixes:
   - [x] RLS policies?
   - [x] Cascade behvior for tables
-- [ ] Debug the answer summary container
+- [x] Debug the answer summary container
+- [ ] When users donwlaoded the app, I saw that the has_seen_demo flag was false for all of them and never got set to true
 
 P3
 
 - [x] Create an icon for the app
 - [ ] Offline error toast?
-- [ ] Add error logging for auto-send notifications
+- [x] Add error logging for auto-send notifications
   - Issue: pg_net trigger calls edge function, but if it fails there's no visibility
   - Improvement: Create `notification_call_log` table to track pg_net responses
   - Add to `eliminate_incorrect_players()` trigger to log success/failure

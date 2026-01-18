@@ -1,20 +1,15 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { RealtimePostgresChangesPayload } from '../../db/realtime';
 import {
   getAnswerForQuestion,
   submitAnswer,
-  subscribeToAnswersForParticipant,
   type SubmitAnswerParams,
 } from '../../db/answers';
-import { getContestById, subscribeToContest } from '../../db/contests';
+import { getContestById } from '../../db/contests';
 import { getErrorMessage } from '../../db/errors';
-import {
-  getOrCreateParticipant,
-  getParticipantForUser,
-  subscribeToParticipant,
-} from '../../db/participants';
-import { getQuestionForRound, subscribeToQuestions } from '../../db/questions';
+import { getOrCreateParticipant, getParticipantForUser } from '../../db/participants';
+import { getQuestionForRound } from '../../db/questions';
+import { subscribeToBroadcast } from '../../db/realtime';
 import type { AnswerRow, ContestRow, ParticipantRow, QuestionRow } from '../../db/types';
 import type { Result } from '../../utils/result';
 import type { PlayerState } from '../constants';
@@ -121,6 +116,15 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     setLoading(false);
   }, [contestId, userId]);
 
+  const refreshParticipant = useCallback(async () => {
+    if (!contestId || !userId) return;
+
+    const result = await getParticipantForUser(contestId, userId);
+    if (result.ok && result.value) {
+      setParticipant(result.value);
+    }
+  }, [contestId, userId]);
+
   useEffect(() => {
     if (!hasInitializedRef.current && contestId) {
       hasInitializedRef.current = true;
@@ -131,45 +135,39 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   useEffect(() => {
     if (!contestId || !hasInitializedRef.current) return undefined;
 
-    const unsubscribes: Array<() => void> = [];
-
-    const contestUnsub = subscribeToContest(contestId, (updatedContest: ContestRow) => {
-      setContest(updatedContest);
-    });
-    unsubscribes.push(contestUnsub);
-
-    if (participant?.id) {
-      const participantUnsub = subscribeToParticipant(participant.id, (updated) => {
-        setParticipant(updated);
-      });
-      unsubscribes.push(participantUnsub);
-
-      const answersUnsub = subscribeToAnswersForParticipant(
-        participant.id,
-        (payload: RealtimePostgresChangesPayload<AnswerRow>) => {
-          if (payload.new && typeof payload.new === 'object') {
-            setAnswer(payload.new as AnswerRow);
+    const unsub = subscribeToBroadcast<ContestRow | QuestionRow>(`contest:${contestId}`, [
+      {
+        event: 'UPDATE',
+        callback: (data) => {
+          if ('state' in data) {
+            setContest(data);
+          }
+          if ('question' in data) {
+            const nextQuestion = data;
+            setQuestion((current) =>
+              nextQuestion.round >= (current?.round ?? 0) ? nextQuestion : current,
+            );
           }
         },
-      );
-      unsubscribes.push(answersUnsub);
-    }
+      },
+      {
+        event: 'INSERT',
+        callback: (data) => {
+          if ('question' in data) {
+            const nextQuestion = data;
+            const currentRound = contestRoundRef.current || questionRoundRef.current;
+            if (nextQuestion.round <= currentRound) {
+              setQuestion((current) =>
+                nextQuestion.round >= (current?.round ?? 0) ? nextQuestion : current,
+              );
+            }
+          }
+        },
+      },
+    ]);
 
-    const questionsUnsub = subscribeToQuestions(contestId, (payload) => {
-      const nextQuestion = payload.new as QuestionRow | null;
-      const currentRound = contestRoundRef.current || questionRoundRef.current;
-      if (nextQuestion && nextQuestion.round <= currentRound) {
-        setQuestion((current) =>
-          nextQuestion.round >= (current?.round ?? 0) ? nextQuestion : current,
-        );
-      }
-    });
-    unsubscribes.push(questionsUnsub);
-
-    return () => {
-      unsubscribes.forEach((unsub) => unsub());
-    };
-  }, [contestId, participant?.id]);
+    return unsub;
+  }, [contestId]);
 
   useEffect(() => {
     contestRoundRef.current = contest?.current_round ?? 0;
@@ -188,6 +186,12 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
   useEffect(() => {
     questionRoundRef.current = question?.round ?? 0;
   }, [question?.round]);
+
+  useEffect(() => {
+    if (question?.processing_status === 'COMPLETE') {
+      void refreshParticipant();
+    }
+  }, [contestId, question?.id, question?.processing_status, question?.round, refreshParticipant]);
 
   useEffect(() => {
     const loadCurrentQuestion = async () => {
@@ -247,7 +251,9 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     const result = await submitAnswer(payload);
     if (!result.ok) {
       setError(getErrorMessage(result.error));
+      return;
     }
+    setAnswer(result.value);
   }, []);
 
   return useMemo(

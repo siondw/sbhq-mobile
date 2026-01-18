@@ -5,7 +5,7 @@ import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } fr
 import { Feather } from '@expo/vector-icons';
 import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import type { ContestRow } from '../db/types';
-import { CONTEST_STATE } from '../logic/constants';
+import { CONTEST_STATE, REGISTRATION_STATUS } from '../logic/constants';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
@@ -110,7 +110,13 @@ const ContestListScreen = () => {
       return;
     }
 
-    await registerForContest(contest.id);
+    const registration = await registerForContest(contest.id);
+    if (!registration) {
+      return;
+    }
+    if (registration.registration_status !== REGISTRATION_STATUS.APPROVED) {
+      return;
+    }
 
     if (contest.state === CONTEST_STATE.FINISHED) {
       router.push(ROUTES.INDEX);
@@ -172,6 +178,8 @@ const ContestListScreen = () => {
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
           const isRegistered = !!participant;
+          const isApproved = participant?.registration_status === REGISTRATION_STATUS.APPROVED;
+          const isPendingApproval = isRegistered && !isApproved;
           const isLive =
             item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
           const isInProgress =
@@ -187,7 +195,10 @@ const ContestListScreen = () => {
           let buttonVariant: 'primary' | 'success' = 'primary';
           let buttonIcon: React.ReactNode = null;
 
-          if (isEliminated && isInProgress) {
+          if (isPendingApproval) {
+            buttonLabel = 'Pending approval';
+            buttonVariant = 'primary';
+          } else if (isEliminated && isInProgress) {
             buttonLabel = 'Eliminated';
             buttonVariant = 'primary';
           } else if (isLocked) {
@@ -217,12 +228,13 @@ const ContestListScreen = () => {
               priceLabel={priceLabel}
               roundLabel={item.current_round ? String(item.current_round) : null}
               live={isLive}
-              dimmed={isLocked || (isEliminated && isInProgress)}
+              dimmed={isLocked || isPendingApproval || (isEliminated && isInProgress)}
               buttonLabel={buttonLabel}
               buttonVariant={buttonVariant}
               buttonIconRight={buttonIcon}
               buttonDisabled={
                 !!isLocked ||
+                isPendingApproval ||
                 (isEliminated && isInProgress) ||
                 (isRegistered &&
                   item.state !== CONTEST_STATE.LOBBY_OPEN &&

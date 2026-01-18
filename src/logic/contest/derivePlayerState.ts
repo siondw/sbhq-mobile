@@ -35,18 +35,10 @@ export const derivePlayerState = (
       if (!hasCurrentQuestion) {
         return PLAYER_STATE.SUBMITTED_WAITING;
       }
-      if (!hasCurrentAnswer) {
-        return PLAYER_STATE.ELIMINATED; // Missed deadline
+      if (question.processing_status !== 'COMPLETE') {
+        return PLAYER_STATE.SUBMITTED_WAITING;
       }
-      if (
-        question.correct_option === null ||
-        (Array.isArray(question.correct_option) && question.correct_option.length === 0)
-      ) {
-        return PLAYER_STATE.SUBMITTED_WAITING; // Waiting for admin
-      }
-      return question.correct_option.includes(answer.answer)
-        ? PLAYER_STATE.CORRECT_WAITING_NEXT
-        : PLAYER_STATE.ELIMINATED;
+      return PLAYER_STATE.CORRECT_WAITING_NEXT;
 
     case CONTEST_STATE.UPCOMING:
     default:

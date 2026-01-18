@@ -14,6 +14,11 @@ export interface RealtimeSubscriptionConfig<TRow extends Record<string, unknown>
   callback: (payload: RealtimePostgresChangesPayload<TRow>) => void;
 }
 
+export interface BroadcastSubscriptionConfig<TPayload> {
+  event: string;
+  callback: (data: TPayload) => void;
+}
+
 export const subscribeToTable = <TRow extends Record<string, unknown>>({
   channel,
   event,
@@ -27,6 +32,27 @@ export const subscribeToTable = <TRow extends Record<string, unknown>>({
     { event, schema, table, filter } as Parameters<RealtimeChannel['on']>[1],
     callback as Parameters<RealtimeChannel['on']>[2],
   );
+
+  void realtimeChannel.subscribe();
+
+  return () => {
+    void SUPABASE_CLIENT.removeChannel(realtimeChannel);
+  };
+};
+
+export const subscribeToBroadcast = <TPayload>(
+  channel: string,
+  events: Array<BroadcastSubscriptionConfig<TPayload>>,
+): (() => void) => {
+  const realtimeChannel: RealtimeChannel = SUPABASE_CLIENT.channel(channel, {
+    config: { private: true },
+  });
+
+  events.forEach(({ event, callback }) => {
+    realtimeChannel.on('broadcast', { event }, (message) => {
+      callback(message.payload as TPayload);
+    });
+  });
 
   void realtimeChannel.subscribe();
 
