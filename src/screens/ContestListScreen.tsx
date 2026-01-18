@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import type { ContestRow } from '../db/types';
 import { CONTEST_STATE, REGISTRATION_STATUS } from '../logic/constants';
-import { useNotifications } from '../logic/contexts';
+import { useDemoMode, useNotifications } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
@@ -38,6 +38,7 @@ const ContestListScreen = () => {
     error: authError,
     loading: authLoading,
   } = useAuth();
+  const { isDemoActive, shouldShowDemo, startDemo } = useDemoMode();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -70,6 +71,15 @@ const ContestListScreen = () => {
     };
     void checkPullHint();
   }, []);
+
+  useEffect(() => {
+    if (authLoading || needsOnboarding || isDemoActive) {
+      return;
+    }
+    if (shouldShowDemo) {
+      startDemo();
+    }
+  }, [authLoading, isDemoActive, needsOnboarding, shouldShowDemo, startDemo]);
 
   useEffect(() => {
     const checkNotificationBanner = async () => {

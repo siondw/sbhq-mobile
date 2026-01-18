@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { DEMO_CONTEST_ID } from '../../configs/constants';
 import { ROUTES, buildLobbyRoute } from '../../configs/routes';
 import { updateUserProfile } from '../../db/users';
@@ -25,31 +25,45 @@ export const useDemoMode = (): DemoModeContextValue => {
 };
 
 export const DemoModeProvider = ({ children }: { children: React.ReactNode }) => {
-  const { profile, refreshProfile } = useAuth();
+  const { profile, refreshProfile, user } = useAuth();
   const router = useRouter();
   const [isDemoActive, setIsDemoActive] = useState(false);
   const [demoTip, setDemoTip] = useState<string | null>(null);
+  const [hasSeenDemoThisSession, setHasSeenDemoThisSession] = useState(false);
+
+  useEffect(() => {
+    setHasSeenDemoThisSession(false);
+  }, [user?.id]);
 
   const startDemo = useCallback(() => {
+    setHasSeenDemoThisSession(true);
+
+    const userId = user?.id ?? profile?.id;
+    if (userId) {
+      void (async () => {
+        const result = await updateUserProfile(userId, { has_seen_demo: true });
+        if (!result.ok) {
+          console.error('Failed to update has_seen_demo:', result.error);
+          return;
+        }
+        await refreshProfile();
+      })();
+    }
+
     setIsDemoActive(true);
     router.replace(buildLobbyRoute(DEMO_CONTEST_ID));
-  }, [router]);
+  }, [profile, refreshProfile, router, user]);
 
-  const exitDemo = useCallback(async () => {
+  const exitDemo = useCallback(() => {
     setIsDemoActive(false);
     setDemoTip(null);
 
-    if (profile?.id) {
-      await updateUserProfile(profile.id, { has_seen_demo: true });
-      await refreshProfile();
-    }
-
     router.replace(ROUTES.CONTESTS);
-  }, [profile, router, refreshProfile]);
+  }, [router]);
 
   const shouldShowDemo = useMemo(() => {
-    return profile?.has_seen_demo !== true;
-  }, [profile]);
+    return !hasSeenDemoThisSession && profile?.has_seen_demo !== true;
+  }, [hasSeenDemoThisSession, profile]);
 
   const value = useMemo(
     () => ({

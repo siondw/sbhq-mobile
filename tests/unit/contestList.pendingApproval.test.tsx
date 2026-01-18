@@ -24,6 +24,7 @@ const mockState = {
 
 const mockRefreshContests = jest.fn(async () => undefined);
 const mockRefreshParticipants = jest.fn(async () => undefined);
+const mockStartDemo = jest.fn();
 
 const resetState = () => {
   mockState.contests = [];
@@ -65,6 +66,19 @@ jest.mock('../../src/logic/hooks/useContestRegistration', () => ({
   }),
 }));
 
+jest.mock('../../src/logic/contexts', () => ({
+  useDemoMode: () => ({
+    isDemoActive: false,
+    shouldShowDemo: false,
+    startDemo: mockStartDemo,
+    exitDemo: jest.fn(),
+    setDemoTip: jest.fn(),
+  }),
+  useNotifications: () => ({
+    isRegistered: true,
+  }),
+}));
+
 jest.mock('../../src/logic/hooks/useHeaderHeight', () => ({
   useHeaderHeight: () => 0,
 }));
@@ -76,6 +90,8 @@ jest.mock('../../src/logic/hooks/utils', () => ({
 jest.mock('../../src/utils/storage', () => ({
   getHasSeenPullHint: jest.fn(async () => true),
   setHasSeenPullHint: jest.fn(async () => undefined),
+  getHasDismissedNotificationBanner: jest.fn(async () => true),
+  setHasDismissedNotificationBanner: jest.fn(async () => undefined),
 }));
 
 jest.mock('../../src/ui/components/ContestListTicket', () => {

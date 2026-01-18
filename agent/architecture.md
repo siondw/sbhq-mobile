@@ -1,4 +1,4 @@
-# SBHQ Player App – Architecture
+# SBHQ Player App - Architecture
 
 This document describes **how the SBHQ Player App is structured** and how data, logic, and UI flow through the system.
 
@@ -44,14 +44,14 @@ The app is structured into clear layers:
 ```
 
 Supabase (DB + Realtime)
-↓
-src/db        → data access only
-↓
-src/logic       → hooks + pure domain logic
-↓
-src/screens    → screen composition
-↓
-src/ui       → visual components
+v
+src/db        -> data access only
+v
+src/logic       -> hooks + pure domain logic
+v
+src/screens    -> screen composition
+v
+src/ui       -> visual components
 
 ```
 
@@ -74,7 +74,7 @@ src/
 
 ---
 
-## 4. `src/db/` – Data Layer
+## 4. `src/db/` - Data Layer
 
 **Purpose:** One place that knows how to talk to Supabase.
 
@@ -86,8 +86,8 @@ src/
 
 ### Typical Files
 
-- `client.ts` – Supabase client setup
-- `types.ts` – Row types (`ContestRow`, `ParticipantRow`, etc.)
+- `client.ts` - Supabase client setup
+- `types.ts` - Row types (`ContestRow`, `ParticipantRow`, etc.)
 - Domain modules:
   - `auth.ts`
   - `contests.ts`
@@ -102,11 +102,11 @@ They call functions from `src/db/`.
 
 ---
 
-## 5. `src/logic/` – App & Game Logic
+## 5. `src/logic/` - App & Game Logic
 
 This is the **brain** of the app.
 
-### 5.1 `logic/hooks/` – React hooks
+### 5.1 `logic/hooks/` - React hooks
 
 Hooks connect the data layer to the UI:
 
@@ -129,7 +129,7 @@ Hooks return shaped state + actions for screens to consume.
 
 ---
 
-### 5.2 `logic/<domain>/` – Pure domain logic
+### 5.2 `logic/<domain>/` - Pure domain logic
 
 Pure, testable functions with **no React and no side effects**.
 
@@ -150,16 +150,16 @@ These functions:
 
 ---
 
-## 6. `src/ui/` – Visual System
+## 6. `src/ui/` - Visual System
 
 **Purpose:** All reusable visual building blocks.
 
 Subfolders:
 
-- `components/` – Buttons, cards, headers, etc.
-- `animations/` – Shared animation hooks and presets
-- `textures/` – Visual effects (glassy, shine, etc.)
-- `theme/` – Colors, spacing, typography, theme context
+- `components/` - Buttons, cards, headers, etc.
+- `animations/` - Shared animation hooks and presets
+- `textures/` - Visual effects (glassy, shine, etc.)
+- `theme/` - Colors, spacing, typography, theme context
 
 UI components:
 
@@ -170,7 +170,7 @@ UI components:
 
 ---
 
-## 7. `src/screens/` – Screens
+## 7. `src/screens/` - Screens
 
 Screens represent **full pages** in the app.
 
@@ -191,7 +191,7 @@ Screens:
 
 ---
 
-## 8. `src/configs/` – Configuration
+## 8. `src/configs/` - Configuration
 
 Centralized app configuration:
 
@@ -204,7 +204,7 @@ Keeps config out of logic and UI.
 
 ---
 
-## 9. `src/utils/` – Generic Helpers
+## 9. `src/utils/` - Generic Helpers
 
 Small, stateless helpers:
 
@@ -216,7 +216,7 @@ No React. No Supabase.
 
 ---
 
-## 10. `app/` – Expo Router
+## 10. `app/` - Expo Router
 
 Expo Router uses `app/` as the route map.
 
@@ -261,31 +261,31 @@ through `ContestRouter` and `derivePlayerState`.
 
 ## 12. How to Navigate the Codebase
 
-- “How do I fetch contests?”
-  → `src/db/contests.ts`
+- "How do I fetch contests?"
+  -> `src/db/contests.ts`
 
-- “How does contest state work?”
-  → `src/logic/hooks/useContestState.ts`
-  → `src/logic/contest/derivePlayerState.ts`
+- "How does contest state work?"
+  -> `src/logic/hooks/useContestState.ts`
+  -> `src/logic/contest/derivePlayerState.ts`
 
-- “Where is this UI built?”
-  → `src/ui/components/`
+- "Where is this UI built?"
+  -> `src/ui/components/`
 
-- “Which screen am I on?”
-  → `src/screens/`
+- "Which screen am I on?"
+  -> `src/screens/`
 
-- “Where are routes defined?”
-  → `app/`
+- "Where are routes defined?"
+  -> `app/`
 
 ---
 
 ## 13. Summary
 
-- **Data access** → `src/db/`
-- **Hooks** → `src/logic/hooks/`
-- **Pure logic** → `src/logic/<domain>/`
-- **UI system** → `src/ui/`
-- **Screens** → `src/screens/`
-- **Routing** → `app/`
-- **Config** → `src/configs/`
-- **Helpers** → `src/utils/`
+- **Data access** -> `src/db/`
+- **Hooks** -> `src/logic/hooks/`
+- **Pure logic** -> `src/logic/<domain>/`
+- **UI system** -> `src/ui/`
+- **Screens** -> `src/screens/`
+- **Routing** -> `app/`
+- **Config** -> `src/configs/`
+- **Helpers** -> `src/utils/`

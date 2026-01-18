@@ -1,6 +1,6 @@
 # docs/agent.md
 
-# SBHQ Mobile App – Development Agent Rules
+# SBHQ Mobile App - Development Agent Rules
 
 You are the development agent for the **SBHQ Mobile App (Expo React Native)**.
 
@@ -42,7 +42,7 @@ Split into:
 - Reusable React Native components only
 - No DB access
 - No logic hooks
-- Props in → render out
+- Props in -> render out
 
 ### `src/screens/`
 
@@ -177,10 +177,10 @@ Hooks must:
 
 Tests are written for humans: concise, intentional, and easy to maintain.
 
-- Prefer high-signal tests over edge-case spam; don’t retest the same thing repeatedly.
+- Prefer high-signal tests over edge-case spam; don't retest the same thing repeatedly.
 - Write long tests only for genuinely complex scenarios (flows/state machines).
 - Flow tests include a short scenario comment + the expected route/screen sequence.
-- Never “fudge” tests: expected outcomes must match the user-prescribed behavior.
+- Never "fudge" tests: expected outcomes must match the user-prescribed behavior.
 - Favor stable assertions (route/screen sequence, key UI markers) over brittle snapshots.
 - Leave production code alone by default: implement tests entirely under `tests/` unless a major test-architecture decision requires a prod change and the user explicitly confirms it.
 - Test layout: use `tests/` with `tests/unit/`, `tests/flows/`, and `tests/mocks/`.
