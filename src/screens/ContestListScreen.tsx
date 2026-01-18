@@ -6,6 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import type { ContestRow } from '../db/types';
 import { CONTEST_STATE, REGISTRATION_STATUS } from '../logic/constants';
+import { useNotifications } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
@@ -15,10 +16,16 @@ import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import LoadingView from '../ui/components/LoadingView';
+import NotificationBanner from '../ui/components/NotificationBanner';
 import OnboardingModal from '../ui/components/OnboardingModal';
 import PullHint from '../ui/components/PullHint';
 import Text from '../ui/components/Text';
-import { getHasSeenPullHint, setHasSeenPullHint } from '../utils/storage';
+import {
+  getHasDismissedNotificationBanner,
+  getHasSeenPullHint,
+  setHasDismissedNotificationBanner,
+  setHasSeenPullHint,
+} from '../utils/storage';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const ContestListScreen = () => {
@@ -49,8 +56,10 @@ const ContestListScreen = () => {
     refresh: refreshParticipants,
   } = useContestRegistration(contests, derivedUser?.id);
   const { refreshing, onRefresh } = useRefresh([refreshContests, refreshParticipants]);
+  const { isRegistered: notificationsEnabled } = useNotifications();
 
   const [showPullHint, setShowPullHint] = useState(false);
+  const [showNotificationBanner, setShowNotificationBanner] = useState(false);
 
   useEffect(() => {
     const checkPullHint = async () => {
@@ -60,6 +69,24 @@ const ContestListScreen = () => {
       }
     };
     void checkPullHint();
+  }, []);
+
+  useEffect(() => {
+    const checkNotificationBanner = async () => {
+      const hasDismissed = await getHasDismissedNotificationBanner();
+      // Show banner if: not dismissed AND notifications not enabled
+      if (!hasDismissed && !notificationsEnabled) {
+        setShowNotificationBanner(true);
+      } else {
+        setShowNotificationBanner(false);
+      }
+    };
+    void checkNotificationBanner();
+  }, [notificationsEnabled]);
+
+  const dismissNotificationBanner = useCallback(() => {
+    setShowNotificationBanner(false);
+    void setHasDismissedNotificationBanner();
   }, []);
 
   const dismissPullHint = useCallback(() => {
@@ -173,6 +200,11 @@ const ContestListScreen = () => {
               </View>
             )}
             {showPullHint && <PullHint onDismiss={dismissPullHint} />}
+            {showNotificationBanner && (
+              <View style={styles.notificationBannerWrapper}>
+                <NotificationBanner variant="full" onDismiss={dismissNotificationBanner} />
+              </View>
+            )}
           </>
         }
         renderItem={({ item }) => {
@@ -254,7 +286,7 @@ const ContestListScreen = () => {
             </Text>
           </View>
         }
-      />
+        />
       {needsOnboarding && (
         <OnboardingModal visible={true} onComplete={completeOnboarding} error={authError} />
       )}
@@ -310,6 +342,9 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
       fontSize: TYPOGRAPHY.BODY,
       color: colors.muted,
       textAlign: 'center',
+    },
+    notificationBannerWrapper: {
+      marginBottom: SPACING.MD,
     },
   });
 

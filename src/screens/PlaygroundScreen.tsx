@@ -555,7 +555,7 @@ const PlaygroundScreen = () => {
                             { color: withAlpha(palette.ink, 0.6) },
                           ]}
                         >
-                          Play in progress - results post after the whistle.
+                          Play in progress.
                         </Text>
                       ) : (
                         <View style={styles.submittedChart}>

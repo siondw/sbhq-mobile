@@ -11,6 +11,7 @@ export const LOBBY_TIPS = [
   'Pull down to refresh if something looks stale.',
   'Some questions can have more than one correct answer.',
   'Submissions can close as soon as play resumes.',
+  'Enable notifications to know when new questions drop.',
 ] as const;
 
 export const ANSWER_OPTION = {

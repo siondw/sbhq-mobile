@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import React, { memo, useCallback, useMemo, useState } from 'react';
 import {
   Keyboard,
+  Linking,
   Modal,
   Platform,
   Pressable,
@@ -13,6 +14,7 @@ import {
 } from 'react-native';
 
 import { ROUTES } from '../../configs/routes';
+import { useNotifications } from '../../logic/contexts';
 import { useAuth } from '../../logic/hooks/useAuth';
 import { lightImpact } from '../../utils/haptics';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
@@ -29,6 +31,7 @@ const UserMenu = memo(({ visible, onClose }: UserMenuProps) => {
   const styles = useMemo(() => createStyles(colors), [colors]);
   const router = useRouter();
   const { deleteAccount, logout } = useAuth();
+  const { isRegistered, requestPermissions, permissionStatus } = useNotifications();
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deleteInput, setDeleteInput] = useState('');
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -44,6 +47,32 @@ const UserMenu = memo(({ visible, onClose }: UserMenuProps) => {
     onClose();
     router.push(ROUTES.CONTESTS);
   }, [onClose, router]);
+
+  // Check if permission was denied (can't ask again means user explicitly denied)
+  const wasDenied = permissionStatus?.canAskAgain === false && !permissionStatus?.granted;
+
+  const handleNotifications = useCallback(async () => {
+    lightImpact();
+
+    if (isRegistered) {
+      // Already enabled - open settings to disable
+      if (Platform.OS === 'ios') {
+        await Linking.openURL('app-settings:');
+      } else {
+        await Linking.openSettings();
+      }
+    } else if (wasDenied) {
+      // User previously denied - open settings
+      if (Platform.OS === 'ios') {
+        await Linking.openURL('app-settings:');
+      } else {
+        await Linking.openSettings();
+      }
+    } else {
+      // Request permissions
+      await requestPermissions();
+    }
+  }, [isRegistered, wasDenied, requestPermissions]);
 
   const handleLogout = useCallback(() => {
     lightImpact();
@@ -117,6 +146,21 @@ const UserMenu = memo(({ visible, onClose }: UserMenuProps) => {
                 <Text weight="medium" style={styles.menuItemText}>
                   Return to Home
                 </Text>
+              </Pressable>
+
+              <Pressable
+                style={({ pressed }) => [styles.menuItem, pressed && styles.menuItemPressed]}
+                onPress={() => void handleNotifications()}
+              >
+                <Ionicons
+                  name={isRegistered ? 'notifications' : 'notifications-off-outline'}
+                  size={20}
+                  color={colors.ink}
+                />
+                <Text weight="medium" style={styles.menuItemText}>
+                  Notifications
+                </Text>
+                <Text style={styles.menuItemStatus}>{isRegistered ? 'On' : 'Off'}</Text>
               </Pressable>
 
               <Pressable
@@ -263,6 +307,11 @@ function createStyles(colors: {
     menuItemText: {
       fontSize: TYPOGRAPHY.BODY,
       color: colors.ink,
+      flex: 1,
+    },
+    menuItemStatus: {
+      fontSize: TYPOGRAPHY.SMALL,
+      color: colors.muted,
     },
     menuItemTextDanger: {
       color: colors.danger,

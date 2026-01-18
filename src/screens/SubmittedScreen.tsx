@@ -106,7 +106,7 @@ const SubmittedScreen = () => {
 
                 {!showDistribution && (
                   <Text style={styles.waitingText}>
-                    Play in progress - results post after the whistle.
+                    Play in progress
                   </Text>
                 )}
 

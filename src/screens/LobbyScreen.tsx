@@ -1,16 +1,17 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useMemo, useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { Linking, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { LOBBY_TIPS } from '../configs/constants';
 import { PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
-import { useContestData } from '../logic/contexts';
+import { useContestData, useNotifications } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
 import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { useRefresh } from '../logic/hooks/utils';
+import { lightImpact } from '../utils/haptics';
 import Header from '../ui/components/AppHeader';
 import HeroCountdown from '../ui/components/HeroCountdown';
 import StatusBadge from '../ui/components/StatusBadge';
@@ -29,8 +30,26 @@ const LobbyScreen = () => {
   const { count: participantCount } = useParticipantCount(contestId, 15000); // Poll every 15s
 
   const { refreshing, onRefresh } = useRefresh([refresh]);
+  const { isRegistered: notificationsEnabled, requestPermissions, permissionStatus } = useNotifications();
+
   const [tipIndex, setTipIndex] = useState(0);
   const tipCount = LOBBY_TIPS.length;
+
+  // Check if permission was denied (can't ask again means user explicitly denied)
+  const wasDenied = permissionStatus?.canAskAgain === false && !permissionStatus?.granted;
+
+  const handleEnableNotifications = useCallback(async () => {
+    lightImpact();
+    if (wasDenied) {
+      if (Platform.OS === 'ios') {
+        await Linking.openURL('app-settings:');
+      } else {
+        await Linking.openSettings();
+      }
+    } else {
+      await requestPermissions();
+    }
+  }, [wasDenied, requestPermissions]);
 
   const targetTime = startTime
     ? new Date(startTime).getTime()
@@ -106,7 +125,17 @@ const LobbyScreen = () => {
 
               {/* Reassurance Footer */}
               <View style={styles.bottomSection}>
-                <StatusBadge label="GAME TIME" icon="time-outline" />
+                {notificationsEnabled ? (
+                  <StatusBadge label="GAME TIME" icon="time-outline" />
+                ) : (
+                  <Pressable onPress={() => void handleEnableNotifications()}>
+                    <StatusBadge
+                      label="ENABLE NOTIFICATIONS"
+                      icon="notifications-outline"
+                      color={colors.energy}
+                    />
+                  </Pressable>
+                )}
                 <Text style={styles.waitingText}>
                   {`Tip: ${LOBBY_TIPS[tipIndex] ?? 'Stay here. The game will start automatically.'}`}
                 </Text>
