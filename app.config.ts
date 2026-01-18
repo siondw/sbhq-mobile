@@ -13,7 +13,7 @@ export default {
     owner: "siondw",
     name: isDev ? "SBHQ Dev" : "SBHQ",
     slug: isDev ? "sbhq-mobile-dev" : "sbhq-mobile",
-    version: "1.0.0",
+    version: "1.0.1",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: isDev ? "sbhqmobile-dev" : "sbhqmobile",
