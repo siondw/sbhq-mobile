@@ -27,7 +27,16 @@ export interface UseContestStateResult {
   submit: (payload: SubmitAnswerParams) => Promise<void>;
 }
 
-export const useContestState = (contestId?: string, userId?: string): UseContestStateResult => {
+export interface UseContestStateOptions {
+  /** Called when a submission is blocked due to RLS policy (round closed) */
+  onSubmissionClosed?: () => void;
+}
+
+export const useContestState = (
+  contestId?: string,
+  userId?: string,
+  options?: UseContestStateOptions,
+): UseContestStateResult => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [contest, setContest] = useState<ContestRow | null>(null);
@@ -247,14 +256,21 @@ export const useContestState = (contestId?: string, userId?: string): UseContest
     [answer, contest, participant, question],
   );
 
-  const handleSubmit = useCallback(async (payload: SubmitAnswerParams) => {
-    const result = await submitAnswer(payload);
-    if (!result.ok) {
-      setError(getErrorMessage(result.error));
-      return;
-    }
-    setAnswer(result.value);
-  }, []);
+  const handleSubmit = useCallback(
+    async (payload: SubmitAnswerParams) => {
+      const result = await submitAnswer(payload);
+      if (!result.ok) {
+        if (result.error.type === 'SUBMISSION_CLOSED') {
+          options?.onSubmissionClosed?.();
+          return;
+        }
+        setError(getErrorMessage(result.error));
+        return;
+      }
+      setAnswer(result.value);
+    },
+    [options],
+  );
 
   return useMemo(
     () => ({

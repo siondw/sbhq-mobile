@@ -19,6 +19,7 @@ import {
   DemoModeProvider,
   NotificationProvider,
   NotificationRoutingProvider,
+  ToastProvider,
 } from '../src/logic/contexts';
 import { AuthProvider } from '../src/logic/hooks/AuthProvider';
 import { useAppVersionPolicy } from '../src/logic/hooks/useAppVersionPolicy';
@@ -118,10 +119,12 @@ function RootLayoutNav() {
         <NotificationProvider>
           <NotificationRoutingProvider>
             <CustomThemeProvider theme={selectedTheme}>
-              <NavigationThemeProvider value={DefaultTheme}>
-                <StatusBar style={statusBarStyle} />
-                <AppNavigator />
-              </NavigationThemeProvider>
+              <ToastProvider>
+                <NavigationThemeProvider value={DefaultTheme}>
+                  <StatusBar style={statusBarStyle} />
+                  <AppNavigator />
+                </NavigationThemeProvider>
+              </ToastProvider>
             </CustomThemeProvider>
           </NotificationRoutingProvider>
         </NotificationProvider>

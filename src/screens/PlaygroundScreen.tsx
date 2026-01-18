@@ -18,6 +18,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { Vibration } from 'react-native';
+import { ToastProvider, useToast } from '../logic/contexts';
 import { useShineAnimation } from '../ui/animations';
 import RollingFootball from '../ui/animations/RollingFootball';
 import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from '../ui/animations/constants';
@@ -40,6 +41,7 @@ import {
   ThemeProvider,
   isDarkHex,
   themeFromPlaygroundPalette,
+  useTheme,
   withAlpha,
   darken,
   type PlaygroundPalette,
@@ -221,12 +223,29 @@ const CorrectAnimation = ({ color }: { color: string }) => {
   );
 };
 
-const PlaygroundScreen = () => {
-  const router = useRouter();
+// Inner component that uses the toast hook
+const PlaygroundContent = ({
+  palette,
+  paletteKey,
+  setPaletteKey,
+  noiseOpacity,
+  noiseBlur,
+  noiseResizeMode,
+  colorFilters,
+}: {
+  palette: PlaygroundPalette;
+  paletteKey: string;
+  setPaletteKey: React.Dispatch<React.SetStateAction<string>>;
+  noiseOpacity: number;
+  noiseBlur: number;
+  noiseResizeMode: 'repeat' | 'cover';
+  colorFilters: Array<{ keypath: string; color: string }>;
+}) => {
+  const { showToast } = useToast();
+  const theme = useTheme();
   const [selectedRealOption, setSelectedRealOption] = useState<string | null>('A');
   const [playersRemaining, setPlayersRemaining] = useState(1482);
   const [gifIndex] = useState(0);
-  const [paletteKey, setPaletteKey] = useState<string>(PLAYGROUND_PALETTES[0]?.key ?? 'current');
   const [chartKey, setChartKey] = useState(0);
   const [chartState, setChartState] = useState<'submitted' | 'correct' | 'eliminated'>('submitted');
   const [submittedPreviewState, setSubmittedPreviewState] = useState<'waiting' | 'results'>(
@@ -236,58 +255,48 @@ const PlaygroundScreen = () => {
   const [checkmarkKey, setCheckmarkKey] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
-  const palette: PlaygroundPalette = useMemo(() => {
-    const found = PLAYGROUND_PALETTES.find((p) => p.key === paletteKey);
-    return found?.palette ?? PLAYGROUND_PALETTES[0]?.palette ?? PLAYGROUND_PALETTES[0].palette;
-  }, [paletteKey]);
-
-  const colorFilters = useMemo(() => {
-    const primaryFilters = FOOTBALL_RED_KEYPATHS.map((keypath) => ({
-      keypath,
-      color: palette.primary,
-    }));
-
-    const darkFilters = FOOTBALL_DARK_RED_KEYPATHS.map((keypath) => ({
-      keypath,
-      color: darken(palette.primary, 0.4),
-    }));
-
-    return [...primaryFilters, ...darkFilters];
-  }, [palette.primary]);
-
-  useEffect(() => {
-    if (!__DEV__) {
-      router.replace('/');
-    }
-  }, [router]);
-
-  const darkTheme = useMemo(() => isDarkHex(palette.bg), [palette.bg]);
-  const noiseOpacity = darkTheme ? 0.08 : 0.03;
-  const noiseBlur = darkTheme ? 0 : 1;
-  const noiseResizeMode = Platform.OS === 'ios' ? 'repeat' : 'cover';
-
-  const theme = useMemo(() => themeFromPlaygroundPalette(palette), [palette]);
-
   return (
-    <SafeAreaView
-      style={[styles.safeArea, { backgroundColor: palette.bg }]}
-      edges={['top', 'bottom']}
-    >
-      <ThemeProvider theme={theme}>
-        <View style={styles.screen}>
-          <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-            <ImageBackground
-              source={noiseTexture}
-              style={StyleSheet.absoluteFill}
-              resizeMode={noiseResizeMode}
-              imageStyle={[styles.noiseImage, { opacity: noiseOpacity }]}
-              blurRadius={noiseBlur}
-            />
-          </View>
+    <View style={styles.screen}>
+      <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+        <ImageBackground
+          source={noiseTexture}
+          style={StyleSheet.absoluteFill}
+          resizeMode={noiseResizeMode}
+          imageStyle={[styles.noiseImage, { opacity: noiseOpacity }]}
+          blurRadius={noiseBlur}
+        />
+      </View>
 
-          <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-            <Section title="Haptics Testing" titleColor={palette.ink}>
-              <Row>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+        <Section title="Toast Notification" titleColor={palette.ink}>
+          <Row>
+            <Chip
+              label="Warning Toast"
+              onPress={() => showToast('Submissions are closed for this round', 'warning')}
+              palette={palette}
+            />
+            <Chip
+              label="Error Toast"
+              onPress={() => showToast('Network error occurred', 'error')}
+              palette={palette}
+            />
+          </Row>
+          <Row>
+            <Chip
+              label="Success Toast"
+              onPress={() => showToast('Answer submitted successfully!', 'success')}
+              palette={palette}
+            />
+            <Chip
+              label="Info Toast"
+              onPress={() => showToast('Tap anywhere to dismiss', 'info')}
+              palette={palette}
+            />
+          </Row>
+        </Section>
+
+        <Section title="Haptics Testing" titleColor={palette.ink}>
+          <Row>
                 <Chip
                   label="Selection"
                   onPress={() => void Haptics.selectionAsync()}
@@ -681,30 +690,87 @@ const PlaygroundScreen = () => {
               </Card>
             </Section>
 
-            <Section title="Force Update Screen" titleColor={palette.ink}>
-              <View
-                style={[
-                  styles.forceUpdatePreview,
-                  {
-                    backgroundColor: palette.bg,
-                    borderColor: withAlpha(palette.ink, 0.12),
-                  },
-                ]}
-              >
-                <ForceUpdateScreen message="A newer version is required to continue using SBHQ." />
-              </View>
-            </Section>
-          </ScrollView>
+        <Section title="Force Update Screen" titleColor={palette.ink}>
+          <View
+            style={[
+              styles.forceUpdatePreview,
+              {
+                backgroundColor: palette.bg,
+                borderColor: withAlpha(palette.ink, 0.12),
+              },
+            ]}
+          >
+            <ForceUpdateScreen message="A newer version is required to continue using SBHQ." />
+          </View>
+        </Section>
+      </ScrollView>
 
-          <OnboardingModal
-            visible={showOnboarding}
-            onComplete={() => {
-              setShowOnboarding(false);
-              return Promise.resolve(true);
-            }}
-            onDismiss={() => setShowOnboarding(false)}
+      <OnboardingModal
+        visible={showOnboarding}
+        onComplete={() => {
+          setShowOnboarding(false);
+          return Promise.resolve(true);
+        }}
+        onDismiss={() => setShowOnboarding(false)}
+      />
+    </View>
+  );
+};
+
+// Outer component that sets up providers and theme
+const PlaygroundScreen = () => {
+  const router = useRouter();
+  const [paletteKey, setPaletteKey] = useState<string>(PLAYGROUND_PALETTES[0]?.key ?? 'current');
+
+  const palette: PlaygroundPalette = useMemo(() => {
+    const found = PLAYGROUND_PALETTES.find((p) => p.key === paletteKey);
+    return found?.palette ?? PLAYGROUND_PALETTES[0]?.palette ?? PLAYGROUND_PALETTES[0].palette;
+  }, [paletteKey]);
+
+  const colorFilters = useMemo(() => {
+    const primaryFilters = FOOTBALL_RED_KEYPATHS.map((keypath) => ({
+      keypath,
+      color: palette.primary,
+    }));
+
+    const darkFilters = FOOTBALL_DARK_RED_KEYPATHS.map((keypath) => ({
+      keypath,
+      color: darken(palette.primary, 0.4),
+    }));
+
+    return [...primaryFilters, ...darkFilters];
+  }, [palette.primary]);
+
+  useEffect(() => {
+    if (!__DEV__) {
+      router.replace('/');
+    }
+  }, [router]);
+
+  const darkTheme = useMemo(() => isDarkHex(palette.bg), [palette.bg]);
+  const noiseOpacity = darkTheme ? 0.08 : 0.03;
+  const noiseBlur = darkTheme ? 0 : 1;
+  const noiseResizeMode = Platform.OS === 'ios' ? 'repeat' : 'cover';
+
+  const theme = useMemo(() => themeFromPlaygroundPalette(palette), [palette]);
+
+  return (
+    <SafeAreaView
+      style={[styles.safeArea, { backgroundColor: palette.bg }]}
+      edges={['top', 'bottom']}
+    >
+      <ThemeProvider theme={theme}>
+        <ToastProvider>
+          <PlaygroundContent
+            palette={palette}
+            paletteKey={paletteKey}
+            setPaletteKey={setPaletteKey}
+            noiseOpacity={noiseOpacity}
+            noiseBlur={noiseBlur}
+            noiseResizeMode={noiseResizeMode}
+            colorFilters={colorFilters}
           />
-        </View>
+        </ToastProvider>
       </ThemeProvider>
     </SafeAreaView>
   );

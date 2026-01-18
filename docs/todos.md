@@ -38,9 +38,9 @@ P1
   - [ ] Make notifications auto-trigger based off time and contest tstate
 - [ ] Allow elimnated users to continue watching the contest as spectators
 - [ ] Add participant count to contest card
-- [ ] Use the active flag in the db to also make sure they were approved by the admin
-  - [ ] Update in app registration to show pending approval status and et to false by default
-  - [ ] Redirect user to www.sbhq.live to see rules (and potentially pay for the contest)
+- [x] Use the active flag in the db to also make sure they were approved by the admin
+  - [x] Update in app registration to show pending approval status and et to false by default
+  - [x] Redirect user to www.sbhq.live to see rules (and potentially pay for the contest)
 
 P2
 

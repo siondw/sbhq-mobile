@@ -4,6 +4,7 @@ export type DbError =
   | { type: 'VALIDATION_ERROR'; field: string; message: string }
   | { type: 'AUTH_ERROR'; message: string }
   | { type: 'PERMISSION_ERROR'; message: string }
+  | { type: 'SUBMISSION_CLOSED'; message: string }
   | { type: 'UNKNOWN_ERROR'; message: string };
 
 export const notFound = (resource: string, id: string): DbError => ({
@@ -38,6 +39,13 @@ export const unknownError = (message: string): DbError => ({
   message,
 });
 
+export const submissionClosedError = (
+  message = 'Submissions are closed for this round',
+): DbError => ({
+  type: 'SUBMISSION_CLOSED',
+  message,
+});
+
 export const getErrorMessage = (error: DbError): string => {
   switch (error.type) {
     case 'NOT_FOUND':
@@ -50,6 +58,8 @@ export const getErrorMessage = (error: DbError): string => {
       return `Authentication error: ${error.message}`;
     case 'PERMISSION_ERROR':
       return `Permission denied: ${error.message}`;
+    case 'SUBMISSION_CLOSED':
+      return error.message;
     case 'UNKNOWN_ERROR':
       return `Unknown error: ${error.message}`;
   }

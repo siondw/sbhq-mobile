@@ -4,7 +4,7 @@ import { Err, Ok } from '../utils/result';
 import { SUPABASE_CLIENT } from './client';
 import { DB_TABLES } from './constants';
 import type { DbError } from './errors';
-import { networkError } from './errors';
+import { networkError, submissionClosedError } from './errors';
 import type { AnswerInsert, AnswerRow } from './types';
 
 export interface SubmitAnswerParams {
@@ -50,6 +50,10 @@ export const submitAnswer = async ({
       .single();
 
     if (error) {
+      // Check for RLS policy violation (submissions closed)
+      if (error.code === '42501' || error.message.includes('row-level security')) {
+        return Err(submissionClosedError());
+      }
       return Err(networkError(`Failed to update answer: ${error.message}`));
     }
 
@@ -62,6 +66,10 @@ export const submitAnswer = async ({
     .single();
 
   if (error) {
+    // Check for RLS policy violation (submissions closed)
+    if (error.code === '42501' || error.message.includes('row-level security')) {
+      return Err(submissionClosedError());
+    }
     return Err(networkError(`Failed to submit answer: ${error.message}`));
   }
 
