@@ -8,22 +8,24 @@
       "developmentClient": true,
       "distribution": "internal",
       "autoIncrement": true,
-      "env": {
-        "APP_VARIANT": "dev"
-      }
+      "channel": "development",
+      "env": { "APP_VARIANT": "dev" }
     },
     "preview": {
       "distribution": "internal",
       "autoIncrement": true,
-      "env": {
-        "APP_VARIANT": "prod"
-      }
+      "channel": "preview",
+      "env": { "APP_VARIANT": "prod" }
+    },
+    "appetize": {
+      "channel": "preview",
+      "env": { "APP_VARIANT": "prod" },
+      "ios": { "simulator": true }
     },
     "production": {
       "autoIncrement": true,
-      "env": {
-        "APP_VARIANT": "prod"
-      }
+      "channel": "production",
+      "env": { "APP_VARIANT": "prod" }
     }
   },
   "submit": {
