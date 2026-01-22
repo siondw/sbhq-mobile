@@ -6,7 +6,7 @@ import { Feather } from '@expo/vector-icons';
 import { ROUTES, buildLobbyRoute } from '../configs/routes';
 import type { ContestRow } from '../db/types';
 import { CONTEST_STATE, REGISTRATION_STATUS } from '../logic/constants';
-import { useDemoMode, useNotifications } from '../logic/contexts';
+import { useDemoMode, useNotifications, useToast } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
@@ -20,12 +20,7 @@ import NotificationBanner from '../ui/components/NotificationBanner';
 import OnboardingModal from '../ui/components/OnboardingModal';
 import PullHint from '../ui/components/PullHint';
 import Text from '../ui/components/Text';
-import {
-  getHasDismissedNotificationBanner,
-  getHasSeenPullHint,
-  setHasDismissedNotificationBanner,
-  setHasSeenPullHint,
-} from '../utils/storage';
+import { getHasSeenPullHint, setHasSeenPullHint } from '../utils/storage';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme } from '../ui/theme';
 
 const ContestListScreen = () => {
@@ -39,9 +34,11 @@ const ContestListScreen = () => {
     loading: authLoading,
   } = useAuth();
   const { isDemoActive, shouldShowDemo, startDemo } = useDemoMode();
+  const { showToast } = useToast();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const [showOnboardingManual, setShowOnboardingManual] = useState(false);
 
   const {
     contests,
@@ -81,22 +78,13 @@ const ContestListScreen = () => {
     }
   }, [authLoading, isDemoActive, needsOnboarding, shouldShowDemo, startDemo]);
 
+  // Show notification banner if notifications not enabled (session-only dismissal)
   useEffect(() => {
-    const checkNotificationBanner = async () => {
-      const hasDismissed = await getHasDismissedNotificationBanner();
-      // Show banner if: not dismissed AND notifications not enabled
-      if (!hasDismissed && !notificationsEnabled) {
-        setShowNotificationBanner(true);
-      } else {
-        setShowNotificationBanner(false);
-      }
-    };
-    void checkNotificationBanner();
+    setShowNotificationBanner(!notificationsEnabled);
   }, [notificationsEnabled]);
 
   const dismissNotificationBanner = useCallback(() => {
     setShowNotificationBanner(false);
-    void setHasDismissedNotificationBanner();
   }, []);
 
   const dismissPullHint = useCallback(() => {
@@ -112,7 +100,13 @@ const ContestListScreen = () => {
   }, [showPullHint, dismissPullHint, onRefresh]);
 
   const loading = authLoading || contestsLoading || participantsLoading;
-  const error = contestsError || participantsError;
+
+  // Show toast for non-critical errors (participants) - must be before early returns!
+  useEffect(() => {
+    if (participantsError) {
+      showToast(participantsError, 'error');
+    }
+  }, [participantsError, showToast]);
 
   const numColumns = width >= 1100 ? 3 : width >= 760 ? 2 : 1;
 
@@ -144,11 +138,18 @@ const ContestListScreen = () => {
 
   const handleEnterContest = async (contest: ContestRow) => {
     if (!derivedUser?.id) {
+      showToast('Please log in to register', 'error');
+      return;
+    }
+
+    if (!derivedUser.username) {
+      setShowOnboardingManual(true);
       return;
     }
 
     const registration = await registerForContest(contest.id);
     if (!registration) {
+      showToast(participantsError ?? 'Failed to register for contest', 'error');
       return;
     }
     if (registration.registration_status !== REGISTRATION_STATUS.APPROVED) {
@@ -180,11 +181,11 @@ const ContestListScreen = () => {
     return <LoadingView />;
   }
 
-  if (error) {
+  if (contestsError) {
     return (
       <View style={styles.center}>
         <Text weight="bold">Error loading contests</Text>
-        <Text>{error}</Text>
+        <Text>{contestsError}</Text>
         <View style={styles.spacer} />
         <Button label="Retry" onPress={handleRefresh} />
       </View>
@@ -297,8 +298,18 @@ const ContestListScreen = () => {
           </View>
         }
         />
-      {needsOnboarding && (
-        <OnboardingModal visible={true} onComplete={completeOnboarding} error={authError} />
+      {(needsOnboarding || showOnboardingManual) && (
+        <OnboardingModal
+          visible={true}
+          onComplete={async (username, phone) => {
+            const success = await completeOnboarding(username, phone);
+            if (success) {
+              setShowOnboardingManual(false);
+            }
+            return success;
+          }}
+          error={authError}
+        />
       )}
     </View>
   );

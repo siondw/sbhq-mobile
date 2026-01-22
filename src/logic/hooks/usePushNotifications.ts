@@ -97,7 +97,7 @@ export const usePushNotifications = () => {
 
       callCountRef.current += 1;
 
-      if (callCountRef.current > 5) {
+      if (callCountRef.current > 10) {
         console.error(`[PUSH] TOO MANY CALLS (${callCountRef.current}), blocking further requests`);
         return;
       }
@@ -135,6 +135,7 @@ export const usePushNotifications = () => {
 
         setExpoPushToken(token);
         setIsRegistered(true);
+        callCountRef.current = 0; // Reset counter on success
       } finally {
         isRegisteringRef.current = false;
       }

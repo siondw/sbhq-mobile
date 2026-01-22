@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { useNotifications } from '../../logic/contexts';
+import { useNotifications, useToast } from '../../logic/contexts';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import GlassyTexture from '../textures/GlassyTexture';
 import Button from './Button';
@@ -43,6 +43,7 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const { requestPermissions } = useNotifications();
+  const { showToast } = useToast();
 
   const [username, setUsername] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -71,8 +72,12 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
       await requestPermissions();
     }
 
-    await onComplete(username.trim(), phoneDigits);
+    const success = await onComplete(username.trim(), phoneDigits);
     setIsSubmitting(false);
+
+    if (!success && !error) {
+      showToast('Failed to save profile. Please try again.', 'error');
+    }
   }, [
     isFormValid,
     isSubmitting,
@@ -81,6 +86,8 @@ const OnboardingModal = ({ visible, onComplete, error, onDismiss }: OnboardingMo
     phoneDigits,
     enableNotifications,
     requestPermissions,
+    error,
+    showToast,
   ]);
 
   const toggleNotifications = useCallback(() => {

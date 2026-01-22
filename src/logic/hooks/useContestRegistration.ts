@@ -71,7 +71,12 @@ export const useContestRegistration = (
         setParticipants((prev) => new Map(prev).set(contestId, result.value));
         return result.value;
       } else {
-        setError(getErrorMessage(result.error));
+        const errorMsg = getErrorMessage(result.error);
+        if (errorMsg.includes('Username not found')) {
+          setError('No username detected, please logout and log back in again');
+        } else {
+          setError(errorMsg);
+        }
         return null;
       }
     },

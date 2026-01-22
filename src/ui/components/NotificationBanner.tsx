@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { memo, useCallback, useMemo } from 'react';
-import { Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
+import React, { memo, useCallback, useMemo, useState } from 'react';
+import { ActivityIndicator, Linking, Platform, Pressable, StyleSheet, View } from 'react-native';
 
-import { useNotifications } from '../../logic/contexts';
+import { useNotifications, useToast } from '../../logic/contexts';
 import { lightImpact } from '../../utils/haptics';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import GlassyTexture from '../textures/GlassyTexture';
@@ -17,25 +17,41 @@ const NotificationBanner = memo(({ variant, onDismiss }: NotificationBannerProps
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors, variant), [colors, variant]);
   const { isRegistered, requestPermissions, permissionStatus } = useNotifications();
+  const { showToast } = useToast();
 
   // Check if permission was denied (can't ask again means user explicitly denied)
   const wasDenied = permissionStatus?.canAskAgain === false && !permissionStatus?.granted;
+  const [isEnabling, setIsEnabling] = useState(false);
 
   const handleEnable = useCallback(async () => {
-    lightImpact();
+    if (isEnabling) return;
 
-    if (wasDenied) {
-      // User previously denied - open settings
-      if (Platform.OS === 'ios') {
-        await Linking.openURL('app-settings:');
+    lightImpact();
+    setIsEnabling(true);
+
+    try {
+      if (wasDenied) {
+        // User previously denied - open settings
+        if (Platform.OS === 'ios') {
+          await Linking.openURL('app-settings:');
+        } else {
+          await Linking.openSettings();
+        }
       } else {
-        await Linking.openSettings();
+        // Request permissions normally
+        const result = await requestPermissions();
+        if (!result?.granted && result?.canAskAgain === false) {
+          const settingsPath = Platform.OS === 'ios' ? 'Settings > SBHQ' : 'Settings > Apps > SBHQ';
+          showToast(`Enable notifications in ${settingsPath}`, 'info');
+        }
       }
-    } else {
-      // Request permissions normally
-      await requestPermissions();
+    } catch {
+      const settingsPath = Platform.OS === 'ios' ? 'Settings > SBHQ' : 'Settings > Apps > SBHQ';
+      showToast(`Enable notifications in ${settingsPath}`, 'info');
+    } finally {
+      setIsEnabling(false);
     }
-  }, [wasDenied, requestPermissions]);
+  }, [wasDenied, requestPermissions, isEnabling, showToast]);
 
   const handleDismiss = useCallback(() => {
     lightImpact();
@@ -61,10 +77,15 @@ const NotificationBanner = memo(({ variant, onDismiss }: NotificationBannerProps
             <Pressable
               style={({ pressed }) => [styles.compactButton, pressed && styles.buttonPressed]}
               onPress={() => void handleEnable()}
+              disabled={isEnabling}
             >
-              <Text weight="bold" style={styles.compactButtonText}>
-                {wasDenied ? 'Settings' : 'Enable'}
-              </Text>
+              {isEnabling ? (
+                <ActivityIndicator size="small" color={colors.surface} />
+              ) : (
+                <Text weight="bold" style={styles.compactButtonText}>
+                  {wasDenied ? 'Settings' : 'Enable'}
+                </Text>
+              )}
             </Pressable>
             {onDismiss && (
               <Pressable
@@ -108,15 +129,22 @@ const NotificationBanner = memo(({ variant, onDismiss }: NotificationBannerProps
         <Pressable
           style={({ pressed }) => [styles.fullButton, pressed && styles.fullButtonPressed]}
           onPress={() => void handleEnable()}
+          disabled={isEnabling}
         >
-          <Ionicons
-            name={wasDenied ? 'settings-outline' : 'notifications-outline'}
-            size={18}
-            color={colors.surface}
-          />
-          <Text weight="bold" style={styles.fullButtonText}>
-            {wasDenied ? 'Open Settings' : 'Enable Notifications'}
-          </Text>
+          {isEnabling ? (
+            <ActivityIndicator size="small" color={colors.surface} />
+          ) : (
+            <>
+              <Ionicons
+                name={wasDenied ? 'settings-outline' : 'notifications-outline'}
+                size={18}
+                color={colors.surface}
+              />
+              <Text weight="bold" style={styles.fullButtonText}>
+                {wasDenied ? 'Open Settings' : 'Enable Notifications'}
+              </Text>
+            </>
+          )}
         </Pressable>
       </View>
     </GlassyTexture>
