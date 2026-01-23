@@ -58,9 +58,9 @@ const LoginScreen = () => {
               label="Continue with Apple"
               onPress={handleApple}
               disabled={loading}
-              variant="dark"
+              variant="secondary"
               iconLeft={
-                <Ionicons name="logo-apple" size={22} color="white" style={{ marginTop: -2 }} />
+                <Ionicons name="logo-apple" size={22} color="black" style={{ marginTop: -2 }} />
               }
             />
           </View>
@@ -70,7 +70,7 @@ const LoginScreen = () => {
               label="Continue with Google"
               onPress={handleGoogle}
               disabled={loading}
-              variant="secondary"
+              variant="dark"
               iconLeft={<GoogleIcon width={20} height={20} />}
             />
           </View>
