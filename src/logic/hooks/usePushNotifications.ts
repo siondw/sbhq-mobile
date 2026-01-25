@@ -2,7 +2,7 @@ import Constants from 'expo-constants';
 import * as Device from 'expo-device';
 import * as Notifications from 'expo-notifications';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
+import { AppState, Platform } from 'react-native';
 
 import { getErrorMessage } from '../../db/errors';
 import { clearPushToken, updatePushToken } from '../../db/users';
@@ -216,6 +216,22 @@ export const usePushNotifications = () => {
       pushTokenListener.remove();
     };
   }, [registerToken]);
+
+  // Detect permission changes when app returns from settings
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'active') {
+        void (async () => {
+          const settings = await Notifications.getPermissionsAsync();
+          if (isPermissionGranted(settings) && !isRegistered) {
+            await refreshPermissions();
+          }
+        })();
+      }
+    });
+
+    return () => subscription.remove();
+  }, [refreshPermissions, isRegistered]);
 
   return {
     expoPushToken,

@@ -15,6 +15,7 @@ import { useRefresh } from '../logic/hooks/utils';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import ContestListTicket from '../ui/components/ContestListTicket';
+import DemoBanner from '../ui/components/DemoBanner';
 import LoadingView from '../ui/components/LoadingView';
 import NotificationBanner from '../ui/components/NotificationBanner';
 import OnboardingModal from '../ui/components/OnboardingModal';
@@ -33,7 +34,7 @@ const ContestListScreen = () => {
     error: authError,
     loading: authLoading,
   } = useAuth();
-  const { isDemoActive, shouldShowDemo, startDemo } = useDemoMode();
+  const { isDemoActive, startDemo } = useDemoMode();
   const { showToast } = useToast();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
@@ -58,6 +59,7 @@ const ContestListScreen = () => {
 
   const [showPullHint, setShowPullHint] = useState(false);
   const [showNotificationBanner, setShowNotificationBanner] = useState(false);
+  const [showDemoLink, setShowDemoLink] = useState(true); // Session-based, shows until dismissed
 
   useEffect(() => {
     const checkPullHint = async () => {
@@ -68,15 +70,6 @@ const ContestListScreen = () => {
     };
     void checkPullHint();
   }, []);
-
-  useEffect(() => {
-    if (authLoading || needsOnboarding || isDemoActive) {
-      return;
-    }
-    if (shouldShowDemo) {
-      startDemo();
-    }
-  }, [authLoading, isDemoActive, needsOnboarding, shouldShowDemo, startDemo]);
 
   // Show notification banner if notifications not enabled (session-only dismissal)
   useEffect(() => {
@@ -90,6 +83,10 @@ const ContestListScreen = () => {
   const dismissPullHint = useCallback(() => {
     setShowPullHint(false);
     void setHasSeenPullHint();
+  }, []);
+
+  const dismissDemoLink = useCallback(() => {
+    setShowDemoLink(false);
   }, []);
 
   const handleRefresh = useCallback(() => {
@@ -217,6 +214,13 @@ const ContestListScreen = () => {
               </View>
             )}
           </>
+        }
+        ListFooterComponent={
+          showDemoLink ? (
+            <View style={styles.demoBannerWrapper}>
+              <DemoBanner onStartDemo={startDemo} onDismiss={dismissDemoLink} />
+            </View>
+          ) : null
         }
         renderItem={({ item }) => {
           const participant = participants.get(item.id);
@@ -366,6 +370,9 @@ const createStyles = (colors: ReturnType<typeof useTheme>['colors']) =>
     },
     notificationBannerWrapper: {
       marginBottom: SPACING.MD,
+    },
+    demoBannerWrapper: {
+      marginTop: SPACING.MD,
     },
   });
 
