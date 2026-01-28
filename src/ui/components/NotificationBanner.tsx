@@ -15,7 +15,7 @@ interface NotificationBannerProps {
 
 const NotificationBanner = memo(({ variant, onDismiss }: NotificationBannerProps) => {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors, variant), [colors, variant]);
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { isRegistered, requestPermissions, permissionStatus } = useNotifications();
   const { showToast } = useToast();
 
@@ -153,18 +153,15 @@ const NotificationBanner = memo(({ variant, onDismiss }: NotificationBannerProps
 
 NotificationBanner.displayName = 'NotificationBanner';
 
-function createStyles(
-  colors: {
-    surface: string;
-    ink: string;
-    muted: string;
-    energy: string;
-    primary: string;
-    background: string;
-    border: string;
-  },
-  variant: 'compact' | 'full',
-) {
+function createStyles(colors: {
+  surface: string;
+  ink: string;
+  muted: string;
+  energy: string;
+  primary: string;
+  background: string;
+  border: string;
+}) {
   return StyleSheet.create({
     // Compact variant styles
     compactContainer: {

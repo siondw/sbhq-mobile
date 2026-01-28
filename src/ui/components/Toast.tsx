@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import React, { useCallback, useEffect, useRef } from 'react';
+import { Animated, Pressable, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { RADIUS, SPACING, textOnHex, useTheme } from '../theme';
@@ -52,6 +52,23 @@ const Toast: React.FC<ToastProps> = ({
   const backgroundColor = getBackgroundColor();
   const textColor = textOnHex(backgroundColor);
 
+  const dismissToast = useCallback(() => {
+    Animated.parallel([
+      Animated.timing(translateY, {
+        toValue: -100,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      onDismiss();
+    });
+  }, [onDismiss, opacity, translateY]);
+
   useEffect(() => {
     if (visible) {
       Animated.parallel([
@@ -73,28 +90,11 @@ const Toast: React.FC<ToastProps> = ({
       }, duration);
 
       return () => clearTimeout(timer);
-    } else {
-      translateY.setValue(-100);
-      opacity.setValue(0);
     }
-  }, [visible, duration]);
-
-  const dismissToast = () => {
-    Animated.parallel([
-      Animated.timing(translateY, {
-        toValue: -100,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(opacity, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: true,
-      }),
-    ]).start(() => {
-      onDismiss();
-    });
-  };
+    translateY.setValue(-100);
+    opacity.setValue(0);
+    return undefined;
+  }, [dismissToast, duration, opacity, translateY, visible]);
 
   if (!visible) return null;
 

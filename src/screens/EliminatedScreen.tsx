@@ -103,6 +103,16 @@ const EliminatedScreen = () => {
     ]).start();
   }, [skullAnim, textAnim, contentAnim, chartAnim]);
 
+  const handleSpectate = () => {
+    if (!contestId) {
+      return;
+    }
+    router.replace({
+      pathname: `${ROUTES.GAME}/[contestId]`,
+      params: { contestId, spectating: 'true' },
+    });
+  };
+
   if (loading) {
     return <LoadingView />;
   }
@@ -175,7 +185,26 @@ const EliminatedScreen = () => {
             )}
 
             <Animated.View style={[styles.footer, { opacity: contentAnim }]}>
-              <Button label="Back to Contests" onPress={() => router.replace(ROUTES.INDEX)} />
+              <View style={styles.buttonRow}>
+                <View style={styles.buttonItem}>
+                  <Button
+                    label="Contests"
+                    onPress={() => router.replace(ROUTES.CONTESTS)}
+                    variant="danger"
+                    labelColor={colors.surface}
+                    iconLeft={<Ionicons name="arrow-back" size={18} color={colors.surface} />}
+                  />
+                </View>
+                <View style={styles.buttonItem}>
+                  <Button
+                    label="Spectate"
+                    onPress={handleSpectate}
+                    variant="primary"
+                    labelColor={colors.surface}
+                    iconLeft={<Ionicons name="eye" size={18} color={colors.surface} />}
+                  />
+                </View>
+              </View>
             </Animated.View>
           </View>
         </ScrollView>
@@ -228,6 +257,13 @@ const createStyles = (colors: { background: string; danger: string; muted: strin
     },
     footer: {
       marginTop: SPACING.MD,
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      gap: SPACING.SM,
+    },
+    buttonItem: {
+      flex: 1,
     },
     spacer: {
       height: SPACING.SM,

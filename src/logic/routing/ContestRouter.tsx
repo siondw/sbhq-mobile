@@ -1,7 +1,7 @@
 import { usePathname, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { buildContestRoute, buildLobbyRoute, ROUTES } from '../../configs/routes';
-import { PLAYER_STATE } from '../constants';
+import { CONTEST_STATE, PLAYER_STATE, type ContestStateValue } from '../constants';
 import { useNotificationRouting } from '../contexts';
 import LoadingView from '../../ui/components/LoadingView';
 
@@ -12,6 +12,9 @@ interface ContestRouterProps {
   children: React.ReactNode;
   validState: string;
   startTime?: string; // For LobbyScreen
+  contestState?: ContestStateValue | null;
+  validContestStates?: ContestStateValue[];
+  isSpectating?: boolean;
 }
 
 /**
@@ -33,6 +36,9 @@ export const ContestRouter = ({
   children,
   validState,
   startTime,
+  contestState,
+  validContestStates,
+  isSpectating = false,
 }: ContestRouterProps) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -49,12 +55,59 @@ export const ContestRouter = ({
     (playerState === PLAYER_STATE.SUBMITTED_WAITING || playerState === PLAYER_STATE.UNKNOWN);
 
   useEffect(() => {
+    if (!isSpectating) {
+      return;
+    }
+    if (!contestId || loading || !contestState) {
+      return;
+    }
+
+    if (contestState === CONTEST_STATE.FINISHED) {
+      router.replace(ROUTES.CONTESTS);
+      return;
+    }
+
+    const isValidSpectatorState =
+      validContestStates?.includes(contestState) ?? false;
+
+    if (isValidSpectatorState) {
+      return;
+    }
+
+    switch (contestState) {
+      case CONTEST_STATE.ROUND_IN_PROGRESS:
+        router.replace({
+          pathname: `${ROUTES.GAME}/[contestId]`,
+          params: { contestId, spectating: 'true' },
+        });
+        break;
+      case CONTEST_STATE.ROUND_CLOSED:
+        router.replace({
+          pathname: ROUTES.SUBMITTED,
+          params: { contestId, spectating: 'true' },
+        });
+        break;
+      case CONTEST_STATE.LOBBY_OPEN:
+      case CONTEST_STATE.UPCOMING:
+      default:
+        router.replace(ROUTES.CONTESTS);
+        break;
+    }
+  }, [contestId, contestState, isSpectating, loading, router, validContestStates]);
+
+  useEffect(() => {
+    if (isSpectating) {
+      return;
+    }
     if (isPendingResultForPath && playerState === validState) {
       clearPendingResultIntent();
     }
-  }, [isPendingResultForPath, playerState, validState, clearPendingResultIntent]);
+  }, [clearPendingResultIntent, isPendingResultForPath, isSpectating, playerState, validState]);
 
   useEffect(() => {
+    if (isSpectating) {
+      return;
+    }
     if (!contestId || loading || playerState === PLAYER_STATE.UNKNOWN) {
       return;
     }
@@ -89,13 +142,30 @@ export const ContestRouter = ({
           break;
       }
     }
-  }, [contestId, playerState, validState, loading, router, startTime, shouldHoldResultRedirect]);
+  }, [
+    contestId,
+    isSpectating,
+    loading,
+    playerState,
+    router,
+    shouldHoldResultRedirect,
+    startTime,
+    validState,
+  ]);
 
   // If wrong state, show loading during redirect
-  if (!loading && contestId && playerState !== validState && playerState !== PLAYER_STATE.UNKNOWN) {
-    if (shouldHoldResultRedirect) {
+  if (isSpectating) {
+    const isValidSpectatorState =
+      contestState && (validContestStates?.includes(contestState) ?? false);
+    if (!loading && contestId && contestState && !isValidSpectatorState) {
       return <LoadingView />;
     }
+  } else if (
+    !loading &&
+    contestId &&
+    playerState !== validState &&
+    playerState !== PLAYER_STATE.UNKNOWN
+  ) {
     return <LoadingView />;
   }
 

@@ -5,11 +5,15 @@ import { ContestStateProvider } from '../../src/logic/contexts';
 import { useAuth } from '../../src/logic/hooks/useAuth';
 
 const ContestLayout = () => {
-  const { contestId } = useLocalSearchParams<{ contestId?: string }>();
+  const { contestId, spectating } = useLocalSearchParams<{
+    contestId?: string;
+    spectating?: string;
+  }>();
   const { derivedUser } = useAuth();
+  const isSpectating = spectating === 'true';
 
   return (
-    <ContestStateProvider contestId={contestId} userId={derivedUser?.id}>
+    <ContestStateProvider contestId={contestId} userId={isSpectating ? undefined : derivedUser?.id}>
       <Stack screenOptions={{ headerShown: false, gestureEnabled: false }} />
     </ContestStateProvider>
   );

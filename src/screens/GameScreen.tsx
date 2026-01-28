@@ -1,9 +1,11 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
 import { heavyImpact } from '../utils/haptics';
-import { PLAYER_STATE } from '../logic/constants';
+import { ROUTES } from '../configs/routes';
+import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
@@ -15,6 +17,7 @@ import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
+import SpectatorBanner from '../ui/components/SpectatorBanner';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
 import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
@@ -22,6 +25,9 @@ import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/question
 const GameScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
+  const router = useRouter();
+  const { spectating } = useLocalSearchParams<{ spectating?: string }>();
+  const isSpectating = spectating === 'true';
   const { derivedUser } = useAuth();
   const headerHeight = useHeaderHeight();
   const {
@@ -80,7 +86,7 @@ const GameScreen = () => {
     );
   }
 
-  const isAnswerLocked = playerState !== PLAYER_STATE.ANSWERING || !!answer;
+  const isAnswerLocked = playerState !== PLAYER_STATE.ANSWERING || !!answer || isSpectating;
 
   return (
     <ContestRouter
@@ -88,6 +94,9 @@ const GameScreen = () => {
       playerState={playerState}
       loading={loading}
       validState={PLAYER_STATE.ANSWERING}
+      contestState={contest?.state ?? null}
+      validContestStates={[CONTEST_STATE.ROUND_IN_PROGRESS]}
+      isSpectating={isSpectating}
     >
       <View style={styles.container}>
         <Header user={derivedUser} />
@@ -98,6 +107,11 @@ const GameScreen = () => {
           }
         >
           <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
+            {isSpectating && (
+              <View style={styles.bannerRow}>
+                <SpectatorBanner onLeave={() => router.replace(ROUTES.CONTESTS)} />
+              </View>
+            )}
             <View style={styles.scorebugSection}>
               <Scorebug playerCount={participantCount} />
             </View>
@@ -132,13 +146,15 @@ const GameScreen = () => {
               ))}
             </View>
 
-            <View style={styles.submitRow}>
-              <Button
-                label="Submit"
-                onPress={handleSubmit}
-                disabled={isAnswerLocked || !selectedOption}
-              />
-            </View>
+            {!isSpectating && (
+              <View style={styles.submitRow}>
+                <Button
+                  label="Submit"
+                  onPress={handleSubmit}
+                  disabled={isAnswerLocked || !selectedOption}
+                />
+              </View>
+            )}
           </View>
         </ScrollView>
       </View>
@@ -163,6 +179,9 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
       padding: SPACING.LG,
     },
     scorebugSection: {
+      marginBottom: SPACING.MD,
+    },
+    bannerRow: {
       marginBottom: SPACING.MD,
     },
     roundHeader: {

@@ -38,7 +38,7 @@ const resetState = () => {
 
 jest.mock('../../src/logic/hooks/useAuth', () => ({
   useAuth: () => ({
-    derivedUser: { id: mockUserId },
+    derivedUser: { id: mockUserId, username: 'tester' },
     needsOnboarding: false,
     completeOnboarding: jest.fn(),
     error: null,
@@ -76,6 +76,9 @@ jest.mock('../../src/logic/contexts', () => ({
   }),
   useNotifications: () => ({
     isRegistered: true,
+  }),
+  useToast: () => ({
+    showToast: jest.fn(),
   }),
 }));
 

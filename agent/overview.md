@@ -1,7 +1,3 @@
-Got it. Here's a clean doc you can drop straight in as `docs/OVERVIEW.md` or the top of your README.
-
----
-
 # SBHQ Player App - Overview
 
 ## 1. What this app is

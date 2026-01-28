@@ -34,7 +34,7 @@ const ContestListScreen = () => {
     error: authError,
     loading: authLoading,
   } = useAuth();
-  const { isDemoActive, startDemo } = useDemoMode();
+  const { startDemo } = useDemoMode();
   const { showToast } = useToast();
   const headerHeight = useHeaderHeight();
   const { width } = useWindowDimensions();
@@ -133,7 +133,14 @@ const ContestListScreen = () => {
     return `${month}/${day} @ ${hour}${minuteSuffix}${period} EST`;
   };
 
-  const handleEnterContest = async (contest: ContestRow) => {
+  const handleEnterContest = async (contest: ContestRow, shouldSpectate = false) => {
+    if (shouldSpectate) {
+      router.push({
+        pathname: `${ROUTES.GAME}/[contestId]`,
+        params: { contestId: contest.id, spectating: 'true' },
+      });
+      return;
+    }
     if (!derivedUser?.id) {
       showToast('Please log in to register', 'error');
       return;
@@ -233,6 +240,7 @@ const ContestListScreen = () => {
             item.state === CONTEST_STATE.ROUND_IN_PROGRESS ||
             item.state === CONTEST_STATE.ROUND_CLOSED;
           const isEliminated = participant?.elimination_round !== null;
+          const canSpectate = isInProgress && (!isRegistered || isEliminated);
           const isLocked = item.state === CONTEST_STATE.ROUND_IN_PROGRESS && !isRegistered;
 
           const startLabel = formatStart(item.start_time);
@@ -242,11 +250,12 @@ const ContestListScreen = () => {
           let buttonVariant: 'primary' | 'success' = 'primary';
           let buttonIcon: React.ReactNode = null;
 
-          if (isPendingApproval) {
-            buttonLabel = 'Pending approval';
+          if (canSpectate) {
+            buttonLabel = 'Spectate';
             buttonVariant = 'primary';
-          } else if (isEliminated && isInProgress) {
-            buttonLabel = 'Eliminated';
+            buttonIcon = <Feather name="eye" size={20} color={colors.surface} />;
+          } else if (isPendingApproval) {
+            buttonLabel = 'Pending approval';
             buttonVariant = 'primary';
           } else if (isLocked) {
             buttonLabel = 'Locked';
@@ -275,19 +284,19 @@ const ContestListScreen = () => {
               priceLabel={priceLabel}
               roundLabel={item.current_round ? String(item.current_round) : null}
               live={isLive}
-              dimmed={isLocked || isPendingApproval || (isEliminated && isInProgress)}
+              dimmed={isLocked || isPendingApproval}
               buttonLabel={buttonLabel}
               buttonVariant={buttonVariant}
               buttonIconRight={buttonIcon}
               buttonDisabled={
-                !!isLocked ||
-                isPendingApproval ||
-                (isEliminated && isInProgress) ||
-                (isRegistered &&
+                (!!isLocked && !canSpectate) ||
+                (isPendingApproval && !canSpectate) ||
+                (!canSpectate &&
+                  isRegistered &&
                   item.state !== CONTEST_STATE.LOBBY_OPEN &&
                   item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
               }
-              onPress={() => void handleEnterContest(item)}
+              onPress={() => void handleEnterContest(item, canSpectate)}
             />
           );
         }}

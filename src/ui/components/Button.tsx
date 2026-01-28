@@ -7,9 +7,10 @@ interface ButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'success' | 'dark';
+  variant?: 'primary' | 'secondary' | 'success' | 'dark' | 'danger';
   iconRight?: ReactNode;
   iconLeft?: ReactNode;
+  labelColor?: string;
 }
 
 const Button = ({
@@ -19,6 +20,7 @@ const Button = ({
   variant = 'primary',
   iconRight,
   iconLeft,
+  labelColor,
 }: ButtonProps) => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -27,6 +29,7 @@ const Button = ({
   const isSuccess = variant === 'success';
   const isSecondary = variant === 'secondary';
   const isDark = variant === 'dark';
+  const isDanger = variant === 'danger';
 
   const bgColor = useMemo(
     () =>
@@ -34,14 +37,29 @@ const Button = ({
         ? colors.primary
         : isSuccess
           ? colors.success
+          : isDanger
+            ? colors.danger
           : isDark
             ? '#000000'
             : isSecondary
               ? '#FFFFFF'
               : colors.surface,
-    [isPrimary, isSuccess, isDark, isSecondary, colors.primary, colors.success, colors.surface],
+    [
+      isPrimary,
+      isSuccess,
+      isDanger,
+      isDark,
+      isSecondary,
+      colors.primary,
+      colors.success,
+      colors.danger,
+      colors.surface,
+    ],
   );
-  const labelColor = useMemo(() => (isDark ? '#FFFFFF' : textOnHex(bgColor)), [isDark, bgColor]);
+  const computedLabelColor = useMemo(
+    () => (isDark || isDanger ? '#FFFFFF' : textOnHex(bgColor)),
+    [isDark, isDanger, bgColor],
+  );
 
   return (
     <Pressable
@@ -51,10 +69,12 @@ const Button = ({
           ? styles.primary
           : isSuccess
             ? styles.success
+            : isDanger
+              ? styles.danger
             : isDark
               ? styles.dark
               : styles.secondary,
-        disabled && (isPrimary || isDark) && styles.disabled,
+        disabled && (isPrimary || isDark || isDanger) && styles.disabled,
         pressed && !disabled && styles.pressed,
       ]}
       onPress={onPress}
@@ -65,7 +85,7 @@ const Button = ({
         <Text
           style={[
             styles.label,
-            { color: labelColor },
+            { color: labelColor ?? computedLabelColor },
             disabled && isSuccess && styles.successLabelDisabled,
           ]}
         >
@@ -83,6 +103,7 @@ function createStyles(colors: {
   border: string;
   ink: string;
   success: string;
+  danger: string;
 }) {
   return StyleSheet.create({
     base: {
@@ -119,6 +140,14 @@ function createStyles(colors: {
       shadowOffset: { width: 0, height: 4 },
       shadowRadius: 6,
       elevation: 2,
+    },
+    danger: {
+      backgroundColor: colors.danger,
+      shadowColor: colors.danger,
+      shadowOpacity: 0.12,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 1,
     },
     success: {
       backgroundColor: colors.success,

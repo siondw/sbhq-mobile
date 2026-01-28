@@ -24,11 +24,13 @@ import RollingFootball from '../ui/animations/RollingFootball';
 import { FOOTBALL_DARK_RED_KEYPATHS, FOOTBALL_RED_KEYPATHS } from '../ui/animations/constants';
 import AnswerDistributionChart from '../ui/components/AnswerDistributionChart';
 import AnswerOption from '../ui/components/AnswerOption';
+import Button from '../ui/components/Button';
 import Card from '../ui/components/Card';
 import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import OnboardingModal from '../ui/components/OnboardingModal';
 import Scorebug from '../ui/components/Scorebug';
+import SpectatorBanner from '../ui/components/SpectatorBanner';
 import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
 import Text from '../ui/components/Text';
 import ForceUpdateScreen from './ForceUpdateScreen';
@@ -582,6 +584,139 @@ const PlaygroundContent = ({
                         </View>
                       )}
                     </View>
+                  </View>
+                </View>
+              </View>
+            </Section>
+
+            <Section title="Spectator - Game Screen" titleColor={palette.ink}>
+              <View
+                style={[
+                  styles.spectatorPreview,
+                  {
+                    backgroundColor: palette.bg,
+                    borderColor: withAlpha(palette.ink, 0.12),
+                  },
+                ]}
+              >
+                <SpectatorBanner onLeave={() => {}} />
+                <View style={styles.spectatorScorebug}>
+                  <Scorebug playerCount={playersRemaining} />
+                </View>
+                <View style={styles.spectatorRound}>
+                  <Text weight="medium" style={[styles.spectatorRoundLabel, { color: palette.ink }]}>
+                    Round
+                  </Text>
+                  <Text weight="bold" style={[styles.spectatorRoundNumber, { color: palette.ink }]}>
+                    3
+                  </Text>
+                  <Text weight="medium" style={[styles.spectatorRoundSubtitle, { color: palette.ink }]}>
+                    Choose Wisely!
+                  </Text>
+                </View>
+                <Text
+                  weight="bold"
+                  style={[styles.spectatorQuestion, { color: palette.ink }]}
+                >
+                  3rd & Short. What’s the call?
+                </Text>
+                <View style={styles.optionsWrap}>
+                  {[
+                    { key: 'A', label: 'QB sneak' },
+                    { key: 'B', label: 'Inside zone' },
+                    { key: 'C', label: 'Play action' },
+                    { key: 'D', label: 'Jet sweep' },
+                  ].map((option) => (
+                    <AnswerOption
+                      key={option.key}
+                      label={option.label}
+                      iconText={option.key}
+                      selected={false}
+                      disabled={true}
+                      onPress={() => {}}
+                    />
+                  ))}
+                </View>
+              </View>
+            </Section>
+
+            <Section title="Spectator - Submitted Screen" titleColor={palette.ink}>
+              <View
+                style={[
+                  styles.spectatorPreview,
+                  {
+                    backgroundColor: palette.bg,
+                    borderColor: withAlpha(palette.ink, 0.12),
+                  },
+                ]}
+              >
+                <SpectatorBanner onLeave={() => {}} />
+                <View style={styles.spectatorScorebug}>
+                  <Scorebug playerCount={playersRemaining} />
+                </View>
+                <View style={{ marginTop: SPACING.MD }}>
+                  <SubmittedQuestionCard
+                    round={3}
+                    question="4th & Goal at the 2. What's the call?"
+                    options={[
+                      { key: 'A', label: 'QB sneak' },
+                      { key: 'B', label: 'Play action fade' },
+                      { key: 'C', label: 'Jet sweep' },
+                      { key: 'D', label: 'Field goal' },
+                    ]}
+                    selectedOptionKey="B"
+                    layoutVariant="wrap"
+                  />
+                </View>
+                <Text
+                  style={[styles.spectatorWaitingText, { color: withAlpha(palette.ink, 0.6) }]}
+                >
+                  Play in progress.
+                </Text>
+              </View>
+            </Section>
+
+            <Section title="Eliminated Screen" titleColor={palette.ink}>
+              <View
+                style={[
+                  styles.eliminatedPreviewCard,
+                  {
+                    backgroundColor: palette.bg,
+                    borderColor: withAlpha(palette.ink, 0.12),
+                  },
+                ]}
+              >
+                <View style={styles.eliminatedHeader}>
+                  <Text weight="bold" style={[styles.eliminatedTitle, { color: theme.colors.danger }]}>
+                    Eliminated
+                  </Text>
+                  <Ionicons name="skull" size={72} color={theme.colors.danger} />
+                </View>
+                <ContestStatsCard
+                  numberOfRemainingPlayers={playersRemaining}
+                  roundNumber={3}
+                  variant="eliminated"
+                />
+                <View style={styles.eliminatedButtonRow}>
+                  <View style={styles.eliminatedButtonItem}>
+                    <Button
+                      label="Contests"
+                      onPress={() => {}}
+                      variant="danger"
+                      labelColor={theme.colors.surface}
+                      iconLeft={
+                        <Ionicons name="arrow-back" size={18} color={theme.colors.surface} />
+                      }
+                    />
+                  </View>
+                  <View style={styles.eliminatedButtonItem}>
+                    <Button
+                      label="Spectate"
+                      onPress={() => {}}
+                      variant="primary"
+                      labelColor={theme.colors.surface}
+                      iconLeft={<Ionicons name="eye" size={18} color={theme.colors.surface} />}
+                    />
                   </View>
                 </View>
               </View>
@@ -1189,6 +1324,68 @@ const styles = StyleSheet.create({
   },
   submittedChart: {
     marginTop: SPACING.SM,
+  },
+
+  spectatorPreview: {
+    borderRadius: RADIUS.XL,
+    borderWidth: 1,
+    padding: SPACING.MD,
+    gap: SPACING.MD,
+  },
+  spectatorScorebug: {
+    alignItems: 'center',
+  },
+  spectatorRound: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  spectatorRoundLabel: {
+    fontSize: TYPOGRAPHY.BODY,
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  spectatorRoundNumber: {
+    fontSize: 64,
+    lineHeight: 72,
+  },
+  spectatorRoundSubtitle: {
+    fontSize: TYPOGRAPHY.BODY,
+  },
+  spectatorQuestion: {
+    fontSize: TYPOGRAPHY.SUBTITLE,
+    textAlign: 'center',
+  },
+  spectatorWaitingText: {
+    fontSize: TYPOGRAPHY.SMALL,
+    textAlign: 'center',
+    maxWidth: '80%',
+    alignSelf: 'center',
+    lineHeight: 18,
+  },
+
+  eliminatedPreviewCard: {
+    borderRadius: RADIUS.XL,
+    borderWidth: 1,
+    padding: SPACING.LG,
+    gap: SPACING.LG,
+    alignItems: 'center',
+  },
+  eliminatedHeader: {
+    alignItems: 'center',
+    gap: SPACING.XS,
+  },
+  eliminatedTitle: {
+    fontSize: 48,
+    textAlign: 'center',
+    letterSpacing: -1,
+  },
+  eliminatedButtonRow: {
+    flexDirection: 'row',
+    gap: SPACING.SM,
+    width: '100%',
+  },
+  eliminatedButtonItem: {
+    flex: 1,
   },
 
   // Lobby Preview Styles
