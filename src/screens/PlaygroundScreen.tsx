@@ -30,7 +30,6 @@ import ContestListTicket from '../ui/components/ContestListTicket';
 import ContestStatsCard from '../ui/components/ContestStatsCard';
 import OnboardingModal from '../ui/components/OnboardingModal';
 import Scorebug from '../ui/components/Scorebug';
-import SpectatorBanner from '../ui/components/SpectatorBanner';
 import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
 import Text from '../ui/components/Text';
 import ForceUpdateScreen from './ForceUpdateScreen';
@@ -256,6 +255,7 @@ const PlaygroundContent = ({
   const [statsVariant, setStatsVariant] = useState<'success' | 'eliminated'>('success');
   const [checkmarkKey, setCheckmarkKey] = useState(0);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const spectatorAccent = palette.primary;
 
   return (
     <View style={styles.screen}>
@@ -455,7 +455,8 @@ const PlaygroundContent = ({
                 title="Sunday Showdown"
                 startLabel="12/29 @ 7PM EST"
                 priceLabel="$5.00"
-                roundLabel="1"
+                statLabel={playersRemaining.toLocaleString()}
+                statPrefix="Players"
                 live
                 buttonLabel="Register"
                 buttonVariant="primary"
@@ -464,6 +465,69 @@ const PlaygroundContent = ({
               />
 
               <ContestStatsCard numberOfRemainingPlayers={playersRemaining} roundNumber={5} />
+            </Section>
+
+            <Section title="Contest Ticket Buttons" titleColor={palette.ink}>
+              {(
+                [
+                  {
+                    label: 'Register',
+                    variant: 'primary',
+                    icon: 'ticket',
+                  },
+                  {
+                    label: 'Join Contest',
+                    variant: 'success',
+                    icon: 'arrow-forward',
+                  },
+                  {
+                    label: 'Registered',
+                    variant: 'success',
+                    icon: 'checkmark-circle',
+                  },
+                  {
+                    label: 'Spectate',
+                    variant: 'primary',
+                    icon: 'eye',
+                  },
+                  {
+                    label: 'Pending approval',
+                    variant: 'muted',
+                    icon: 'time',
+                  },
+                ] as Array<{
+                  label: string;
+                  variant: 'primary' | 'success' | 'muted';
+                  icon: keyof typeof Ionicons.glyphMap;
+                }>
+              ).map((button) => {
+                const buttonColor =
+                  button.variant === 'success'
+                    ? palette.success
+                    : button.variant === 'muted'
+                      ? withAlpha(palette.ink, 0.68)
+                      : palette.primary;
+                const iconColor = '#FFFFFF';
+                return (
+                  <ContestListTicket
+                    key={button.label}
+                    title={`Ticket - ${button.label}`}
+                    startLabel="12/29 @ 7PM EST"
+                    priceLabel="$5.00"
+                    statLabel={playersRemaining.toLocaleString()}
+                    statPrefix="Players"
+                    live
+                    buttonLabel={button.label}
+                    buttonVariant={button.variant}
+                    buttonLabelColor={iconColor}
+                    buttonIconRight={
+                      <Ionicons name={button.icon} size={18} color={iconColor} />
+                    }
+                    cutoutBackgroundColor={palette.bg}
+                    onPress={() => {}}
+                  />
+                );
+              })}
             </Section>
 
             <Section title="Scorebug" titleColor={palette.ink}>
@@ -599,9 +663,13 @@ const PlaygroundContent = ({
                   },
                 ]}
               >
-                <SpectatorBanner onLeave={() => {}} />
                 <View style={styles.spectatorScorebug}>
-                  <Scorebug playerCount={playersRemaining} />
+                  <Scorebug
+                    playerCount={playersRemaining}
+                    statusLabel="Spectating"
+                    statusVariant="glow"
+                    statusAccentColor={spectatorAccent}
+                  />
                 </View>
                 <View style={styles.spectatorRound}>
                   <Text weight="medium" style={[styles.spectatorRoundLabel, { color: palette.ink }]}>
@@ -650,9 +718,13 @@ const PlaygroundContent = ({
                   },
                 ]}
               >
-                <SpectatorBanner onLeave={() => {}} />
                 <View style={styles.spectatorScorebug}>
-                  <Scorebug playerCount={playersRemaining} />
+                  <Scorebug
+                    playerCount={playersRemaining}
+                    statusLabel="Spectating"
+                    statusVariant="glow"
+                    statusAccentColor={spectatorAccent}
+                  />
                 </View>
                 <View style={{ marginTop: SPACING.MD }}>
                   <SubmittedQuestionCard
@@ -673,6 +745,30 @@ const PlaygroundContent = ({
                 >
                   Play in progress.
                 </Text>
+              </View>
+            </Section>
+
+            <Section title="Spectator Scorebug" titleColor={palette.ink}>
+              <View
+                style={[
+                  styles.spectatorVariantCard,
+                  {
+                    backgroundColor: withAlpha(palette.surface, 0.6),
+                    borderColor: withAlpha(palette.ink, 0.12),
+                  },
+                ]}
+              >
+                <Text weight="medium" style={[styles.variantTitle, { color: palette.ink }]}>
+                  Blinking glow tag
+                </Text>
+                <View style={styles.variantCenter}>
+                  <Scorebug
+                    playerCount={playersRemaining}
+                    statusLabel="Spectating"
+                    statusVariant="glow"
+                    statusAccentColor={spectatorAccent}
+                  />
+                </View>
               </View>
             </Section>
 
@@ -1386,6 +1482,21 @@ const styles = StyleSheet.create({
   },
   eliminatedButtonItem: {
     flex: 1,
+  },
+
+  spectatorVariantCard: {
+    borderRadius: RADIUS.LG,
+    borderWidth: 1,
+    padding: SPACING.MD,
+    gap: SPACING.SM,
+  },
+  variantTitle: {
+    fontSize: TYPOGRAPHY.SMALL,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  variantCenter: {
+    alignItems: 'center',
   },
 
   // Lobby Preview Styles

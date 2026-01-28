@@ -1,9 +1,8 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import React, { useMemo } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
-import { ROUTES } from '../configs/routes';
 import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
@@ -19,7 +18,6 @@ import Button from '../ui/components/Button';
 import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
 import SubmittedQuestionCard from '../ui/components/SubmittedQuestionCard';
-import SpectatorBanner from '../ui/components/SpectatorBanner';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
 import { buildAnswerDistribution } from '../utils/answerDistribution';
@@ -28,7 +26,6 @@ import { normalizeQuestionOptions } from '../utils/questionOptions';
 const SubmittedScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const router = useRouter();
   const { spectating } = useLocalSearchParams<{ spectating?: string }>();
   const isSpectating = spectating === 'true';
   const { derivedUser } = useAuth();
@@ -39,7 +36,6 @@ const SubmittedScreen = () => {
   const { count: participantCount } = useParticipantCount(contestId);
 
   const { refreshing, onRefresh } = useRefresh([refresh]);
-  const spectatorOffset = isSpectating ? SPACING.XXL + SPACING.SM : 0;
 
   const roundToFetch =
     contest?.state === CONTEST_STATE.ROUND_CLOSED && contest.current_round !== null
@@ -94,24 +90,18 @@ const SubmittedScreen = () => {
             <RefreshControl refreshing={refreshing} onRefresh={() => void onRefresh()} />
           }
         >
-          <View
-            style={[
-              styles.content,
-              { paddingTop: headerHeight + SPACING.MD + spectatorOffset },
-            ]}
-          >
-            {isSpectating && (
-              <View style={styles.bannerRow}>
-                <SpectatorBanner onLeave={() => router.replace(ROUTES.CONTESTS)} />
-              </View>
-            )}
+          <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
             <View
               style={[
                 styles.scorebugContainer,
-                { top: headerHeight + SPACING.MD + spectatorOffset },
+                { top: headerHeight + SPACING.MD },
               ]}
             >
-              <Scorebug playerCount={participantCount} />
+              <Scorebug
+                playerCount={participantCount}
+                statusLabel={isSpectating ? 'Spectating' : undefined}
+                statusVariant={isSpectating ? 'glow' : undefined}
+              />
             </View>
 
             <View style={styles.centerStack}>
@@ -182,9 +172,6 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
       right: 0,
       alignItems: 'center',
       zIndex: 10,
-    },
-    bannerRow: {
-      marginBottom: SPACING.MD,
     },
     centerStack: {
       width: '100%',

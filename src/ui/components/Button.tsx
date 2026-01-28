@@ -7,7 +7,7 @@ interface ButtonProps {
   label: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary' | 'success' | 'dark' | 'danger';
+  variant?: 'primary' | 'secondary' | 'success' | 'dark' | 'danger' | 'muted';
   iconRight?: ReactNode;
   iconLeft?: ReactNode;
   labelColor?: string;
@@ -30,6 +30,7 @@ const Button = ({
   const isSecondary = variant === 'secondary';
   const isDark = variant === 'dark';
   const isDanger = variant === 'danger';
+  const isMuted = variant === 'muted';
 
   const bgColor = useMemo(
     () =>
@@ -39,26 +40,30 @@ const Button = ({
           ? colors.success
           : isDanger
             ? colors.danger
-          : isDark
-            ? '#000000'
-            : isSecondary
-              ? '#FFFFFF'
-              : colors.surface,
+            : isMuted
+              ? colors.muted
+            : isDark
+              ? '#000000'
+              : isSecondary
+                ? '#FFFFFF'
+                : colors.surface,
     [
       isPrimary,
       isSuccess,
       isDanger,
+      isMuted,
       isDark,
       isSecondary,
       colors.primary,
       colors.success,
       colors.danger,
+      colors.muted,
       colors.surface,
     ],
   );
   const computedLabelColor = useMemo(
-    () => (isDark || isDanger ? '#FFFFFF' : textOnHex(bgColor)),
-    [isDark, isDanger, bgColor],
+    () => (isDark || isDanger || isMuted ? '#FFFFFF' : textOnHex(bgColor)),
+    [isDark, isDanger, isMuted, bgColor],
   );
 
   return (
@@ -67,13 +72,15 @@ const Button = ({
         styles.base,
         isPrimary
           ? styles.primary
-          : isSuccess
-            ? styles.success
-            : isDanger
-              ? styles.danger
-            : isDark
-              ? styles.dark
-              : styles.secondary,
+            : isSuccess
+              ? styles.success
+              : isDanger
+                ? styles.danger
+                : isMuted
+                  ? styles.muted
+                : isDark
+                  ? styles.dark
+                  : styles.secondary,
         disabled && (isPrimary || isDark || isDanger) && styles.disabled,
         pressed && !disabled && styles.pressed,
       ]}
@@ -104,6 +111,7 @@ function createStyles(colors: {
   ink: string;
   success: string;
   danger: string;
+  muted: string;
 }) {
   return StyleSheet.create({
     base: {
@@ -153,6 +161,14 @@ function createStyles(colors: {
       backgroundColor: colors.success,
       shadowColor: colors.success,
       shadowOpacity: 0.08,
+      shadowOffset: { width: 0, height: 4 },
+      shadowRadius: 6,
+      elevation: 1,
+    },
+    muted: {
+      backgroundColor: colors.muted,
+      shadowColor: colors.ink,
+      shadowOpacity: 0.06,
       shadowOffset: { width: 0, height: 4 },
       shadowRadius: 6,
       elevation: 1,

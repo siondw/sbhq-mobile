@@ -2,15 +2,16 @@ import { useRouter } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, FlatList, StyleSheet, View, useWindowDimensions } from 'react-native';
 
-import { Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { ROUTES, buildLobbyRoute } from '../configs/routes';
-import type { ContestRow } from '../db/types';
+import type { ContestRow, ParticipantRow } from '../db/types';
 import { CONTEST_STATE, REGISTRATION_STATUS } from '../logic/constants';
 import { useDemoMode, useNotifications, useToast } from '../logic/contexts';
 import { useAuth } from '../logic/hooks/useAuth';
 import { useContestRegistration } from '../logic/hooks/useContestRegistration';
 import { useContests } from '../logic/hooks/useContests';
 import { useHeaderHeight } from '../logic/hooks/useHeaderHeight';
+import { useParticipantCount } from '../logic/hooks/useParticipantCount';
 import { useRefresh } from '../logic/hooks/utils';
 import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
@@ -229,77 +230,15 @@ const ContestListScreen = () => {
             </View>
           ) : null
         }
-        renderItem={({ item }) => {
-          const participant = participants.get(item.id);
-          const isRegistered = !!participant;
-          const isApproved = participant?.registration_status === REGISTRATION_STATUS.APPROVED;
-          const isPendingApproval = isRegistered && !isApproved;
-          const isLive =
-            item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
-          const isInProgress =
-            item.state === CONTEST_STATE.ROUND_IN_PROGRESS ||
-            item.state === CONTEST_STATE.ROUND_CLOSED;
-          const isEliminated = participant?.elimination_round !== null;
-          const canSpectate = isInProgress && (!isRegistered || isEliminated);
-          const isLocked = item.state === CONTEST_STATE.ROUND_IN_PROGRESS && !isRegistered;
-
-          const startLabel = formatStart(item.start_time);
-          const priceLabel = item.price ? `$${item.price.toFixed(2)}` : 'Free';
-
-          let buttonLabel = 'Register';
-          let buttonVariant: 'primary' | 'success' = 'primary';
-          let buttonIcon: React.ReactNode = null;
-
-          if (canSpectate) {
-            buttonLabel = 'Spectate';
-            buttonVariant = 'primary';
-            buttonIcon = <Feather name="eye" size={20} color={colors.surface} />;
-          } else if (isPendingApproval) {
-            buttonLabel = 'Pending approval';
-            buttonVariant = 'primary';
-          } else if (isLocked) {
-            buttonLabel = 'Locked';
-            buttonVariant = 'primary';
-          } else if (
-            isRegistered &&
-            (item.state === CONTEST_STATE.LOBBY_OPEN ||
-              item.state === CONTEST_STATE.ROUND_IN_PROGRESS)
-          ) {
-            buttonLabel = 'Join Contest';
-            buttonVariant = 'success';
-            buttonIcon = <Feather name="arrow-right" size={20} color={colors.surface} />;
-          } else if (isRegistered) {
-            buttonLabel = 'Registered';
-            buttonVariant = 'success';
-            buttonIcon = null;
-          } else if (item.state === CONTEST_STATE.LOBBY_OPEN) {
-            buttonLabel = 'Register';
-            buttonVariant = 'primary';
-          }
-
-          return (
-            <ContestListTicket
-              title={item.name}
-              startLabel={startLabel}
-              priceLabel={priceLabel}
-              roundLabel={item.current_round ? String(item.current_round) : null}
-              live={isLive}
-              dimmed={isLocked || isPendingApproval}
-              buttonLabel={buttonLabel}
-              buttonVariant={buttonVariant}
-              buttonIconRight={buttonIcon}
-              buttonDisabled={
-                (!!isLocked && !canSpectate) ||
-                (isPendingApproval && !canSpectate) ||
-                (!canSpectate &&
-                  isRegistered &&
-                  item.state !== CONTEST_STATE.LOBBY_OPEN &&
-                  item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
-              }
-              onPress={() => void handleEnterContest(item, canSpectate)}
-            />
-          );
-        }}
+        renderItem={({ item }) => (
+          <ContestListRow
+            item={item}
+            colors={colors}
+            participants={participants}
+            formatStart={formatStart}
+            onEnterContest={handleEnterContest}
+          />
+        )}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text weight="bold" style={styles.emptyTitle}>
@@ -325,6 +264,102 @@ const ContestListScreen = () => {
         />
       )}
     </View>
+  );
+};
+
+const ContestListRow = ({
+  item,
+  colors,
+  participants,
+  formatStart,
+  onEnterContest,
+}: {
+  item: ContestRow;
+  colors: ReturnType<typeof useTheme>['colors'];
+  participants: Map<string, ParticipantRow>;
+  formatStart: (startTime: string) => string;
+  onEnterContest: (contest: ContestRow, shouldSpectate?: boolean) => Promise<void>;
+}) => {
+  const { count: participantCount, loading: participantCountLoading } = useParticipantCount(
+    item.id,
+    0,
+    true,
+  );
+  const participantLabel = participantCountLoading
+    ? '...'
+    : participantCount.toLocaleString();
+  const participant = participants.get(item.id);
+  const isRegistered = !!participant;
+  const isApproved = participant?.registration_status === REGISTRATION_STATUS.APPROVED;
+  const isPendingApproval = isRegistered && !isApproved;
+  const isLive = item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
+  const isInProgress =
+    item.state === CONTEST_STATE.ROUND_IN_PROGRESS ||
+    item.state === CONTEST_STATE.ROUND_CLOSED;
+  const isEliminated = participant?.elimination_round !== null;
+  const canSpectate = isInProgress && (!isRegistered || isEliminated);
+  const startLabel = formatStart(item.start_time);
+  const priceLabel = item.price ? `$${item.price.toFixed(2)}` : 'Free';
+
+  let buttonLabel = 'Register';
+  let buttonVariant: 'primary' | 'success' | 'muted' = 'primary';
+  let buttonIconName: keyof typeof Ionicons.glyphMap | null = 'ticket';
+
+  if (canSpectate) {
+    buttonLabel = 'Spectate';
+    buttonVariant = 'primary';
+    buttonIconName = 'eye';
+  } else if (isPendingApproval) {
+    buttonLabel = 'Pending approval';
+    buttonVariant = 'muted';
+    buttonIconName = 'time';
+  } else if (
+    isRegistered &&
+    (item.state === CONTEST_STATE.LOBBY_OPEN ||
+      item.state === CONTEST_STATE.ROUND_IN_PROGRESS)
+  ) {
+    buttonLabel = 'Join Contest';
+    buttonVariant = 'success';
+    buttonIconName = 'arrow-forward';
+  } else if (isRegistered) {
+    buttonLabel = 'Registered';
+    buttonVariant = 'success';
+    buttonIconName = 'checkmark-circle';
+  } else if (item.state === CONTEST_STATE.LOBBY_OPEN) {
+    buttonLabel = 'Register';
+    buttonVariant = 'primary';
+    buttonIconName = 'ticket';
+  }
+
+  const buttonLabelColor = '#FFFFFF';
+  const buttonIcon = buttonIconName ? (
+    <Ionicons name={buttonIconName} size={18} color={buttonLabelColor} />
+  ) : null;
+  const liveVariant = buttonVariant === 'success' ? 'success' : 'primary';
+
+  return (
+    <ContestListTicket
+      title={item.name}
+      startLabel={startLabel}
+      priceLabel={priceLabel}
+      statLabel={participantLabel}
+      statPrefix="Players"
+      live={isLive}
+      liveVariant={liveVariant}
+      dimmed={isPendingApproval}
+      buttonLabel={buttonLabel}
+      buttonVariant={buttonVariant}
+      buttonIconRight={buttonIcon}
+      buttonLabelColor={buttonLabelColor}
+      buttonDisabled={
+        isPendingApproval ||
+        (!canSpectate &&
+          isRegistered &&
+          item.state !== CONTEST_STATE.LOBBY_OPEN &&
+          item.state !== CONTEST_STATE.ROUND_IN_PROGRESS)
+      }
+      onPress={() => void onEnterContest(item, canSpectate)}
+    />
   );
 };
 

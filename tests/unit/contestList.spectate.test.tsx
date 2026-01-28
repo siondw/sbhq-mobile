@@ -1,8 +1,8 @@
 /**
- * Verifies pending approval state on contest registration.
+ * Verifies spectate CTA for in-progress contests.
  */
 import React from 'react';
-import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { fireEvent, render } from '@testing-library/react-native';
 
 import ContestListScreen from '../../src/screens/ContestListScreen';
 import type { ContestRow, ParticipantRow } from '../../src/db/types';
@@ -24,7 +24,6 @@ const mockState = {
 
 const mockRefreshContests = jest.fn(async () => undefined);
 const mockRefreshParticipants = jest.fn(async () => undefined);
-const mockStartDemo = jest.fn();
 
 const resetState = () => {
   mockState.contests = [];
@@ -70,7 +69,7 @@ jest.mock('../../src/logic/contexts', () => ({
   useDemoMode: () => ({
     isDemoActive: false,
     shouldShowDemo: false,
-    startDemo: mockStartDemo,
+    startDemo: jest.fn(),
     exitDemo: jest.fn(),
     setDemoTip: jest.fn(),
   }),
@@ -133,17 +132,52 @@ jest.mock('../../src/ui/components/OnboardingModal', () => {
 
 const renderScreen = () => render(<ContestListScreen />);
 
-describe('ContestListScreen pending approval', () => {
+describe('ContestListScreen spectate CTA', () => {
   beforeEach(() => {
     __router.reset();
     resetState();
   });
 
-  test('shows pending approval when participant is pending', () => {
+  test('shows Spectate for in-progress contest when not registered', () => {
     const contest = makeContest({
       id: 'contest-1',
       name: 'Contest-1',
-      state: CONTEST_STATE.LOBBY_OPEN,
+      state: CONTEST_STATE.ROUND_IN_PROGRESS,
+    });
+    mockState.contests = [contest];
+
+    const view = renderScreen();
+
+    expect(view.getByTestId('label-Contest-1').props.children).toBe('Spectate');
+    expect(view.getByTestId('disabled-Contest-1').props.children).toBe('false');
+  });
+
+  test('navigates to spectate route when Spectate is pressed', () => {
+    const contest = makeContest({
+      id: 'contest-2',
+      name: 'Contest-2',
+      state: CONTEST_STATE.ROUND_IN_PROGRESS,
+    });
+    mockState.contests = [contest];
+
+    const view = renderScreen();
+
+    fireEvent.press(view.getByTestId('ticket-Contest-2'));
+
+    const events = __router.getEvents();
+    expect(events).toHaveLength(1);
+    expect(events[0]?.resolvedPath).toBe(`/game/${contest.id}`);
+    expect(events[0]?.href).toMatchObject({
+      pathname: '/game/[contestId]',
+      params: { contestId: contest.id, spectating: 'true' },
+    });
+  });
+
+  test('shows Spectate for eliminated participants in-progress', () => {
+    const contest = makeContest({
+      id: 'contest-3',
+      name: 'Contest-3',
+      state: CONTEST_STATE.ROUND_IN_PROGRESS,
     });
     mockState.contests = [contest];
     mockState.participants = new Map([
@@ -152,37 +186,15 @@ describe('ContestListScreen pending approval', () => {
         makeParticipant({
           contest_id: contest.id,
           user_id: mockUserId,
-          registration_status: REGISTRATION_STATUS.PENDING,
+          registration_status: REGISTRATION_STATUS.APPROVED,
+          elimination_round: 2,
         }),
       ],
     ]);
 
     const view = renderScreen();
 
-    expect(view.getByTestId('label-Contest-1').props.children).toBe('Pending approval');
-    expect(view.getByTestId('disabled-Contest-1').props.children).toBe('true');
-  });
-
-  test('does not navigate after registration when participant is pending', async () => {
-    const contest = makeContest({
-      id: 'contest-2',
-      name: 'Contest-2',
-      state: CONTEST_STATE.LOBBY_OPEN,
-    });
-    mockState.contests = [contest];
-    mockState.registerForContest.mockResolvedValue(
-      makeParticipant({
-        contest_id: contest.id,
-        user_id: mockUserId,
-        registration_status: REGISTRATION_STATUS.PENDING,
-      }),
-    );
-
-    const view = renderScreen();
-
-    fireEvent.press(view.getByTestId('ticket-Contest-2'));
-
-    await waitFor(() => expect(mockState.registerForContest).toHaveBeenCalledWith(contest.id));
-    expect(__router.getEvents()).toHaveLength(0);
+    expect(view.getByTestId('label-Contest-3').props.children).toBe('Spectate');
+    expect(view.getByTestId('disabled-Contest-3').props.children).toBe('false');
   });
 });

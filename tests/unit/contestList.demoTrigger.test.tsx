@@ -83,6 +83,10 @@ jest.mock('../../src/logic/hooks/useHeaderHeight', () => ({
   useHeaderHeight: () => 0,
 }));
 
+jest.mock('../../src/logic/hooks/useParticipantCount', () => ({
+  useParticipantCount: () => ({ count: 1200, loading: false, error: null }),
+}));
+
 jest.mock('../../src/logic/hooks/utils', () => ({
   useRefresh: () => ({ refreshing: false, onRefresh: jest.fn() }),
 }));

@@ -13,14 +13,17 @@ type ContestListTicketProps = {
   title: string;
   startLabel: string;
   priceLabel: string;
-  roundLabel?: string | null;
+  statLabel?: string | null;
+  statPrefix?: string;
   live?: boolean;
+  liveVariant?: 'primary' | 'energy' | 'danger' | 'success';
   dimmed?: boolean;
   cutoutBackgroundColor?: string;
   buttonLabel: string;
-  buttonVariant?: 'primary' | 'secondary' | 'success';
+  buttonVariant?: 'primary' | 'secondary' | 'success' | 'muted';
   buttonDisabled?: boolean;
   buttonIconRight?: React.ReactNode;
+  buttonLabelColor?: string;
   onPress: () => void;
 };
 
@@ -28,14 +31,17 @@ const ContestListTicket = ({
   title,
   startLabel,
   priceLabel,
-  roundLabel,
+  statLabel,
+  statPrefix = 'Players',
   live,
+  liveVariant,
   dimmed,
   cutoutBackgroundColor,
   buttonLabel,
   buttonVariant = 'primary',
   buttonDisabled,
   buttonIconRight,
+  buttonLabelColor,
   onPress,
 }: ContestListTicketProps) => {
   const { colors } = useTheme();
@@ -95,12 +101,12 @@ const ContestListTicket = ({
           <Text weight="bold" style={styles.cardTitle}>
             {title}
           </Text>
-          {live ? <LiveIndicator size="large" /> : null}
+          {live ? <LiveIndicator size="large" variant={liveVariant ?? 'primary'} /> : null}
         </View>
 
         <Text style={styles.meta}>Start: {startLabel}</Text>
         <Text style={styles.meta}>Entry: {priceLabel}</Text>
-        {roundLabel ? <Text style={styles.meta}>Round: {roundLabel}</Text> : null}
+        {statLabel ? <Text style={styles.meta}>{statPrefix}: {statLabel}</Text> : null}
 
         <View style={styles.cardFooter}>
           <GlassyTexture
@@ -112,6 +118,7 @@ const ContestListTicket = ({
               label={buttonLabel}
               variant={buttonVariant === 'secondary' ? 'secondary' : buttonVariant}
               iconRight={buttonIconRight}
+              labelColor={buttonLabelColor}
               onPress={() => {
                 lightImpact();
                 onPress();

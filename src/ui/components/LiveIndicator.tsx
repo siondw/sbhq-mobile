@@ -9,7 +9,7 @@ interface LiveIndicatorProps {
   size?: 'small' | 'medium' | 'large';
   showLabel?: boolean;
   showContainer?: boolean;
-  variant?: 'primary' | 'energy' | 'danger';
+  variant?: 'primary' | 'energy' | 'danger' | 'success';
 }
 
 const LiveIndicator = ({
@@ -31,7 +31,13 @@ const LiveIndicator = ({
   const gap = size === 'small' ? SPACING.XS - 3 : size === 'medium' ? SPACING.XS - 2 : SPACING.XS;
 
   const color =
-    variant === 'danger' ? colors.danger : variant === 'energy' ? colors.energy : colors.primary;
+    variant === 'danger'
+      ? colors.danger
+      : variant === 'energy'
+        ? colors.energy
+        : variant === 'success'
+          ? colors.success
+          : colors.primary;
 
   const content = (
     <View style={[styles.content, { gap }]}>

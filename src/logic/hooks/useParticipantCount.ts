@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { DEMO_CONTEST_ID } from '../../configs/constants';
 import { getErrorMessage } from '../../db/errors';
-import { getActiveParticipantCount } from '../../db/participants';
+import { getActiveParticipantCount, getParticipantCount } from '../../db/participants';
 
 export interface UseParticipantCountResult {
   count: number;
@@ -14,6 +14,7 @@ const DEMO_PARTICIPANT_COUNT = 1247;
 export const useParticipantCount = (
   contestId?: string,
   pollIntervalMs: number = 0,
+  includeEliminated: boolean = false,
 ): UseParticipantCountResult => {
   const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -35,7 +36,9 @@ export const useParticipantCount = (
       if (!isPolling) setLoading(true);
       setError(null);
 
-      const result = await getActiveParticipantCount(contestId);
+      const result = includeEliminated
+        ? await getParticipantCount(contestId)
+        : await getActiveParticipantCount(contestId);
       if (isMounted) {
         if (result.ok) {
           setCount(result.value);
@@ -65,7 +68,7 @@ export const useParticipantCount = (
       isMounted = false;
       if (intervalId) clearInterval(intervalId);
     };
-  }, [contestId, pollIntervalMs, isDemo]);
+  }, [contestId, pollIntervalMs, isDemo, includeEliminated]);
 
   return {
     count: isDemo ? DEMO_PARTICIPANT_COUNT : count,

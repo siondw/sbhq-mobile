@@ -1,10 +1,9 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import { type AnswerOptionValue } from '../configs/constants';
 import { heavyImpact } from '../utils/haptics';
-import { ROUTES } from '../configs/routes';
 import { CONTEST_STATE, PLAYER_STATE } from '../logic/constants';
 import { ContestRouter } from '../logic/routing/ContestRouter';
 import { useContestData } from '../logic/contexts';
@@ -17,7 +16,6 @@ import Header from '../ui/components/AppHeader';
 import Button from '../ui/components/Button';
 import LoadingView from '../ui/components/LoadingView';
 import Scorebug from '../ui/components/Scorebug';
-import SpectatorBanner from '../ui/components/SpectatorBanner';
 import Text from '../ui/components/Text';
 import { SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../ui/theme';
 import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/questionOptions';
@@ -25,7 +23,6 @@ import { isAnswerOptionValue, normalizeQuestionOptions } from '../utils/question
 const GameScreen = () => {
   const { colors } = useTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const router = useRouter();
   const { spectating } = useLocalSearchParams<{ spectating?: string }>();
   const isSpectating = spectating === 'true';
   const { derivedUser } = useAuth();
@@ -107,13 +104,12 @@ const GameScreen = () => {
           }
         >
           <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-            {isSpectating && (
-              <View style={styles.bannerRow}>
-                <SpectatorBanner onLeave={() => router.replace(ROUTES.CONTESTS)} />
-              </View>
-            )}
             <View style={styles.scorebugSection}>
-              <Scorebug playerCount={participantCount} />
+              <Scorebug
+                playerCount={participantCount}
+                statusLabel={isSpectating ? 'Spectating' : undefined}
+                statusVariant={isSpectating ? 'glow' : undefined}
+              />
             </View>
 
             <View style={styles.roundHeader}>
@@ -179,9 +175,6 @@ const createStyles = (colors: { background: string; muted: string; ink: string }
       padding: SPACING.LG,
     },
     scorebugSection: {
-      marginBottom: SPACING.MD,
-    },
-    bannerRow: {
       marginBottom: SPACING.MD,
     },
     roundHeader: {
