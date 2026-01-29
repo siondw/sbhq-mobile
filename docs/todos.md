@@ -36,8 +36,8 @@ P1
 - [x] Notifications
   - [x] Finish testing
   - [ ] Make notifications auto-trigger based off time and contest tstate
-- [ ] Allow elimnated users to continue watching the contest as spectators
-- [ ] Add participant count to contest card
+- [x] Allow elimnated users to continue watching the contest as spectators
+- [x] Add participant count to contest card
 - [x] Use the active flag in the db to also make sure they were approved by the admin
   - [x] Update in app registration to show pending approval status and et to false by default
   - [x] Redirect user to www.sbhq.live to see rules (and potentially pay for the contest)
@@ -55,7 +55,6 @@ P2
   - [x] RLS policies?
   - [x] Cascade behvior for tables
 - [x] Debug the answer summary container
-- [ ] When users donwlaoded the app, I saw that the has_seen_demo flag was false for all of them and never got set to true
 
 P3
 
@@ -67,8 +66,6 @@ P3
   - Add to `eliminate_incorrect_players()` trigger to log success/failure
   - Use for debugging if notifications don't arrive
 - [x] Refactor lobby route to use path param instead of query param for consistency
-
-
 
 P4 (Polish / Nice-to-haves)
 
