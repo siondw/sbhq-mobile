@@ -69,9 +69,11 @@ jest.mock('../../src/logic/contexts', () => ({
   useDemoMode: () => ({
     isDemoActive: false,
     shouldShowDemo: false,
+    demoPhase: null,
     startDemo: jest.fn(),
     exitDemo: jest.fn(),
     setDemoTip: jest.fn(),
+    setDemoPhase: jest.fn(),
   }),
   useNotifications: () => ({
     isRegistered: true,

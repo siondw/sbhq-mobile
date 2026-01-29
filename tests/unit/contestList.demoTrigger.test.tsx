@@ -37,9 +37,11 @@ const resetState = () => {
 jest.mock('../../src/logic/contexts', () => ({
   useDemoMode: () => ({
     isDemoActive: false,
+    demoPhase: null,
     startDemo: mockStartDemo,
     exitDemo: jest.fn(),
     setDemoTip: jest.fn(),
+    setDemoPhase: jest.fn(),
   }),
   useNotifications: () => ({
     isRegistered: true,

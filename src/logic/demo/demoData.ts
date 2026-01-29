@@ -22,17 +22,17 @@ export interface HydratedDemoPhase extends Omit<DemoPhase, 'contest'> {
 const now = new Date().toISOString();
 
 export const DEMO_PHASES: DemoPhase[] = [
-  // Phase 0: LOBBY (0-5s)
+  // Phase 0: LOBBY (0-10s)
   {
     name: 'LOBBY',
-    durationMs: 5000,
-    tip: 'This is the lobby. Wait here until the game starts. The countdown shows when Round 1 begins.',
+    durationMs: 10000,
+    tip: "Welcome to the lobby. This is where you'll wait until the contest starts! The Game Admin will open the first question when the live game starts.",
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
       state: CONTEST_STATE.LOBBY_OPEN,
       current_round: null,
-      start_time_offset_ms: 5000,
+      start_time_offset_ms: 10000,
       price: 0,
       created_at: now,
     },
@@ -48,11 +48,11 @@ export const DEMO_PHASES: DemoPhase[] = [
     answer: null,
   },
 
-  // Phase 1: ROUND 1 - ANSWERING (5-8s)
+  // Phase 1: ROUND 1 - ANSWERING (10-20s)
   {
     name: 'ROUND_1_ANSWERING',
-    durationMs: 5000,
-    tip: 'A question appeared! Answer quick! Submissions lock when the live NFL broadcast returns to play. One answer only',
+    durationMs: 10000,
+    tip: "Round 1 is live. The Ravens just won the toss and are about to take the field. The Game Admin closes submissions as play starts - submit before it closes; once it does, you're locked in.",
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
@@ -77,7 +77,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       options: {
         A: 'Zay Flowers',
         B: 'Derrick Henry',
-        C: 'Mark Andrews + Isiah Likely',
+        C: 'Mark Andrews + Isaiah Likely',
         D: 'Everyone else combined',
       },
       processing_status: 'PENDING',
@@ -86,11 +86,11 @@ export const DEMO_PHASES: DemoPhase[] = [
     answer: null,
   },
 
-  // Phase 2: ROUND 1 - SUBMITTED (8-10s)
+  // Phase 2: ROUND 1 - SUBMITTED (20-26s)
   {
     name: 'ROUND_1_SUBMITTED',
-    durationMs: 5000,
-    tip: 'Answer locked in! Now wait for the play to happen and see if you got it right.',
+    durationMs: 6000,
+    tip: "Your answer is locked in. Wait for the drive to finish. The Game Admin will process results when the drive ends. If you're correct, you'll advance to the next round!",
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
@@ -115,7 +115,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       options: {
         A: 'Zay Flowers',
         B: 'Derrick Henry',
-        C: 'Mark Andrews + Isiah Likely',
+        C: 'Mark Andrews + Isaiah Likely',
         D: 'Everyone else combined',
       },
       processing_status: 'PENDING',
@@ -132,11 +132,11 @@ export const DEMO_PHASES: DemoPhase[] = [
     },
   },
 
-  // Phase 3: ROUND 1 - CORRECT (10-15s)
+  // Phase 3: ROUND 1 - CORRECT (30-40s)
   {
     name: 'ROUND_1_CORRECT',
-    durationMs: 5000,
-    tip: "You got it right! You advance to the next round. Get it wrong and you're eliminated.",
+    durationMs: 10000,
+    tip: 'You got it right and are moving on to Round 2! Wrong answers and missed submissions were eliminated.',
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
@@ -161,7 +161,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       options: {
         A: 'Zay Flowers',
         B: 'Derrick Henry',
-        C: 'Mark Andrews + Isiah Likely',
+        C: 'Mark Andrews + Isaiah Likely',
         D: 'Everyone else combined',
       },
       processing_status: 'COMPLETE',
@@ -178,11 +178,11 @@ export const DEMO_PHASES: DemoPhase[] = [
     },
   },
 
-  // Phase 4: ROUND 2 - ANSWERING (15-18s)
+  // Phase 4: ROUND 2 - ANSWERING (40-50s)
   {
     name: 'ROUND_2_ANSWERING',
-    durationMs: 5000,
-    tip: 'Round 2! Each round brings a new question. Stay sharp and keep predicting!',
+    durationMs: 10000,
+    tip: 'The Steelers are now getting the ball. Pick your answer before the broadcast comes back from commercial!',
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
@@ -203,12 +203,12 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: 'demo-q2',
       contest_id: DEMO_CONTEST_ID,
       round: 2,
-      question: 'Will Lamar Jackson complete his first pass attempt?',
+      question: 'How many 1st downs will the Steelers record on this drive?',
       options: {
-        A: 'Complete for 10+ yards',
-        B: 'Complete for under 10 yards',
-        C: 'Incomplete',
-        D: 'Interception',
+        A: '0',
+        B: '1',
+        C: '2',
+        D: '3+',
       },
       processing_status: 'PENDING',
       correct_option: null,
@@ -216,11 +216,11 @@ export const DEMO_PHASES: DemoPhase[] = [
     answer: null,
   },
 
-  // Phase 5: ROUND 2 - SUBMITTED (18-20s)
+  // Phase 5: ROUND 2 - SUBMITTED (50-60s)
   {
     name: 'ROUND_2_SUBMITTED',
-    durationMs: 5000,
-    tip: 'Answer submitted! Fingers crossed...',
+    durationMs: 10000,
+    tip: 'Answer submitted. Stay here while the drive finishes and the correct result is set.',
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
@@ -241,12 +241,12 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: 'demo-q2',
       contest_id: DEMO_CONTEST_ID,
       round: 2,
-      question: 'Will Lamar Jackson complete his first pass attempt?',
+      question: 'How many 1st downs will the Steelers record on this drive?',
       options: {
-        A: 'Complete for 10+ yards',
-        B: 'Complete for under 10 yards',
-        C: 'Incomplete',
-        D: 'Interception',
+        A: '0',
+        B: '1',
+        C: '2',
+        D: '3+',
       },
       processing_status: 'PENDING',
       correct_option: null,
@@ -257,16 +257,16 @@ export const DEMO_PHASES: DemoPhase[] = [
       question_id: 'demo-q2',
       contest_id: DEMO_CONTEST_ID,
       round: 2,
-      answer: 'A',
+      answer: 'B',
       timestamp: now,
     },
   },
 
-  // Phase 6: ROUND 2 - ELIMINATED (20s+)
+  // Phase 6: ROUND 2 - ELIMINATED (60-70s)
   {
     name: 'ROUND_2_ELIMINATED',
-    durationMs: Number.POSITIVE_INFINITY,
-    tip: 'Eliminated! Wrong answer ends your run. In real games, last player standing wins the pot!',
+    durationMs: 10000,
+    tip: 'Eliminated! You got it wrong this time. In live contests, only a few players make it to the end.',
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',
@@ -287,15 +287,15 @@ export const DEMO_PHASES: DemoPhase[] = [
       id: 'demo-q2',
       contest_id: DEMO_CONTEST_ID,
       round: 2,
-      question: 'Will Lamar Jackson complete his first pass attempt?',
+      question: 'How many 1st downs will the Steelers record on this drive?',
       options: {
-        A: 'Complete for 10+ yards',
-        B: 'Complete for under 10 yards',
-        C: 'Incomplete',
-        D: 'Interception',
+        A: '0',
+        B: '1',
+        C: '2',
+        D: '3+',
       },
       processing_status: 'COMPLETE',
-      correct_option: ['C'],
+      correct_option: ['D'],
     },
     answer: {
       id: 'demo-a2',
@@ -303,7 +303,7 @@ export const DEMO_PHASES: DemoPhase[] = [
       question_id: 'demo-q2',
       contest_id: DEMO_CONTEST_ID,
       round: 2,
-      answer: 'A',
+      answer: 'B',
       timestamp: now,
     },
   },
@@ -312,7 +312,7 @@ export const DEMO_PHASES: DemoPhase[] = [
   {
     name: 'DEMO_COMPLETE',
     durationMs: Number.POSITIVE_INFINITY,
-    tip: 'Demo complete! You now know how to play. Join a real contest to compete for the prize!',
+    tip: 'Demo complete. Join a real contest to play for prizes.',
     contest: {
       id: DEMO_CONTEST_ID,
       name: 'Steelers vs Ravens - Demo',

@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { RADIUS, SPACING, TYPOGRAPHY, useTheme, withAlpha } from '../theme';
 import GlassyTexture from '../textures/GlassyTexture';
@@ -8,11 +8,14 @@ import Text from './Text';
 
 interface DemoOverlayProps {
   tip: string | null;
+  phase?: string | null;
+  onExit?: () => void;
 }
 
-const DISPLAY_DURATION_MS = 3000;
+const DISPLAY_DURATION_MS = 5000;
+const ANSWERING_DURATION_MS = 6000;
 
-const DemoOverlay = ({ tip }: DemoOverlayProps) => {
+const DemoOverlay = ({ tip, phase, onExit }: DemoOverlayProps) => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const styles = useMemo(() => createStyles(colors, insets.top), [colors, insets.top]);
@@ -34,24 +37,27 @@ const DemoOverlay = ({ tip }: DemoOverlayProps) => {
       clearTimeout(hideTimeoutRef.current);
     }
 
+    const durationMs = phase?.includes('ANSWERING')
+      ? ANSWERING_DURATION_MS
+      : DISPLAY_DURATION_MS;
+
     hideTimeoutRef.current = setTimeout(() => {
       setIsVisible(false);
-    }, DISPLAY_DURATION_MS);
+    }, durationMs);
 
     return () => {
       if (hideTimeoutRef.current) {
         clearTimeout(hideTimeoutRef.current);
       }
     };
-  }, [tip]);
+  }, [tip, phase]);
 
   if (!isVisible || !visibleTip) {
     return null;
   }
 
   return (
-    <View style={styles.container} pointerEvents="none">
-      <View style={styles.backdrop} />
+    <View style={styles.container} pointerEvents="box-none">
       <GlassyTexture colors={colors} showShine={false} style={styles.tipContainer}>
         <View style={styles.tipContent}>
           <View style={styles.demoBadge}>
@@ -61,6 +67,22 @@ const DemoOverlay = ({ tip }: DemoOverlayProps) => {
           <Text style={styles.tipText}>{visibleTip}</Text>
         </View>
       </GlassyTexture>
+      {onExit ? (
+        <Pressable
+          accessibilityRole="button"
+          style={({ pressed }) => [
+            styles.exitButton,
+            styles.exitButtonBelow,
+            pressed && styles.exitButtonPressed,
+          ]}
+          onPress={onExit}
+        >
+          <Ionicons name="close-circle" size={16} color={colors.muted} />
+          <Text weight="medium" style={styles.exitText}>
+            Exit Demo
+          </Text>
+        </Pressable>
+      ) : null}
     </View>
   );
 };
@@ -77,10 +99,6 @@ const createStyles = (
       paddingHorizontal: SPACING.MD,
       paddingTop: topInset + SPACING.XL,
       zIndex: 9999,
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: withAlpha(colors.ink, 0.18),
     },
     tipContainer: {
       width: '100%',
@@ -121,6 +139,28 @@ const createStyles = (
       fontFamily: TYPOGRAPHY.FONT_FAMILY_MEDIUM,
       color: colors.ink,
       lineHeight: 18,
+    },
+    exitButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: SPACING.XS,
+      alignSelf: 'center',
+      paddingVertical: 4,
+      paddingHorizontal: SPACING.SM,
+      borderRadius: RADIUS.SM,
+      borderWidth: 1,
+      borderColor: withAlpha(colors.primary, 0.25),
+      backgroundColor: withAlpha(colors.surface, 0.6),
+    },
+    exitButtonBelow: {
+      marginTop: SPACING.SM,
+    },
+    exitButtonPressed: {
+      opacity: 0.75,
+    },
+    exitText: {
+      fontSize: TYPOGRAPHY.SMALL - 1,
+      color: colors.muted,
     },
   });
 

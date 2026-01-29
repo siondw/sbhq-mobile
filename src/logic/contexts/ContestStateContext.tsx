@@ -20,7 +20,7 @@ export const ContestStateProvider = ({
   userId?: string;
   children: React.ReactNode;
 }) => {
-  const { isDemoActive, setDemoTip } = useDemoMode();
+  const { isDemoActive, setDemoTip, setDemoPhase } = useDemoMode();
 
   // Call both hooks unconditionally (Rules of Hooks)
   // Pass undefined to the unused hook based on demo mode
@@ -39,10 +39,12 @@ export const ContestStateProvider = ({
   useEffect(() => {
     if (!isDemoActive) {
       setDemoTip(null);
+      setDemoPhase(null);
       return;
     }
     setDemoTip(demoState.demoTip);
-  }, [demoState.demoTip, isDemoActive, setDemoTip]);
+    setDemoPhase(demoState.demoPhase);
+  }, [demoState.demoTip, demoState.demoPhase, isDemoActive, setDemoTip, setDemoPhase]);
 
   const value = useMemo(
     () => ({
