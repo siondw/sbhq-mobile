@@ -501,12 +501,6 @@ const PlaygroundContent = ({
                   icon: keyof typeof Ionicons.glyphMap;
                 }>
               ).map((button) => {
-                const buttonColor =
-                  button.variant === 'success'
-                    ? palette.success
-                    : button.variant === 'muted'
-                      ? withAlpha(palette.ink, 0.68)
-                      : palette.primary;
                 const iconColor = '#FFFFFF';
                 return (
                   <ContestListTicket

@@ -88,7 +88,7 @@ const DemoOverlay = ({ tip, phase, onExit }: DemoOverlayProps) => {
 };
 
 const createStyles = (
-  colors: { surface: string; ink: string; primary: string },
+  colors: { surface: string; ink: string; primary: string; muted: string },
   topInset: number,
 ) =>
   StyleSheet.create({

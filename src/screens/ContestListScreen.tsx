@@ -233,7 +233,6 @@ const ContestListScreen = () => {
         renderItem={({ item }) => (
           <ContestListRow
             item={item}
-            colors={colors}
             participants={participants}
             formatStart={formatStart}
             onEnterContest={handleEnterContest}
@@ -269,13 +268,11 @@ const ContestListScreen = () => {
 
 const ContestListRow = ({
   item,
-  colors,
   participants,
   formatStart,
   onEnterContest,
 }: {
   item: ContestRow;
-  colors: ReturnType<typeof useTheme>['colors'];
   participants: Map<string, ParticipantRow>;
   formatStart: (startTime: string) => string;
   onEnterContest: (contest: ContestRow, shouldSpectate?: boolean) => Promise<void>;
