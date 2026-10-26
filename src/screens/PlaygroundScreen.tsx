@@ -89,7 +89,7 @@ const CorrectAnimation = ({ color }: { color: string }) => {
     setShowChart(false);
 
     // Checkmark and text scale/fade in together
-    Animated.parallel([
+    const headerAnimation = Animated.parallel([
       Animated.spring(checkmarkScale, {
         toValue: 1,
         tension: 50,
@@ -112,28 +112,38 @@ const CorrectAnimation = ({ color }: { color: string }) => {
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    headerAnimation.start();
 
     // Summary container fades in after text+shine complete (~1400ms)
-    Animated.sequence([
+    const contentAnimation = Animated.sequence([
       Animated.delay(1400),
       Animated.timing(contentAnim, {
         toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    contentAnimation.start();
 
     // Chart fades in after summary (~2100ms)
-    setTimeout(() => setShowChart(true), 2100);
-    Animated.sequence([
+    const chartTimeout = setTimeout(() => setShowChart(true), 2100);
+    const chartAnimation = Animated.sequence([
       Animated.delay(2100),
       Animated.timing(chartAnim, {
         toValue: 1,
         duration: 1000,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    chartAnimation.start();
+
+    return () => {
+      clearTimeout(chartTimeout);
+      headerAnimation.stop();
+      contentAnimation.stop();
+      chartAnimation.stop();
+    };
   }, [checkmarkScale, checkmarkOpacity, textScale, textOpacity, contentAnim, chartAnim]);
 
   return (

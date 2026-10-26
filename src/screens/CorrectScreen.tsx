@@ -63,7 +63,7 @@ const CorrectScreen = () => {
     successHaptic();
 
     // Checkmark scales and fades in
-    Animated.parallel([
+    const checkmarkAnimation = Animated.parallel([
       Animated.spring(checkmarkScale, {
         toValue: 1,
         tension: 50,
@@ -75,10 +75,11 @@ const CorrectScreen = () => {
         duration: 300,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    checkmarkAnimation.start();
 
     // Text scales and fades in 400ms later
-    Animated.sequence([
+    const textAnimation = Animated.sequence([
       Animated.delay(400),
       Animated.parallel([
         Animated.spring(textScale, {
@@ -93,28 +94,39 @@ const CorrectScreen = () => {
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+    ]);
+    textAnimation.start();
 
     // Content fades in 1000ms later
-    Animated.sequence([
+    const contentAnimation = Animated.sequence([
       Animated.delay(1000),
       Animated.timing(contentAnim, {
         toValue: 1,
         duration: 600,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    contentAnimation.start();
 
     // Show chart at 1600ms, then fade it in
-    setTimeout(() => setShowChart(true), 1600);
-    Animated.sequence([
+    const chartTimeout = setTimeout(() => setShowChart(true), 1600);
+    const chartAnimation = Animated.sequence([
       Animated.delay(1600),
       Animated.timing(chartAnim, {
         toValue: 1,
         duration: 600,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    chartAnimation.start();
+
+    return () => {
+      clearTimeout(chartTimeout);
+      checkmarkAnimation.stop();
+      textAnimation.stop();
+      contentAnimation.stop();
+      chartAnimation.stop();
+    };
   }, [checkmarkScale, checkmarkOpacity, textScale, textOpacity, contentAnim, chartAnim]);
 
   if (loading) {
