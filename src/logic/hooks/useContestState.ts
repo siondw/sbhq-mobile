@@ -299,11 +299,10 @@ export const useContestState = (
       if (contextVersionRef.current !== contextVersion || contestRoundRef.current !== payload.round)
         return;
       if (!result.ok) {
+        setError(getErrorMessage(result.error));
         if (result.error.type === 'SUBMISSION_CLOSED') {
           options?.onSubmissionClosed?.();
-          return;
         }
-        setError(getErrorMessage(result.error));
         return;
       }
       answerVersionRef.current += 1;
