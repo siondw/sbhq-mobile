@@ -67,8 +67,7 @@ export const ContestRouter = ({
       return;
     }
 
-    const isValidSpectatorState =
-      validContestStates?.includes(contestState) ?? false;
+    const isValidSpectatorState = validContestStates?.includes(contestState) ?? false;
 
     if (isValidSpectatorState) {
       return;

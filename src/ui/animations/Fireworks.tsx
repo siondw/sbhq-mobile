@@ -28,11 +28,9 @@ const buildFireworkParticles = (
 ): FireworkParticle[] => {
   return Array.from({ length: count }, () => {
     const angle = Math.random() * Math.PI * 2;
-    const distance =
-      distanceRange[0] + Math.random() * (distanceRange[1] - distanceRange[0]);
+    const distance = distanceRange[0] + Math.random() * (distanceRange[1] - distanceRange[0]);
     const size = sizeRange[0] + Math.random() * (sizeRange[1] - sizeRange[0]);
-    const opacityScale =
-      opacityRange[0] + Math.random() * (opacityRange[1] - opacityRange[0]);
+    const opacityScale = opacityRange[0] + Math.random() * (opacityRange[1] - opacityRange[0]);
     const color = palette[Math.floor(Math.random() * palette.length)] ?? palette[0];
     return { angle, distance, size, color, opacityScale };
   });
@@ -73,10 +71,7 @@ const Fireworks = ({ colors }: { colors: ThemeColors }) => {
     ];
   }, [palette]);
 
-  const burstAnimations = useMemo(
-    () => bursts.map(() => new Animated.Value(0)),
-    [bursts],
-  );
+  const burstAnimations = useMemo(() => bursts.map(() => new Animated.Value(0)), [bursts]);
 
   useEffect(() => {
     burstAnimations.forEach((anim) => anim.setValue(0));

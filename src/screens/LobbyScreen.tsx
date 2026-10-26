@@ -1,7 +1,15 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, Platform, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Linking,
+  Platform,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 
 import { LOBBY_TIPS } from '../configs/constants';
 import { PLAYER_STATE } from '../logic/constants';
@@ -30,7 +38,11 @@ const LobbyScreen = () => {
   const { count: participantCount } = useParticipantCount(contestId, 15000); // Poll every 15s
 
   const { refreshing, onRefresh } = useRefresh([refresh]);
-  const { isRegistered: notificationsEnabled, requestPermissions, permissionStatus } = useNotifications();
+  const {
+    isRegistered: notificationsEnabled,
+    requestPermissions,
+    permissionStatus,
+  } = useNotifications();
 
   const [tipIndex, setTipIndex] = useState(0);
   const tipCount = LOBBY_TIPS.length;

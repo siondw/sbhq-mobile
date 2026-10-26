@@ -299,428 +299,296 @@ const PlaygroundContent = ({
 
         <Section title="Haptics Testing" titleColor={palette.ink}>
           <Row>
-                <Chip
-                  label="Selection"
-                  onPress={() => void Haptics.selectionAsync()}
-                  palette={palette}
-                />
-                <Chip
-                  label="Light"
-                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-                  palette={palette}
-                />
-                <Chip
-                  label="Medium"
-                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
-                  palette={palette}
-                />
-                <Chip
-                  label="Heavy"
-                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)}
-                  palette={palette}
-                />
-              </Row>
-              <Row>
-                <Chip
-                  label="Rigid"
-                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)}
-                  palette={palette}
-                />
-                <Chip
-                  label="Soft"
-                  onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)}
-                  palette={palette}
-                />
-              </Row>
-              <Row>
-                <Chip
-                  label="Success"
-                  onPress={() =>
-                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
-                  }
-                  palette={palette}
-                />
-                <Chip
-                  label="Warning"
-                  onPress={() =>
-                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
-                  }
-                  palette={palette}
-                />
-                <Chip
-                  label="Error"
-                  onPress={() =>
-                    void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)
-                  }
-                  palette={palette}
-                />
-              </Row>
-              <Row>
-                <Chip
-                  label="Vibrate 1s"
-                  onPress={() => Vibration.vibrate(1000)}
-                  palette={palette}
-                />
-                <Chip
-                  label="Vibrate 3s"
-                  onPress={() => Vibration.vibrate(3000)}
-                  palette={palette}
-                />
-                <Chip
-                  label="Pattern"
-                  onPress={() => Vibration.vibrate([0, 200, 100, 200, 100, 400])}
-                  palette={palette}
-                />
-              </Row>
-            </Section>
+            <Chip
+              label="Selection"
+              onPress={() => void Haptics.selectionAsync()}
+              palette={palette}
+            />
+            <Chip
+              label="Light"
+              onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+              palette={palette}
+            />
+            <Chip
+              label="Medium"
+              onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium)}
+              palette={palette}
+            />
+            <Chip
+              label="Heavy"
+              onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy)}
+              palette={palette}
+            />
+          </Row>
+          <Row>
+            <Chip
+              label="Rigid"
+              onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Rigid)}
+              palette={palette}
+            />
+            <Chip
+              label="Soft"
+              onPress={() => void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Soft)}
+              palette={palette}
+            />
+          </Row>
+          <Row>
+            <Chip
+              label="Success"
+              onPress={() =>
+                void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success)
+              }
+              palette={palette}
+            />
+            <Chip
+              label="Warning"
+              onPress={() =>
+                void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning)
+              }
+              palette={palette}
+            />
+            <Chip
+              label="Error"
+              onPress={() => void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error)}
+              palette={palette}
+            />
+          </Row>
+          <Row>
+            <Chip label="Vibrate 1s" onPress={() => Vibration.vibrate(1000)} palette={palette} />
+            <Chip label="Vibrate 3s" onPress={() => Vibration.vibrate(3000)} palette={palette} />
+            <Chip
+              label="Pattern"
+              onPress={() => Vibration.vibrate([0, 200, 100, 200, 100, 400])}
+              palette={palette}
+            />
+          </Row>
+        </Section>
 
-            <Section title="Knobs" titleColor={palette.ink}>
-              <View style={styles.palettePicker}>
-                <Text weight="medium" style={[styles.palettePickerLabel, { color: palette.ink }]}>
-                  Palettes
-                </Text>
-                <ScrollView
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  style={styles.palettePickerScroll}
-                  contentContainerStyle={styles.palettePickerRow}
-                >
-                  {PLAYGROUND_PALETTES.map((p) => (
-                    <Chip
-                      key={p.key}
-                      label={p.name}
-                      selected={p.key === paletteKey}
-                      onPress={() => setPaletteKey(p.key)}
-                      palette={palette}
-                    />
-                  ))}
-                </ScrollView>
-              </View>
-              <Row>
+        <Section title="Knobs" titleColor={palette.ink}>
+          <View style={styles.palettePicker}>
+            <Text weight="medium" style={[styles.palettePickerLabel, { color: palette.ink }]}>
+              Palettes
+            </Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.palettePickerScroll}
+              contentContainerStyle={styles.palettePickerRow}
+            >
+              {PLAYGROUND_PALETTES.map((p) => (
                 <Chip
-                  label={`Players: ${playersRemaining.toLocaleString()}`}
-                  onPress={() => setPlayersRemaining(nextPlayers(playersRemaining))}
+                  key={p.key}
+                  label={p.name}
+                  selected={p.key === paletteKey}
+                  onPress={() => setPaletteKey(p.key)}
                   palette={palette}
                 />
-              </Row>
-              <Row>
-                <Chip
-                  label="Reset"
-                  onPress={() => reset(setSelectedRealOption, setPlayersRemaining)}
-                  palette={palette}
-                />
-              </Row>
-              <Row>
-                <Chip
-                  label="Open Onboarding"
-                  onPress={() => setShowOnboarding(true)}
-                  palette={palette}
-                />
-              </Row>
-            </Section>
+              ))}
+            </ScrollView>
+          </View>
+          <Row>
+            <Chip
+              label={`Players: ${playersRemaining.toLocaleString()}`}
+              onPress={() => setPlayersRemaining(nextPlayers(playersRemaining))}
+              palette={palette}
+            />
+          </Row>
+          <Row>
+            <Chip
+              label="Reset"
+              onPress={() => reset(setSelectedRealOption, setPlayersRemaining)}
+              palette={palette}
+            />
+          </Row>
+          <Row>
+            <Chip
+              label="Open Onboarding"
+              onPress={() => setShowOnboarding(true)}
+              palette={palette}
+            />
+          </Row>
+        </Section>
 
-            <Section title="Actual Components" titleColor={palette.ink}>
-              <Card>
-                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                  Lottie Football Animation
-                </Text>
-                <View style={{ height: SPACING.MD }} />
-                <View style={{ alignItems: 'center' }}>
-                  <LottieView
-                    source={footballAnimation}
-                    autoPlay
-                    loop
-                    style={{ width: 120, height: 120 }}
-                    colorFilters={colorFilters}
-                  />
-                  <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
-                    Ball: Primary • Laces: Energy
-                  </Text>
-                </View>
-              </Card>
+        <Section title="Actual Components" titleColor={palette.ink}>
+          <Card>
+            <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+              Lottie Football Animation
+            </Text>
+            <View style={{ height: SPACING.MD }} />
+            <View style={{ alignItems: 'center' }}>
+              <LottieView
+                source={footballAnimation}
+                autoPlay
+                loop
+                style={{ width: 120, height: 120 }}
+                colorFilters={colorFilters}
+              />
+              <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
+                Ball: Primary • Laces: Energy
+              </Text>
+            </View>
+          </Card>
 
-              <Card>
-                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                  Rolling Football Animation (SVG + Reanimated)
-                </Text>
-                <View style={{ height: 100, overflow: 'hidden', position: 'relative' }}>
-                  <RollingFootball />
-                </View>
-                <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
-                  Pure SVG animation - No assets required
-                </Text>
-              </Card>
+          <Card>
+            <Text weight="bold" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+              Rolling Football Animation (SVG + Reanimated)
+            </Text>
+            <View style={{ height: 100, overflow: 'hidden', position: 'relative' }}>
+              <RollingFootball />
+            </View>
+            <Text style={{ color: palette.ink, marginTop: SPACING.SM, textAlign: 'center' }}>
+              Pure SVG animation - No assets required
+            </Text>
+          </Card>
 
+          <ContestListTicket
+            title="Sunday Showdown"
+            startLabel="12/29 @ 7PM EST"
+            priceLabel="$5.00"
+            statLabel={playersRemaining.toLocaleString()}
+            statPrefix="Players"
+            live
+            buttonLabel="Register"
+            buttonVariant="primary"
+            cutoutBackgroundColor={palette.bg}
+            onPress={() => {}}
+          />
+
+          <ContestStatsCard numberOfRemainingPlayers={playersRemaining} roundNumber={5} />
+        </Section>
+
+        <Section title="Contest Ticket Buttons" titleColor={palette.ink}>
+          {(
+            [
+              {
+                label: 'Register',
+                variant: 'primary',
+                icon: 'ticket',
+              },
+              {
+                label: 'Join Contest',
+                variant: 'success',
+                icon: 'arrow-forward',
+              },
+              {
+                label: 'Registered',
+                variant: 'success',
+                icon: 'checkmark-circle',
+              },
+              {
+                label: 'Spectate',
+                variant: 'primary',
+                icon: 'eye',
+              },
+              {
+                label: 'Pending approval',
+                variant: 'muted',
+                icon: 'time',
+              },
+            ] as Array<{
+              label: string;
+              variant: 'primary' | 'success' | 'muted';
+              icon: keyof typeof Ionicons.glyphMap;
+            }>
+          ).map((button) => {
+            const iconColor = '#FFFFFF';
+            return (
               <ContestListTicket
-                title="Sunday Showdown"
+                key={button.label}
+                title={`Ticket - ${button.label}`}
                 startLabel="12/29 @ 7PM EST"
                 priceLabel="$5.00"
                 statLabel={playersRemaining.toLocaleString()}
                 statPrefix="Players"
                 live
-                buttonLabel="Register"
-                buttonVariant="primary"
+                buttonLabel={button.label}
+                buttonVariant={button.variant}
+                buttonLabelColor={iconColor}
+                buttonIconRight={<Ionicons name={button.icon} size={18} color={iconColor} />}
                 cutoutBackgroundColor={palette.bg}
                 onPress={() => {}}
               />
+            );
+          })}
+        </Section>
 
-              <ContestStatsCard numberOfRemainingPlayers={playersRemaining} roundNumber={5} />
-            </Section>
+        <Section title="Scorebug" titleColor={palette.ink}>
+          <View style={styles.scorebugWrap}>
+            <Scorebug playerCount={playersRemaining} />
+          </View>
+        </Section>
 
-            <Section title="Contest Ticket Buttons" titleColor={palette.ink}>
-              {(
-                [
-                  {
-                    label: 'Register',
-                    variant: 'primary',
-                    icon: 'ticket',
-                  },
-                  {
-                    label: 'Join Contest',
-                    variant: 'success',
-                    icon: 'arrow-forward',
-                  },
-                  {
-                    label: 'Registered',
-                    variant: 'success',
-                    icon: 'checkmark-circle',
-                  },
-                  {
-                    label: 'Spectate',
-                    variant: 'primary',
-                    icon: 'eye',
-                  },
-                  {
-                    label: 'Pending approval',
-                    variant: 'muted',
-                    icon: 'time',
-                  },
-                ] as Array<{
-                  label: string;
-                  variant: 'primary' | 'success' | 'muted';
-                  icon: keyof typeof Ionicons.glyphMap;
-                }>
-              ).map((button) => {
-                const iconColor = '#FFFFFF';
-                return (
-                  <ContestListTicket
-                    key={button.label}
-                    title={`Ticket - ${button.label}`}
-                    startLabel="12/29 @ 7PM EST"
-                    priceLabel="$5.00"
-                    statLabel={playersRemaining.toLocaleString()}
-                    statPrefix="Players"
-                    live
-                    buttonLabel={button.label}
-                    buttonVariant={button.variant}
-                    buttonLabelColor={iconColor}
-                    buttonIconRight={
-                      <Ionicons name={button.icon} size={18} color={iconColor} />
-                    }
-                    cutoutBackgroundColor={palette.bg}
-                    onPress={() => {}}
-                  />
-                );
-              })}
-            </Section>
+        <Section title="Contest Stats Card" titleColor={palette.ink}>
+          <Row>
+            <Chip label="Success" onPress={() => setStatsVariant('success')} palette={palette} />
+            <Chip
+              label="Eliminated"
+              onPress={() => setStatsVariant('eliminated')}
+              palette={palette}
+            />
+          </Row>
+          <ContestStatsCard
+            numberOfRemainingPlayers={playersRemaining}
+            roundNumber={3}
+            variant={statsVariant}
+          />
+        </Section>
 
-            <Section title="Scorebug" titleColor={palette.ink}>
-              <View style={styles.scorebugWrap}>
-                <Scorebug playerCount={playersRemaining} />
-              </View>
-            </Section>
+        <Section title="Correct Screen Header" titleColor={palette.ink}>
+          <Row>
+            <Chip
+              label="Replay Animation"
+              onPress={() => setCheckmarkKey((k) => k + 1)}
+              palette={palette}
+            />
+          </Row>
+          <CorrectAnimation key={checkmarkKey} color={theme.colors.success} />
+        </Section>
 
-            <Section title="Contest Stats Card" titleColor={palette.ink}>
-              <Row>
-                <Chip
-                  label="Success"
-                  onPress={() => setStatsVariant('success')}
-                  palette={palette}
-                />
-                <Chip
-                  label="Eliminated"
-                  onPress={() => setStatsVariant('eliminated')}
-                  palette={palette}
-                />
-              </Row>
-              <ContestStatsCard
-                numberOfRemainingPlayers={playersRemaining}
-                roundNumber={3}
-                variant={statsVariant}
+        <Section title="Submitted Screen" titleColor={palette.ink}>
+          <Row>
+            <Chip
+              label="Waiting"
+              onPress={() => setSubmittedPreviewState('waiting')}
+              palette={palette}
+              selected={submittedPreviewState === 'waiting'}
+            />
+            <Chip
+              label="Results"
+              onPress={() => setSubmittedPreviewState('results')}
+              palette={palette}
+              selected={submittedPreviewState === 'results'}
+            />
+          </Row>
+
+          <View
+            style={[
+              styles.submittedPreview,
+              {
+                backgroundColor: palette.bg,
+                borderColor: withAlpha(palette.ink, 0.12),
+              },
+            ]}
+          >
+            <View pointerEvents="none" style={StyleSheet.absoluteFill}>
+              <LinearGradient
+                colors={[withAlpha(palette.bg, 0), withAlpha(palette.ink, 0.06)]}
+                style={StyleSheet.absoluteFill}
+                locations={[0.4, 1]}
               />
-            </Section>
+            </View>
 
-            <Section title="Correct Screen Header" titleColor={palette.ink}>
-              <Row>
-                <Chip
-                  label="Replay Animation"
-                  onPress={() => setCheckmarkKey((k) => k + 1)}
-                  palette={palette}
-                />
-              </Row>
-              <CorrectAnimation key={checkmarkKey} color={theme.colors.success} />
-            </Section>
+            <View style={styles.submittedScorebug}>
+              <Scorebug playerCount={playersRemaining} />
+            </View>
 
-            <Section title="Submitted Screen" titleColor={palette.ink}>
-              <Row>
-                <Chip
-                  label="Waiting"
-                  onPress={() => setSubmittedPreviewState('waiting')}
-                  palette={palette}
-                  selected={submittedPreviewState === 'waiting'}
-                />
-                <Chip
-                  label="Results"
-                  onPress={() => setSubmittedPreviewState('results')}
-                  palette={palette}
-                  selected={submittedPreviewState === 'results'}
-                />
-              </Row>
-
-              <View
-                style={[
-                  styles.submittedPreview,
-                  {
-                    backgroundColor: palette.bg,
-                    borderColor: withAlpha(palette.ink, 0.12),
-                  },
-                ]}
-              >
-                <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-                  <LinearGradient
-                    colors={[withAlpha(palette.bg, 0), withAlpha(palette.ink, 0.06)]}
-                    style={StyleSheet.absoluteFill}
-                    locations={[0.4, 1]}
-                  />
+            <View style={styles.submittedPreviewContent}>
+              <View style={styles.submittedCenterStack}>
+                <View style={styles.submittedFootball}>
+                  <RollingFootball />
                 </View>
 
-                <View style={styles.submittedScorebug}>
-                  <Scorebug playerCount={playersRemaining} />
-                </View>
-
-                <View style={styles.submittedPreviewContent}>
-                  <View style={styles.submittedCenterStack}>
-                    <View style={styles.submittedFootball}>
-                      <RollingFootball />
-                    </View>
-
-                    <View style={styles.submittedCardStack}>
-                      <SubmittedQuestionCard
-                        round={3}
-                        question="4th & Goal at the 2. What's the call?"
-                        options={[
-                          { key: 'A', label: 'QB sneak' },
-                          { key: 'B', label: 'Play action fade' },
-                          { key: 'C', label: 'Jet sweep' },
-                          { key: 'D', label: 'Field goal' },
-                        ]}
-                        selectedOptionKey="B"
-                        layoutVariant="wrap"
-                      />
-
-                      {submittedPreviewState === 'waiting' ? (
-                        <Text
-                          style={[
-                            styles.submittedWaitingText,
-                            { color: withAlpha(palette.ink, 0.6) },
-                          ]}
-                        >
-                          Play in progress.
-                        </Text>
-                      ) : (
-                        <View style={styles.submittedChart}>
-                          <AnswerDistributionChart
-                            distribution={[
-                              { option: 'A', label: 'QB sneak', count: 523 },
-                              { option: 'B', label: 'Play action fade', count: 312 },
-                              { option: 'C', label: 'Jet sweep', count: 487 },
-                              { option: 'D', label: 'Field goal', count: 160 },
-                            ]}
-                            correctAnswer={null}
-                            userAnswer="B"
-                          />
-                        </View>
-                      )}
-                    </View>
-                  </View>
-                </View>
-              </View>
-            </Section>
-
-            <Section title="Spectator - Game Screen" titleColor={palette.ink}>
-              <View
-                style={[
-                  styles.spectatorPreview,
-                  {
-                    backgroundColor: palette.bg,
-                    borderColor: withAlpha(palette.ink, 0.12),
-                  },
-                ]}
-              >
-                <View style={styles.spectatorScorebug}>
-                  <Scorebug
-                    playerCount={playersRemaining}
-                    statusLabel="Spectating"
-                    statusVariant="glow"
-                    statusAccentColor={spectatorAccent}
-                  />
-                </View>
-                <View style={styles.spectatorRound}>
-                  <Text weight="medium" style={[styles.spectatorRoundLabel, { color: palette.ink }]}>
-                    Round
-                  </Text>
-                  <Text weight="bold" style={[styles.spectatorRoundNumber, { color: palette.ink }]}>
-                    3
-                  </Text>
-                  <Text weight="medium" style={[styles.spectatorRoundSubtitle, { color: palette.ink }]}>
-                    Choose Wisely!
-                  </Text>
-                </View>
-                <Text
-                  weight="bold"
-                  style={[styles.spectatorQuestion, { color: palette.ink }]}
-                >
-                  3rd & Short. What’s the call?
-                </Text>
-                <View style={styles.optionsWrap}>
-                  {[
-                    { key: 'A', label: 'QB sneak' },
-                    { key: 'B', label: 'Inside zone' },
-                    { key: 'C', label: 'Play action' },
-                    { key: 'D', label: 'Jet sweep' },
-                  ].map((option) => (
-                    <AnswerOption
-                      key={option.key}
-                      label={option.label}
-                      iconText={option.key}
-                      selected={false}
-                      disabled={true}
-                      onPress={() => {}}
-                    />
-                  ))}
-                </View>
-              </View>
-            </Section>
-
-            <Section title="Spectator - Submitted Screen" titleColor={palette.ink}>
-              <View
-                style={[
-                  styles.spectatorPreview,
-                  {
-                    backgroundColor: palette.bg,
-                    borderColor: withAlpha(palette.ink, 0.12),
-                  },
-                ]}
-              >
-                <View style={styles.spectatorScorebug}>
-                  <Scorebug
-                    playerCount={playersRemaining}
-                    statusLabel="Spectating"
-                    statusVariant="glow"
-                    statusAccentColor={spectatorAccent}
-                  />
-                </View>
-                <View style={{ marginTop: SPACING.MD }}>
+                <View style={styles.submittedCardStack}>
                   <SubmittedQuestionCard
                     round={3}
                     question="4th & Goal at the 2. What's the call?"
@@ -733,187 +601,288 @@ const PlaygroundContent = ({
                     selectedOptionKey="B"
                     layoutVariant="wrap"
                   />
-                </View>
-                <Text
-                  style={[styles.spectatorWaitingText, { color: withAlpha(palette.ink, 0.6) }]}
-                >
-                  Play in progress.
-                </Text>
-              </View>
-            </Section>
 
-            <Section title="Spectator Scorebug" titleColor={palette.ink}>
-              <View
-                style={[
-                  styles.spectatorVariantCard,
-                  {
-                    backgroundColor: withAlpha(palette.surface, 0.6),
-                    borderColor: withAlpha(palette.ink, 0.12),
-                  },
-                ]}
-              >
-                <Text weight="medium" style={[styles.variantTitle, { color: palette.ink }]}>
-                  Blinking glow tag
-                </Text>
-                <View style={styles.variantCenter}>
-                  <Scorebug
-                    playerCount={playersRemaining}
-                    statusLabel="Spectating"
-                    statusVariant="glow"
-                    statusAccentColor={spectatorAccent}
-                  />
+                  {submittedPreviewState === 'waiting' ? (
+                    <Text
+                      style={[styles.submittedWaitingText, { color: withAlpha(palette.ink, 0.6) }]}
+                    >
+                      Play in progress.
+                    </Text>
+                  ) : (
+                    <View style={styles.submittedChart}>
+                      <AnswerDistributionChart
+                        distribution={[
+                          { option: 'A', label: 'QB sneak', count: 523 },
+                          { option: 'B', label: 'Play action fade', count: 312 },
+                          { option: 'C', label: 'Jet sweep', count: 487 },
+                          { option: 'D', label: 'Field goal', count: 160 },
+                        ]}
+                        correctAnswer={null}
+                        userAnswer="B"
+                      />
+                    </View>
+                  )}
                 </View>
               </View>
-            </Section>
+            </View>
+          </View>
+        </Section>
 
-            <Section title="Eliminated Screen" titleColor={palette.ink}>
-              <View
-                style={[
-                  styles.eliminatedPreviewCard,
-                  {
-                    backgroundColor: palette.bg,
-                    borderColor: withAlpha(palette.ink, 0.12),
-                  },
-                ]}
-              >
-                <View style={styles.eliminatedHeader}>
-                  <Text weight="bold" style={[styles.eliminatedTitle, { color: theme.colors.danger }]}>
-                    Eliminated
-                  </Text>
-                  <Ionicons name="skull" size={72} color={theme.colors.danger} />
-                </View>
-                <ContestStatsCard
-                  numberOfRemainingPlayers={playersRemaining}
-                  roundNumber={3}
-                  variant="eliminated"
-                />
-                <View style={styles.eliminatedButtonRow}>
-                  <View style={styles.eliminatedButtonItem}>
-                    <Button
-                      label="Contests"
-                      onPress={() => {}}
-                      variant="danger"
-                      labelColor={theme.colors.surface}
-                      iconLeft={
-                        <Ionicons name="arrow-back" size={18} color={theme.colors.surface} />
-                      }
-                    />
-                  </View>
-                  <View style={styles.eliminatedButtonItem}>
-                    <Button
-                      label="Spectate"
-                      onPress={() => {}}
-                      variant="primary"
-                      labelColor={theme.colors.surface}
-                      iconLeft={<Ionicons name="eye" size={18} color={theme.colors.surface} />}
-                    />
-                  </View>
-                </View>
-              </View>
-            </Section>
-
-            <Section title="Answer Distribution" titleColor={palette.ink}>
-              <Row>
-                <Chip
-                  label="Submitted"
-                  onPress={() => setChartState('submitted')}
-                  palette={palette}
-                />
-                <Chip label="Correct" onPress={() => setChartState('correct')} palette={palette} />
-                <Chip
-                  label="Eliminated"
-                  onPress={() => setChartState('eliminated')}
-                  palette={palette}
-                />
-                <Chip label="Replay" onPress={() => setChartKey((k) => k + 1)} palette={palette} />
-              </Row>
-
-              <AnswerDistributionChart
-                key={chartKey}
-                distribution={[
-                  { option: 'A', label: 'Go for it', count: 523 },
-                  { option: 'B', label: 'Punt', count: 312 },
-                  { option: 'C', label: 'Kick FG', count: 487 },
-                  { option: 'D', label: 'Fake punt', count: 160 },
-                ]}
-                correctAnswer={chartState === 'submitted' ? null : 'C'}
-                userAnswer={chartState === 'submitted' ? 'B' : chartState === 'correct' ? 'C' : 'A'}
+        <Section title="Spectator - Game Screen" titleColor={palette.ink}>
+          <View
+            style={[
+              styles.spectatorPreview,
+              {
+                backgroundColor: palette.bg,
+                borderColor: withAlpha(palette.ink, 0.12),
+              },
+            ]}
+          >
+            <View style={styles.spectatorScorebug}>
+              <Scorebug
+                playerCount={playersRemaining}
+                statusLabel="Spectating"
+                statusVariant="glow"
+                statusAccentColor={spectatorAccent}
               />
-            </Section>
+            </View>
+            <View style={styles.spectatorRound}>
+              <Text weight="medium" style={[styles.spectatorRoundLabel, { color: palette.ink }]}>
+                Round
+              </Text>
+              <Text weight="bold" style={[styles.spectatorRoundNumber, { color: palette.ink }]}>
+                3
+              </Text>
+              <Text weight="medium" style={[styles.spectatorRoundSubtitle, { color: palette.ink }]}>
+                Choose Wisely!
+              </Text>
+            </View>
+            <Text weight="bold" style={[styles.spectatorQuestion, { color: palette.ink }]}>
+              3rd & Short. What’s the call?
+            </Text>
+            <View style={styles.optionsWrap}>
+              {[
+                { key: 'A', label: 'QB sneak' },
+                { key: 'B', label: 'Inside zone' },
+                { key: 'C', label: 'Play action' },
+                { key: 'D', label: 'Jet sweep' },
+              ].map((option) => (
+                <AnswerOption
+                  key={option.key}
+                  label={option.label}
+                  iconText={option.key}
+                  selected={false}
+                  disabled={true}
+                  onPress={() => {}}
+                />
+              ))}
+            </View>
+          </View>
+        </Section>
 
-            <Section title="AnswerOption (real)" titleColor={palette.ink}>
-              <View style={styles.optionsWrap}>
-                {[
-                  { key: 'A', label: 'Home team' },
-                  { key: 'B', label: 'Away team' },
-                  { key: 'C', label: 'No score' },
-                ].map((o) => (
-                  <AnswerOption
-                    key={o.key}
-                    label={o.label}
-                    iconText={o.key}
-                    selected={selectedRealOption === o.key}
-                    onPress={() => setSelectedRealOption(o.key)}
-                  />
-                ))}
+        <Section title="Spectator - Submitted Screen" titleColor={palette.ink}>
+          <View
+            style={[
+              styles.spectatorPreview,
+              {
+                backgroundColor: palette.bg,
+                borderColor: withAlpha(palette.ink, 0.12),
+              },
+            ]}
+          >
+            <View style={styles.spectatorScorebug}>
+              <Scorebug
+                playerCount={playersRemaining}
+                statusLabel="Spectating"
+                statusVariant="glow"
+                statusAccentColor={spectatorAccent}
+              />
+            </View>
+            <View style={{ marginTop: SPACING.MD }}>
+              <SubmittedQuestionCard
+                round={3}
+                question="4th & Goal at the 2. What's the call?"
+                options={[
+                  { key: 'A', label: 'QB sneak' },
+                  { key: 'B', label: 'Play action fade' },
+                  { key: 'C', label: 'Jet sweep' },
+                  { key: 'D', label: 'Field goal' },
+                ]}
+                selectedOptionKey="B"
+                layoutVariant="wrap"
+              />
+            </View>
+            <Text style={[styles.spectatorWaitingText, { color: withAlpha(palette.ink, 0.6) }]}>
+              Play in progress.
+            </Text>
+          </View>
+        </Section>
+
+        <Section title="Spectator Scorebug" titleColor={palette.ink}>
+          <View
+            style={[
+              styles.spectatorVariantCard,
+              {
+                backgroundColor: withAlpha(palette.surface, 0.6),
+                borderColor: withAlpha(palette.ink, 0.12),
+              },
+            ]}
+          >
+            <Text weight="medium" style={[styles.variantTitle, { color: palette.ink }]}>
+              Blinking glow tag
+            </Text>
+            <View style={styles.variantCenter}>
+              <Scorebug
+                playerCount={playersRemaining}
+                statusLabel="Spectating"
+                statusVariant="glow"
+                statusAccentColor={spectatorAccent}
+              />
+            </View>
+          </View>
+        </Section>
+
+        <Section title="Eliminated Screen" titleColor={palette.ink}>
+          <View
+            style={[
+              styles.eliminatedPreviewCard,
+              {
+                backgroundColor: palette.bg,
+                borderColor: withAlpha(palette.ink, 0.12),
+              },
+            ]}
+          >
+            <View style={styles.eliminatedHeader}>
+              <Text weight="bold" style={[styles.eliminatedTitle, { color: theme.colors.danger }]}>
+                Eliminated
+              </Text>
+              <Ionicons name="skull" size={72} color={theme.colors.danger} />
+            </View>
+            <ContestStatsCard
+              numberOfRemainingPlayers={playersRemaining}
+              roundNumber={3}
+              variant="eliminated"
+            />
+            <View style={styles.eliminatedButtonRow}>
+              <View style={styles.eliminatedButtonItem}>
+                <Button
+                  label="Contests"
+                  onPress={() => {}}
+                  variant="danger"
+                  labelColor={theme.colors.surface}
+                  iconLeft={<Ionicons name="arrow-back" size={18} color={theme.colors.surface} />}
+                />
               </View>
-            </Section>
-
-            <Section title="GIF Punctuation" titleColor={palette.ink}>
-              <View style={styles.gifRow}>
-                <View
-                  style={[
-                    styles.gifBadge,
-                    {
-                      backgroundColor: withAlpha(palette.ink, 0.1),
-                      borderColor: withAlpha(palette.ink, 0.12),
-                    },
-                  ]}
-                >
-                  <Image source={footballGifs[gifIndex]?.source} style={styles.gif} />
-                </View>
-                <View style={styles.gifCopy}>
-                  <Text weight="bold" style={[styles.gifTitle, { color: palette.ink }]}>
-                    Use as status, not decoration
-                  </Text>
-                  <Text style={[styles.gifText, { color: withAlpha(palette.ink, 0.65) }]}>
-                    Loop on suspense states; do one-shot on results; dock into a chip after “Lock
-                    In”.
-                  </Text>
-                </View>
+              <View style={styles.eliminatedButtonItem}>
+                <Button
+                  label="Spectate"
+                  onPress={() => {}}
+                  variant="primary"
+                  labelColor={theme.colors.surface}
+                  iconLeft={<Ionicons name="eye" size={18} color={theme.colors.surface} />}
+                />
               </View>
-            </Section>
+            </View>
+          </View>
+        </Section>
 
-            <Section title="Spacing" titleColor={palette.ink}>
-              <Card>
-                <Text weight="bold">SPACING scale</Text>
-                <View style={{ height: SPACING.XS }} />
-                <View style={[styles.spacingBar, { height: SPACING.XS }]} />
-                <View style={{ height: SPACING.SM }} />
-                <View style={[styles.spacingBar, { height: SPACING.SM }]} />
-                <View style={{ height: SPACING.MD }} />
-                <View style={[styles.spacingBar, { height: SPACING.MD }]} />
-                <View style={{ height: SPACING.LG }} />
-                <View style={[styles.spacingBar, { height: SPACING.LG }]} />
-              </Card>
-            </Section>
+        <Section title="Answer Distribution" titleColor={palette.ink}>
+          <Row>
+            <Chip label="Submitted" onPress={() => setChartState('submitted')} palette={palette} />
+            <Chip label="Correct" onPress={() => setChartState('correct')} palette={palette} />
+            <Chip
+              label="Eliminated"
+              onPress={() => setChartState('eliminated')}
+              palette={palette}
+            />
+            <Chip label="Replay" onPress={() => setChartKey((k) => k + 1)} palette={palette} />
+          </Row>
 
-            <Section title="Typography" titleColor={palette.ink}>
-              <Card>
-                <Text weight="bold" style={{ fontSize: TYPOGRAPHY.TITLE }}>
-                  Title / {TYPOGRAPHY.TITLE}
-                </Text>
-                <Text weight="medium" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
-                  Subtitle / {TYPOGRAPHY.SUBTITLE}
-                </Text>
-                <Text style={{ fontSize: TYPOGRAPHY.BODY }}>
-                  Body / {TYPOGRAPHY.BODY} — The quick brown fox jumps over the lazy dog.
-                </Text>
-                <Text style={{ fontSize: TYPOGRAPHY.SMALL }}>
-                  Small / {TYPOGRAPHY.SMALL} — Secondary caption text.
-                </Text>
-              </Card>
-            </Section>
+          <AnswerDistributionChart
+            key={chartKey}
+            distribution={[
+              { option: 'A', label: 'Go for it', count: 523 },
+              { option: 'B', label: 'Punt', count: 312 },
+              { option: 'C', label: 'Kick FG', count: 487 },
+              { option: 'D', label: 'Fake punt', count: 160 },
+            ]}
+            correctAnswer={chartState === 'submitted' ? null : 'C'}
+            userAnswer={chartState === 'submitted' ? 'B' : chartState === 'correct' ? 'C' : 'A'}
+          />
+        </Section>
+
+        <Section title="AnswerOption (real)" titleColor={palette.ink}>
+          <View style={styles.optionsWrap}>
+            {[
+              { key: 'A', label: 'Home team' },
+              { key: 'B', label: 'Away team' },
+              { key: 'C', label: 'No score' },
+            ].map((o) => (
+              <AnswerOption
+                key={o.key}
+                label={o.label}
+                iconText={o.key}
+                selected={selectedRealOption === o.key}
+                onPress={() => setSelectedRealOption(o.key)}
+              />
+            ))}
+          </View>
+        </Section>
+
+        <Section title="GIF Punctuation" titleColor={palette.ink}>
+          <View style={styles.gifRow}>
+            <View
+              style={[
+                styles.gifBadge,
+                {
+                  backgroundColor: withAlpha(palette.ink, 0.1),
+                  borderColor: withAlpha(palette.ink, 0.12),
+                },
+              ]}
+            >
+              <Image source={footballGifs[gifIndex]?.source} style={styles.gif} />
+            </View>
+            <View style={styles.gifCopy}>
+              <Text weight="bold" style={[styles.gifTitle, { color: palette.ink }]}>
+                Use as status, not decoration
+              </Text>
+              <Text style={[styles.gifText, { color: withAlpha(palette.ink, 0.65) }]}>
+                Loop on suspense states; do one-shot on results; dock into a chip after “Lock In”.
+              </Text>
+            </View>
+          </View>
+        </Section>
+
+        <Section title="Spacing" titleColor={palette.ink}>
+          <Card>
+            <Text weight="bold">SPACING scale</Text>
+            <View style={{ height: SPACING.XS }} />
+            <View style={[styles.spacingBar, { height: SPACING.XS }]} />
+            <View style={{ height: SPACING.SM }} />
+            <View style={[styles.spacingBar, { height: SPACING.SM }]} />
+            <View style={{ height: SPACING.MD }} />
+            <View style={[styles.spacingBar, { height: SPACING.MD }]} />
+            <View style={{ height: SPACING.LG }} />
+            <View style={[styles.spacingBar, { height: SPACING.LG }]} />
+          </Card>
+        </Section>
+
+        <Section title="Typography" titleColor={palette.ink}>
+          <Card>
+            <Text weight="bold" style={{ fontSize: TYPOGRAPHY.TITLE }}>
+              Title / {TYPOGRAPHY.TITLE}
+            </Text>
+            <Text weight="medium" style={{ fontSize: TYPOGRAPHY.SUBTITLE }}>
+              Subtitle / {TYPOGRAPHY.SUBTITLE}
+            </Text>
+            <Text style={{ fontSize: TYPOGRAPHY.BODY }}>
+              Body / {TYPOGRAPHY.BODY} — The quick brown fox jumps over the lazy dog.
+            </Text>
+            <Text style={{ fontSize: TYPOGRAPHY.SMALL }}>
+              Small / {TYPOGRAPHY.SMALL} — Secondary caption text.
+            </Text>
+          </Card>
+        </Section>
 
         <Section title="Force Update Screen" titleColor={palette.ink}>
           <View

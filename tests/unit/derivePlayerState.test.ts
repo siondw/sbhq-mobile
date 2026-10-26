@@ -59,7 +59,11 @@ describe('derivePlayerState', () => {
   test('ROUND_CLOSED: processing pending → SUBMITTED_WAITING', () => {
     const contest = makeContest({ state: CONTEST_STATE.ROUND_CLOSED, current_round: 1 });
     const participant = makeParticipant();
-    const question = makeQuestion({ round: 1, correct_option: ['A'], processing_status: 'PENDING' });
+    const question = makeQuestion({
+      round: 1,
+      correct_option: ['A'],
+      processing_status: 'PENDING',
+    });
 
     expect(derivePlayerState(contest, participant, question, makeAnswer({ round: 1 }))).toBe(
       PLAYER_STATE.SUBMITTED_WAITING,

@@ -9,7 +9,12 @@ import { View } from 'react-native';
 import EliminatedScreen from '../../src/screens/EliminatedScreen';
 import GameScreen from '../../src/screens/GameScreen';
 import SubmittedScreen from '../../src/screens/SubmittedScreen';
-import { CONTEST_STATE, PLAYER_STATE, REGISTRATION_STATUS, type PlayerState } from '../../src/logic/constants';
+import {
+  CONTEST_STATE,
+  PLAYER_STATE,
+  REGISTRATION_STATUS,
+  type PlayerState,
+} from '../../src/logic/constants';
 import type { ContestRow, ParticipantRow, QuestionRow } from '../../src/db/types';
 import { __router } from '../mocks/expo-router';
 
@@ -145,10 +150,7 @@ jest.mock('../../src/ui/components/AnswerOption', () => {
   const { View } = require('react-native');
   return function AnswerOptionMock(props: { label: string; disabled?: boolean }) {
     return (
-      <View
-        testID={`option-${props.label}`}
-        accessibilityState={{ disabled: !!props.disabled }}
-      />
+      <View testID={`option-${props.label}`} accessibilityState={{ disabled: !!props.disabled }} />
     );
   };
 });
