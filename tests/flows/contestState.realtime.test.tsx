@@ -375,4 +375,95 @@ describe('Flow: useContestState (offline) — realtime + focus refresh', () => {
     expect(resolvedPaths).toContain(`/game/${DEFAULT_CONTEST_ID}`);
     expect(resolvedPaths.some((p) => p.startsWith(`/submitted/${DEFAULT_CONTEST_ID}`))).toBe(false);
   });
+  test('delayed round-one fetch must not overwrite round-two question', async () => {
+    const view = render(<Harness contestId={DEFAULT_CONTEST_ID} userId={DEFAULT_USER_ID} />);
+    await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
+    let resolveRoundOne!: (v: OkResult<QuestionRow | null>) => void;
+    const pendingRoundOne = new Promise<OkResult<QuestionRow | null>>((resolve) => {
+      resolveRoundOne = resolve;
+    });
+    mockGetQuestionForRound.mockImplementationOnce(() => pendingRoundOne);
+    await act(async () => {
+      mockBroadcastUpdateCallback?.(
+        makeContest({ state: CONTEST_STATE.ROUND_IN_PROGRESS, current_round: 1 }),
+      );
+    });
+    const questionTwo = makeQuestion({ id: 'round-two-question', round: 2 });
+    mockQuestionRow = questionTwo;
+    await act(async () => {
+      mockBroadcastUpdateCallback?.(
+        makeContest({ state: CONTEST_STATE.ROUND_IN_PROGRESS, current_round: 2 }),
+      );
+    });
+    await waitFor(() =>
+      expect(view.getByTestId('questionId').props.children).toBe('round-two-question'),
+    );
+    await act(async () => {
+      resolveRoundOne(mockOk(makeQuestion({ id: 'round-one-question', round: 1 })));
+    });
+    expect(view.getByTestId('currentRound').props.children).toBe('2');
+    expect(view.getByTestId('questionId').props.children).toBe('round-two-question');
+  });
+
+  test('future question UPDATE must not replace the active round question', async () => {
+    mockContestRow = makeContest({ state: CONTEST_STATE.ROUND_IN_PROGRESS, current_round: 1 });
+    mockQuestionRow = makeQuestion({ id: 'active-question', round: 1 });
+    const view = render(<Harness contestId={DEFAULT_CONTEST_ID} userId={DEFAULT_USER_ID} />);
+    await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
+    await act(async () => {
+      mockBroadcastUpdateCallback?.(makeQuestion({ id: 'future-question', round: 2 }));
+    });
+    expect(view.getByTestId('currentRound').props.children).toBe('1');
+    expect(view.getByTestId('questionId').props.children).toBe('active-question');
+  });
+  test('same-tick round and question broadcasts use the new round immediately', async () => {
+    const view = render(<Harness contestId={DEFAULT_CONTEST_ID} userId={DEFAULT_USER_ID} />);
+    await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
+    const nextQuestion = makeQuestion({ id: 'live-question', round: 1 });
+    await act(async () => {
+      mockBroadcastUpdateCallback?.(
+        makeContest({ state: CONTEST_STATE.ROUND_IN_PROGRESS, current_round: 1 }),
+      );
+      mockBroadcastInsertCallback?.(nextQuestion);
+    });
+    expect(view.getByTestId('questionId').props.children).toBe('live-question');
+  });
+
+  test('a snapshot started before a broadcast cannot undo the live round', async () => {
+    const view = render(<Harness contestId={DEFAULT_CONTEST_ID} userId={DEFAULT_USER_ID} />);
+    await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
+    act(() => __router.triggerFocus());
+    let resolveOldSnapshot!: (value: OkResult<ContestRow>) => void;
+    const oldSnapshot = new Promise<OkResult<ContestRow>>((resolve) => {
+      resolveOldSnapshot = resolve;
+    });
+    mockGetContestById.mockImplementationOnce(() => oldSnapshot);
+    act(() => __router.triggerFocus());
+    mockContestRow = makeContest({ state: CONTEST_STATE.ROUND_IN_PROGRESS, current_round: 2 });
+    mockQuestionRow = makeQuestion({ id: 'current-question', round: 2 });
+    await act(async () => {
+      mockBroadcastUpdateCallback?.(mockContestRow);
+    });
+    await act(async () => {
+      resolveOldSnapshot(
+        mockOk(makeContest({ state: CONTEST_STATE.LOBBY_OPEN, current_round: null })),
+      );
+    });
+    await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
+    expect(view.getByTestId('currentRound').props.children).toBe('2');
+    expect(view.getByTestId('questionId').props.children).toBe('current-question');
+  });
+
+  test('a question update from another contest is ignored', async () => {
+    mockContestRow = makeContest({ state: CONTEST_STATE.ROUND_IN_PROGRESS, current_round: 1 });
+    mockQuestionRow = makeQuestion({ id: 'current-question', round: 1 });
+    const view = render(<Harness contestId={DEFAULT_CONTEST_ID} userId={DEFAULT_USER_ID} />);
+    await waitFor(() => expect(view.getByTestId('loading').props.children).toBe('false'));
+    await act(async () => {
+      mockBroadcastUpdateCallback?.(
+        makeQuestion({ contest_id: 'other-contest', id: 'other-question', round: 1 }),
+      );
+    });
+    expect(view.getByTestId('questionId').props.children).toBe('current-question');
+  });
 });
