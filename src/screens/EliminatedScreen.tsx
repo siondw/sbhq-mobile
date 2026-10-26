@@ -63,15 +63,16 @@ const EliminatedScreen = () => {
     eliminationHaptic();
 
     // Skull slams first
-    Animated.spring(skullAnim, {
+    const skullAnimation = Animated.spring(skullAnim, {
       toValue: 0,
       tension: 40,
       friction: 5,
       useNativeDriver: true,
-    }).start();
+    });
+    skullAnimation.start();
 
     // Text slams 500ms later
-    Animated.sequence([
+    const textAnimation = Animated.sequence([
       Animated.delay(500),
       Animated.spring(textAnim, {
         toValue: 0,
@@ -79,28 +80,39 @@ const EliminatedScreen = () => {
         friction: 5,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    textAnimation.start();
 
     // Content fades in 1000ms later (slower fade)
-    Animated.sequence([
+    const contentAnimation = Animated.sequence([
       Animated.delay(1000),
       Animated.timing(contentAnim, {
         toValue: 1,
         duration: 800,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    contentAnimation.start();
 
     // Show chart at 1800ms, then fade it in
-    setTimeout(() => setShowChart(true), 1800);
-    Animated.sequence([
+    const chartTimeout = setTimeout(() => setShowChart(true), 1800);
+    const chartAnimation = Animated.sequence([
       Animated.delay(1800),
       Animated.timing(chartAnim, {
         toValue: 1,
         duration: 600,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
+    chartAnimation.start();
+
+    return () => {
+      clearTimeout(chartTimeout);
+      skullAnimation.stop();
+      textAnimation.stop();
+      contentAnimation.stop();
+      chartAnimation.stop();
+    };
   }, [skullAnim, textAnim, contentAnim, chartAnim]);
 
   const handleSpectate = () => {
