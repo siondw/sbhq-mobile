@@ -1,5 +1,10 @@
-import type { RealtimeChannel, RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+import {
+  REALTIME_SUBSCRIBE_STATES,
+  type RealtimeChannel,
+  type RealtimePostgresChangesPayload,
+} from '@supabase/supabase-js';
 import { SUPABASE_CLIENT } from './client';
+import { networkError, type DbError } from './errors';
 
 export type { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
@@ -40,23 +45,39 @@ export const subscribeToTable = <TRow extends Record<string, unknown>>({
   };
 };
 
+export interface BroadcastSubscriptionLifecycle {
+  onSubscribed?: () => void;
+  onError?: (error: DbError) => void;
+}
+
 export const subscribeToBroadcast = <TPayload>(
   channel: string,
   events: Array<BroadcastSubscriptionConfig<TPayload>>,
+  lifecycle: BroadcastSubscriptionLifecycle = {},
 ): (() => void) => {
+  let active = true;
   const realtimeChannel: RealtimeChannel = SUPABASE_CLIENT.channel(channel, {
     config: { private: true },
   });
 
   events.forEach(({ event, callback }) => {
     realtimeChannel.on('broadcast', { event }, (message) => {
-      callback(message.payload as TPayload);
+      if (active) callback(message.payload as TPayload);
     });
   });
 
-  void realtimeChannel.subscribe();
+  void realtimeChannel.subscribe((status, error) => {
+    if (!active) return;
+    if (status === REALTIME_SUBSCRIBE_STATES.SUBSCRIBED) {
+      lifecycle.onSubscribed?.();
+    } else {
+      lifecycle.onError?.(networkError(error?.message ?? `Realtime subscription ${status}`));
+    }
+  });
 
   return () => {
+    if (!active) return;
+    active = false;
     void SUPABASE_CLIENT.removeChannel(realtimeChannel);
   };
 };

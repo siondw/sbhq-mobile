@@ -1,5 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import { getAnswerForQuestion, submitAnswer, type SubmitAnswerParams } from '../../db/answers';
 import { getContestById } from '../../db/contests';
 import { getErrorMessage } from '../../db/errors';
@@ -176,13 +177,13 @@ export const useContestState = (
   useEffect(() => {
     if (!contestId) return undefined;
     const contextVersion = contextVersionRef.current;
+    let active = true;
+    const isCurrent = () => active && contextVersionRef.current === contextVersion;
+    const recoverSnapshot = () => {
+      if (isCurrent()) void fetchContestState();
+    };
     const receiveQuestion = (data: ContestRow | QuestionRow) => {
-      if (
-        contextVersionRef.current !== contextVersion ||
-        !('question' in data) ||
-        data.contest_id !== contestId
-      )
-        return;
+      if (!isCurrent() || !('question' in data) || data.contest_id !== contestId) return;
 
       broadcastVersionRef.current += 1;
       if (data.round !== contestRoundRef.current) return;
@@ -191,27 +192,45 @@ export const useContestState = (
       setQuestion(data);
     };
 
-    return subscribeToBroadcast<ContestRow | QuestionRow>(`contest:${contestId}`, [
+    const unsubscribe = subscribeToBroadcast<ContestRow | QuestionRow>(
+      `contest:${contestId}`,
+      [
+        {
+          event: 'UPDATE',
+          callback: (data) => {
+            if (!isCurrent()) return;
+            if ('state' in data && data.id === contestId) {
+              broadcastVersionRef.current += 1;
+              contestRoundRef.current = data.current_round ?? 0;
+              setContest(data);
+              questionRef.current =
+                questionRef.current?.round === data.current_round ? questionRef.current : null;
+              setQuestion(questionRef.current);
+              setAnswer((current) => (current?.round === data.current_round ? current : null));
+            } else {
+              receiveQuestion(data);
+            }
+          },
+        },
+        { event: 'INSERT', callback: receiveQuestion },
+      ],
       {
-        event: 'UPDATE',
-        callback: (data) => {
-          if (contextVersionRef.current !== contextVersion) return;
-          if ('state' in data && data.id === contestId) {
-            broadcastVersionRef.current += 1;
-            contestRoundRef.current = data.current_round ?? 0;
-            setContest(data);
-            questionRef.current =
-              questionRef.current?.round === data.current_round ? questionRef.current : null;
-            setQuestion(questionRef.current);
-            setAnswer((current) => (current?.round === data.current_round ? current : null));
-          } else {
-            receiveQuestion(data);
-          }
+        onSubscribed: recoverSnapshot,
+        onError: () => {
+          if (isCurrent()) setError('Live updates disconnected. Please refresh.');
         },
       },
-      { event: 'INSERT', callback: receiveQuestion },
-    ]);
-  }, [contestId, userId]);
+    );
+    const appStateSubscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') recoverSnapshot();
+    });
+
+    return () => {
+      active = false;
+      unsubscribe();
+      appStateSubscription.remove();
+    };
+  }, [contestId, userId, fetchContestState]);
 
   useEffect(() => {
     if (question?.processing_status === 'COMPLETE') {
