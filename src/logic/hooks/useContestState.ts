@@ -1,10 +1,6 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import {
-  getAnswerForQuestion,
-  submitAnswer,
-  type SubmitAnswerParams,
-} from '../../db/answers';
+import { getAnswerForQuestion, submitAnswer, type SubmitAnswerParams } from '../../db/answers';
 import { getContestById } from '../../db/contests';
 import { getErrorMessage } from '../../db/errors';
 import { getOrCreateParticipant, getParticipantForUser } from '../../db/participants';

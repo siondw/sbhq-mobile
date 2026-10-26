@@ -18,11 +18,7 @@ describe('AnswerDistributionChart', () => {
 
   test('renders all distribution items with labels', () => {
     const { getByText } = renderWithTheme(
-      <AnswerDistributionChart
-        distribution={distribution}
-        correctAnswer="A"
-        userAnswer="A"
-      />,
+      <AnswerDistributionChart distribution={distribution} correctAnswer="A" userAnswer="A" />,
     );
 
     // Verify labels are rendered
@@ -33,11 +29,7 @@ describe('AnswerDistributionChart', () => {
 
   test('renders correct answer bar with testID', () => {
     const { getByTestId } = renderWithTheme(
-      <AnswerDistributionChart
-        distribution={distribution}
-        correctAnswer="A"
-        userAnswer="A"
-      />,
+      <AnswerDistributionChart distribution={distribution} correctAnswer="A" userAnswer="A" />,
     );
 
     // When user got it correct, bar should have -correct suffix
@@ -46,11 +38,7 @@ describe('AnswerDistributionChart', () => {
 
   test('renders user wrong answer bar with testID', () => {
     const { getByTestId } = renderWithTheme(
-      <AnswerDistributionChart
-        distribution={distribution}
-        correctAnswer="A"
-        userAnswer="B"
-      />,
+      <AnswerDistributionChart distribution={distribution} correctAnswer="A" userAnswer="B" />,
     );
 
     // Correct answer bar
@@ -63,11 +51,7 @@ describe('AnswerDistributionChart', () => {
 
   test('renders without suffix when no correctAnswer provided', () => {
     const { getByTestId } = renderWithTheme(
-      <AnswerDistributionChart
-        distribution={distribution}
-        correctAnswer={null}
-        userAnswer="A"
-      />,
+      <AnswerDistributionChart distribution={distribution} correctAnswer={null} userAnswer="A" />,
     );
 
     // User answer without correctAnswer just has -user-wrong suffix
@@ -77,11 +61,7 @@ describe('AnswerDistributionChart', () => {
 
   test('renders without crashing when distribution is empty', () => {
     const { toJSON } = renderWithTheme(
-      <AnswerDistributionChart
-        distribution={[]}
-        correctAnswer={null}
-        userAnswer={null}
-      />,
+      <AnswerDistributionChart distribution={[]} correctAnswer={null} userAnswer={null} />,
     );
     expect(toJSON()).toBeTruthy();
   });

@@ -37,9 +37,7 @@ const DemoOverlay = ({ tip, phase, onExit }: DemoOverlayProps) => {
       clearTimeout(hideTimeoutRef.current);
     }
 
-    const durationMs = phase?.includes('ANSWERING')
-      ? ANSWERING_DURATION_MS
-      : DISPLAY_DURATION_MS;
+    const durationMs = phase?.includes('ANSWERING') ? ANSWERING_DURATION_MS : DISPLAY_DURATION_MS;
 
     hideTimeoutRef.current = setTimeout(() => {
       setIsVisible(false);

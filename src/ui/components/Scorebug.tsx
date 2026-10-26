@@ -51,8 +51,7 @@ const Scorebug = ({
     return () => loop.stop();
   }, [pulse, statusVariant]);
 
-  const statusTextColor =
-    statusVariant === 'quiet' ? withAlpha(colors.ink, 0.6) : accentColor;
+  const statusTextColor = statusVariant === 'quiet' ? withAlpha(colors.ink, 0.6) : accentColor;
   const statusContainerStyle = [
     styles.statusWrap,
     statusVariant === 'chip' && {

@@ -42,11 +42,11 @@ const Button = ({
             ? colors.danger
             : isMuted
               ? colors.muted
-            : isDark
-              ? '#000000'
-              : isSecondary
-                ? '#FFFFFF'
-                : colors.surface,
+              : isDark
+                ? '#000000'
+                : isSecondary
+                  ? '#FFFFFF'
+                  : colors.surface,
     [
       isPrimary,
       isSuccess,
@@ -72,12 +72,12 @@ const Button = ({
         styles.base,
         isPrimary
           ? styles.primary
-            : isSuccess
-              ? styles.success
-              : isDanger
-                ? styles.danger
-                : isMuted
-                  ? styles.muted
+          : isSuccess
+            ? styles.success
+            : isDanger
+              ? styles.danger
+              : isMuted
+                ? styles.muted
                 : isDark
                   ? styles.dark
                   : styles.secondary,

@@ -248,7 +248,7 @@ const ContestListScreen = () => {
             </Text>
           </View>
         }
-        />
+      />
       {(needsOnboarding || showOnboardingManual) && (
         <OnboardingModal
           visible={true}
@@ -282,17 +282,14 @@ const ContestListRow = ({
     0,
     true,
   );
-  const participantLabel = participantCountLoading
-    ? '...'
-    : participantCount.toLocaleString();
+  const participantLabel = participantCountLoading ? '...' : participantCount.toLocaleString();
   const participant = participants.get(item.id);
   const isRegistered = !!participant;
   const isApproved = participant?.registration_status === REGISTRATION_STATUS.APPROVED;
   const isPendingApproval = isRegistered && !isApproved;
   const isLive = item.state !== CONTEST_STATE.UPCOMING && item.state !== CONTEST_STATE.FINISHED;
   const isInProgress =
-    item.state === CONTEST_STATE.ROUND_IN_PROGRESS ||
-    item.state === CONTEST_STATE.ROUND_CLOSED;
+    item.state === CONTEST_STATE.ROUND_IN_PROGRESS || item.state === CONTEST_STATE.ROUND_CLOSED;
   const isEliminated = participant?.elimination_round !== null;
   const canSpectate = isInProgress && (!isRegistered || isEliminated);
   const startLabel = formatStart(item.start_time);
@@ -312,8 +309,7 @@ const ContestListRow = ({
     buttonIconName = 'time';
   } else if (
     isRegistered &&
-    (item.state === CONTEST_STATE.LOBBY_OPEN ||
-      item.state === CONTEST_STATE.ROUND_IN_PROGRESS)
+    (item.state === CONTEST_STATE.LOBBY_OPEN || item.state === CONTEST_STATE.ROUND_IN_PROGRESS)
   ) {
     buttonLabel = 'Join Contest';
     buttonVariant = 'success';

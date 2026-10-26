@@ -106,7 +106,11 @@ const ContestListTicket = ({
 
         <Text style={styles.meta}>Start: {startLabel}</Text>
         <Text style={styles.meta}>Entry: {priceLabel}</Text>
-        {statLabel ? <Text style={styles.meta}>{statPrefix}: {statLabel}</Text> : null}
+        {statLabel ? (
+          <Text style={styles.meta}>
+            {statPrefix}: {statLabel}
+          </Text>
+        ) : null}
 
         <View style={styles.cardFooter}>
           <GlassyTexture

@@ -45,8 +45,7 @@ const SubmittedScreen = () => {
   const { distribution } = useAnswerDistribution(contestId, roundToFetch);
 
   const options = useMemo(() => normalizeQuestionOptions(question?.options), [question?.options]);
-  const showDistribution =
-    contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0;
+  const showDistribution = contest?.state === CONTEST_STATE.ROUND_CLOSED && distribution.length > 0;
 
   if (loading) {
     return <LoadingView />;
@@ -91,12 +90,7 @@ const SubmittedScreen = () => {
           }
         >
           <View style={[styles.content, { paddingTop: headerHeight + SPACING.MD }]}>
-            <View
-              style={[
-                styles.scorebugContainer,
-                { top: headerHeight + SPACING.MD },
-              ]}
-            >
+            <View style={[styles.scorebugContainer, { top: headerHeight + SPACING.MD }]}>
               <Scorebug
                 playerCount={participantCount}
                 statusLabel={isSpectating ? 'Spectating' : undefined}
@@ -119,11 +113,7 @@ const SubmittedScreen = () => {
                   layoutVariant="wrap"
                 />
 
-                {!showDistribution && (
-                  <Text style={styles.waitingText}>
-                    Play in progress
-                  </Text>
-                )}
+                {!showDistribution && <Text style={styles.waitingText}>Play in progress</Text>}
 
                 {/* Distribution Chart */}
                 {showDistribution && (

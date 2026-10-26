@@ -44,9 +44,7 @@ export const getActiveParticipantCount = async (
   return Ok(count ?? 0);
 };
 
-export const getParticipantCount = async (
-  contestId: string,
-): AsyncResult<number, DbError> => {
+export const getParticipantCount = async (contestId: string): AsyncResult<number, DbError> => {
   const { count, error } = await SUPABASE_CLIENT.from(DB_TABLES.PARTICIPANTS)
     .select('id', { count: 'exact', head: true })
     .eq('contest_id', contestId);

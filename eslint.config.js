@@ -13,7 +13,6 @@ module.exports = [
       '.expo/**',
       'build/**',
       'coverage/**',
-      'app/**',
       'components/**',
       'assets/**',
       'eslint.config.js',

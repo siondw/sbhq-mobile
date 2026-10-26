@@ -99,7 +99,11 @@ const AnswerDistributionChart = ({
             const testIdSuffix = isCorrect ? '-correct' : isUserAnswer ? '-user-wrong' : '';
 
             return (
-              <View key={item.option} style={styles.horizontalRow} testID={`bar-${item.option}${testIdSuffix}`}>
+              <View
+                key={item.option}
+                style={styles.horizontalRow}
+                testID={`bar-${item.option}${testIdSuffix}`}
+              >
                 <View style={styles.horizontalLabel}>
                   <WordSafeText
                     text={item.label}
@@ -184,7 +188,11 @@ const AnswerDistributionChart = ({
           const testIdSuffix = isCorrect ? '-correct' : isUserAnswer ? '-user-wrong' : '';
 
           return (
-            <View key={item.option} style={styles.barWrapper} testID={`bar-${item.option}${testIdSuffix}`}>
+            <View
+              key={item.option}
+              style={styles.barWrapper}
+              testID={`bar-${item.option}${testIdSuffix}`}
+            >
               <View style={styles.barContainer}>
                 <Animated.View
                   style={[
