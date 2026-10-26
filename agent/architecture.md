@@ -14,9 +14,9 @@ All admin / Game Master functionality lives in a **separate project** that talks
 - **Runtime:** React Native + Expo
 - **Routing:** Expo Router
 - **Backend:** Supabase
-  - Auth (Google, Email OTP)
+  - Auth (Google, Apple)
   - Database (users, contests, participants, questions, answers)
-  - Realtime (Postgres changes)
+  - Realtime (private contest Broadcast channels)
 
 ### Scope of This App
 
@@ -240,7 +240,27 @@ Files in `app/`:
 
 ---
 
-## 11. Notifications
+## 11. Live Contest Updates
+
+`useContestState` subscribes to the private `contest:<contestId>` Broadcast channel.
+Contest and question updates arrive through `UPDATE` and `INSERT` events. Answers
+and participants are loaded through database queries.
+
+The hook fetches a full snapshot on initial load, after the channel initially joins,
+after every successful rejoin, on screen refocus, and when the app returns to the
+foreground. Fetching after joining closes the gap between the initial load and the
+subscription becoming active. Rejoins restore state after missed broadcasts.
+
+Connection failures appear in the hook's error state, and manual refresh remains
+available. Cleanup removes the channel and app-state listener and ignores queued
+callbacks. Snapshot and broadcast updates are scoped to the current contest and user.
+
+This describes client behavior; server Broadcast triggers and access policies are
+configured outside this repository.
+
+---
+
+## 12. Notifications
 
 Push notifications are handled end-to-end through Expo Notifications and Supabase.
 
@@ -259,7 +279,7 @@ through `ContestRouter` and `derivePlayerState`.
 
 ---
 
-## 12. How to Navigate the Codebase
+## 13. How to Navigate the Codebase
 
 - "How do I fetch contests?"
   -> `src/db/contests.ts`
@@ -279,7 +299,7 @@ through `ContestRouter` and `derivePlayerState`.
 
 ---
 
-## 13. Summary
+## 14. Summary
 
 - **Data access** -> `src/db/`
 - **Hooks** -> `src/logic/hooks/`
