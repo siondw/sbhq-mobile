@@ -1,7 +1,15 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import type { AppStateStatus } from 'react-native';
 import { AppState, Platform } from 'react-native';
 
@@ -83,63 +91,88 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [profile, setProfile] = useState<UserRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const isMounted = useRef(false);
+  const currentUserId = useRef<string | null>(null);
+  const profileRequestId = useRef(0);
 
   const fetchProfile = useCallback(async (userId: string) => {
+    if (!isMounted.current || currentUserId.current !== userId) return;
+    const requestId = ++profileRequestId.current;
     const result = await getUserById(userId);
+    if (
+      !isMounted.current ||
+      currentUserId.current !== userId ||
+      profileRequestId.current !== requestId
+    ) {
+      return;
+    }
+
     if (result.ok) {
       setProfile(result.value);
     } else {
       setError(getErrorMessage(result.error));
       setProfile(null);
     }
+    setLoading(false);
   }, []);
 
+  const applySession = useCallback(
+    (nextSession: Session | null) => {
+      const nextUserId = nextSession?.user.id ?? null;
+      profileRequestId.current += 1;
+      if (currentUserId.current !== nextUserId) {
+        setProfile(null);
+        setError(null);
+        setLoading(nextUserId !== null);
+      }
+      currentUserId.current = nextUserId;
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      if (nextUserId) {
+        void fetchProfile(nextUserId);
+      } else {
+        setProfile(null);
+        setLoading(false);
+      }
+    },
+    [fetchProfile],
+  );
+
   useEffect(() => {
-    let isMounted = true;
+    isMounted.current = true;
+    let isActive = true;
+    let hasAuthEvent = false;
+
+    const unsubscribe = onAuthStateChange((_event, nextSession) => {
+      if (!isActive) return;
+      hasAuthEvent = true;
+      applySession(nextSession);
+    });
 
     const init = async () => {
       const result = await getSession();
-      if (!isMounted) return;
+      if (!isActive || hasAuthEvent) return;
 
       if (result.ok) {
-        const initialSession = result.value;
-        setSession(initialSession);
-        setUser(initialSession?.user ?? null);
-        if (initialSession?.user) {
-          await fetchProfile(initialSession.user.id);
-        }
+        applySession(result.value);
       } else {
+        applySession(null);
         setError(getErrorMessage(result.error));
-        setSession(null);
-        setUser(null);
-        setProfile(null);
-      }
-
-      if (isMounted) {
-        setLoading(false);
       }
     };
 
     void init();
 
-    const unsubscribe = onAuthStateChange((_event, nextSession) => {
-      setSession(nextSession);
-      setUser(nextSession?.user ?? null);
-      if (nextSession?.user) {
-        void fetchProfile(nextSession.user.id);
-      } else {
-        setProfile(null);
-      }
-    });
-
     const appStateSubscription = startAuthRefreshListeners();
 
     return () => {
-      isMounted = false;
+      isActive = false;
+      isMounted.current = false;
+      profileRequestId.current += 1;
       unsubscribe();
       appStateSubscription.remove();
     };
-  }, [fetchProfile]);
+  }, [applySession]);
 
   const loginWithGoogle = useCallback(async () => {
     setError(null);
@@ -263,13 +296,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { ok: false, error: getErrorMessage(result.error) };
     }
 
-    setSession(null);
-    setUser(null);
-    setProfile(null);
+    applySession(null);
     await signOut();
 
     return { ok: true };
-  }, [user]);
+  }, [user, applySession]);
 
   const derivedUser = useMemo(() => {
     if (!user) return null;
