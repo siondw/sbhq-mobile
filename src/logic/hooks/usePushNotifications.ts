@@ -6,6 +6,7 @@ import { AppState, Platform } from 'react-native';
 
 import { getErrorMessage } from '../../db/errors';
 import { clearPushToken, updatePushToken } from '../../db/users';
+import { Err, Ok } from '../../utils/result';
 import {
   DEFAULT_NOTIFICATION_CHANNEL_ID,
   DEFAULT_NOTIFICATION_CHANNEL_NAME,
@@ -50,8 +51,34 @@ export const usePushNotifications = () => {
   const [isRegistered, setIsRegistered] = useState(false);
 
   const lastUserIdRef = useRef<string | null>(null);
-  const callCountRef = useRef(0);
-  const isRegisteringRef = useRef(false);
+  const registrationScopeRef = useRef<{
+    userId: string | null;
+    registering: boolean;
+  } | null>(null);
+
+  useEffect(() => {
+    const currentUserId = user?.id ?? null;
+    const scope = { userId: currentUserId, registering: false };
+    registrationScopeRef.current = scope;
+    setExpoPushToken(null);
+    setIsRegistered(false);
+    setError(null);
+
+    const previousUserId = lastUserIdRef.current;
+    lastUserIdRef.current = currentUserId;
+
+    if (!currentUserId && previousUserId) {
+      void clearPushToken(previousUserId).then((result) => {
+        if (registrationScopeRef.current === scope && !result.ok) {
+          setError(getErrorMessage(result.error));
+        }
+      });
+    }
+
+    return () => {
+      registrationScopeRef.current = null;
+    };
+  }, [user?.id]);
 
   const ensureAndroidChannel = useCallback(async () => {
     if (Platform.OS !== 'android') {
@@ -66,23 +93,20 @@ export const usePushNotifications = () => {
 
   const getExpoPushToken = useCallback(async () => {
     if (!Device.isDevice) {
-      setError('Push notifications require a physical device');
-      return null;
+      return Err('Push notifications require a physical device');
     }
 
     const projectId = getExpoProjectId();
     if (!projectId) {
-      setError('Missing Expo project id for push notifications');
-      return null;
+      return Err('Missing Expo project id for push notifications');
     }
 
     try {
       await ensureAndroidChannel();
       const token = await Notifications.getExpoPushTokenAsync({ projectId });
-      return token.data;
+      return Ok(token.data);
     } catch {
-      setError('Failed to fetch Expo push token');
-      return null;
+      return Err('Failed to fetch Expo push token');
     }
   }, [ensureAndroidChannel]);
 
@@ -91,14 +115,8 @@ export const usePushNotifications = () => {
       tokenOverride?: string,
       permissionOverride?: Notifications.NotificationPermissionsStatus,
     ) => {
-      if (isRegisteringRef.current) {
-        return;
-      }
-
-      callCountRef.current += 1;
-
-      if (callCountRef.current > 10) {
-        console.error(`[PUSH] TOO MANY CALLS (${callCountRef.current}), blocking further requests`);
+      const scope = registrationScopeRef.current;
+      if (!scope || scope.userId !== (user?.id ?? null) || scope.registering) {
         return;
       }
 
@@ -109,10 +127,13 @@ export const usePushNotifications = () => {
         return;
       }
 
-      isRegisteringRef.current = true;
+      scope.registering = true;
 
       try {
         const settings = permissionOverride ?? (await Notifications.getPermissionsAsync());
+        if (registrationScopeRef.current !== scope) {
+          return;
+        }
         setPermissionStatus(settings);
 
         if (!isPermissionGranted(settings)) {
@@ -120,33 +141,51 @@ export const usePushNotifications = () => {
           return;
         }
 
-        const token = tokenOverride ?? (await getExpoPushToken());
-        if (!token) {
+        const tokenResult = tokenOverride ? Ok(tokenOverride) : await getExpoPushToken();
+        if (registrationScopeRef.current !== scope) {
+          return;
+        }
+        if (!tokenResult.ok) {
+          setError(tokenResult.error);
           setIsRegistered(false);
           return;
         }
 
-        const result = await updatePushToken(user.id, token);
+        const result = await updatePushToken(user.id, tokenResult.value);
+        if (registrationScopeRef.current !== scope) {
+          return;
+        }
         if (!result.ok) {
           setError(getErrorMessage(result.error));
           setIsRegistered(false);
           return;
         }
 
-        setExpoPushToken(token);
+        setExpoPushToken(tokenResult.value);
         setIsRegistered(true);
-        callCountRef.current = 0; // Reset counter on success
+      } catch {
+        if (registrationScopeRef.current === scope) {
+          setError('Failed to register push notifications');
+          setIsRegistered(false);
+        }
       } finally {
-        isRegisteringRef.current = false;
+        scope.registering = false;
       }
     },
     [user?.id, getExpoPushToken],
   );
 
   const refreshPermissions = useCallback(async () => {
+    const scope = registrationScopeRef.current;
+    if (!scope) {
+      return;
+    }
     setLoading(true);
     try {
       const settings = await Notifications.getPermissionsAsync();
+      if (registrationScopeRef.current !== scope) {
+        return settings;
+      }
       setPermissionStatus(settings);
 
       if (isPermissionGranted(settings)) {
@@ -155,11 +194,14 @@ export const usePushNotifications = () => {
 
       return settings;
     } finally {
-      setLoading(false);
+      if (registrationScopeRef.current === scope) {
+        setLoading(false);
+      }
     }
   }, [registerToken]);
 
   const requestPermissions = useCallback(async () => {
+    const scope = registrationScopeRef.current;
     setError(null);
     await ensureAndroidChannel();
 
@@ -171,6 +213,9 @@ export const usePushNotifications = () => {
       },
     });
 
+    if (registrationScopeRef.current !== scope) {
+      return settings;
+    }
     setPermissionStatus(settings);
 
     if (isPermissionGranted(settings)) {
@@ -183,29 +228,6 @@ export const usePushNotifications = () => {
   useEffect(() => {
     void refreshPermissions();
   }, [refreshPermissions]);
-
-  useEffect(() => {
-    const currentUserId = user?.id ?? null;
-    if (currentUserId) {
-      lastUserIdRef.current = currentUserId;
-      return;
-    }
-
-    const previousUserId = lastUserIdRef.current;
-    if (!previousUserId) {
-      return;
-    }
-
-    lastUserIdRef.current = null;
-    setExpoPushToken(null);
-    setIsRegistered(false);
-
-    void clearPushToken(previousUserId).then((result) => {
-      if (!result.ok) {
-        setError(getErrorMessage(result.error));
-      }
-    });
-  }, [user?.id]);
 
   useEffect(() => {
     const pushTokenListener = Notifications.addPushTokenListener(() => {
